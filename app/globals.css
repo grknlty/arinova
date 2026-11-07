@@ -326,13 +326,13 @@ svg {
   flex-shrink: 0;
 }
 /* On narrow screens the orbits are taller than wide rather than tilted:
-   there is not enough width to keep seven tilted planets and their names
+   there is not enough width to keep eight tilted planets and their names
    apart, but there is height. */
 @media (max-width: 759px) {
   .system {
     --wide: 1;
-    --flat: 1.3;
-    height: 600px;
+    --flat: 1.55;
+    height: 700px;
   }
 }
 /* Grow the system to fill larger screens. */
@@ -515,6 +515,12 @@ svg {
   padding: 4px 10px;
   border-radius: 4px;
   box-shadow: 0 0 10px rgba(94, 231, 255, 0.2);
+}
+/* The one long name goes on two lines so it fits between its neighbours. */
+.art-natuur .planet-name {
+  white-space: normal;
+  max-width: 10em;
+  text-align: center;
 }
 .orbit-planet.selected .planet {
   box-shadow:
@@ -915,6 +921,11 @@ svg {
   --planet: #8b5cf6;
   --planet-light: #ddd6fe;
   --planet-dark: #6d28d9;
+}
+.art-natuur {
+  --planet: #84cc16;
+  --planet-light: #d9f99d;
+  --planet-dark: #4d7c0f;
 }
 .planet {
   position: relative;

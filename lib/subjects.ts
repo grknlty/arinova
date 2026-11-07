@@ -51,6 +51,24 @@ export const subjects = [
     aliases: ['geschiedenis', 'gesch', 'history', 'tarih'],
     labels: { nl: 'Geschiedenis', en: 'History', tr: 'Tarih' },
   },
+  {
+    id: 'natuur',
+    name: 'Natuur en Techniek',
+    aliases: [
+      'natuur en techniek',
+      'natuur & techniek',
+      'natuur',
+      'techniek',
+      'nt',
+      'n&t',
+      'naut',
+      'science',
+      'nature and technology',
+      'fen',
+      'fen bilimleri',
+    ],
+    labels: { nl: 'Natuur en Techniek', en: 'Science', tr: 'Fen Bilimleri' },
+  },
 ] as const;
 
 export type Subject = (typeof subjects)[number];

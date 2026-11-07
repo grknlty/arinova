@@ -29,6 +29,7 @@ import {
   Telescope,
   TrafficCone,
   Landmark,
+  Microscope,
   Trash2,
   RotateCcw,
   X,
@@ -82,13 +83,14 @@ const feelingIcons = [Sun, CloudSun, Shuffle, CircleHelp];
 // so no planet or label overlaps another at phone, tablet or desktop size.
 // Angles between 0 and 180 are nearer to us and drawn larger.
 const orbits = {
-  taal: [108, 42],
-  rekenen: [186, 90],
-  huiswerk: [136, 143],
-  topografie: [162, 203],
-  aardrijkskunde: [196, 253],
-  verkeer: [80, 295],
-  geschiedenis: [176, 346],
+  taal: [149, 316],
+  rekenen: [169, 4],
+  huiswerk: [85, 55],
+  topografie: [178, 101],
+  aardrijkskunde: [187, 149],
+  verkeer: [76, 191],
+  geschiedenis: [196, 216],
+  natuur: [160, 262],
 } as const;
 const subjectIcons = {
   taal: BookOpen,
@@ -98,6 +100,7 @@ const subjectIcons = {
   aardrijkskunde: Earth,
   verkeer: TrafficCone,
   geschiedenis: Landmark,
+  natuur: Microscope,
 };
 type Draft = {
   title?: string;
@@ -629,7 +632,7 @@ export default function Home() {
                     aria-hidden="true"
                   />
                 ))}
-                {[58, 68, 94, 100, 122, 128, 149, 174, 198, 210].map((r) => (
+                {[58, 66, 97, 109, 121, 133, 141, 205, 214].map((r) => (
                   <span
                     key={r}
                     className="orbit fine"
