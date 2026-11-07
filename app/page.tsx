@@ -82,6 +82,13 @@ const resultFilters: Record<
 };
 type View =
   'library' | 'subject' | 'progress' | 'manage' | 'study' | 'quiz' | 'result';
+type Place = {
+  view: View;
+  subject: string;
+  setId?: string;
+  result?: Attempt;
+  scrollY: number;
+};
 const feelings = ['sure', 'unsure', 'best_guess', 'not_understood'] as const;
 const feelingIcons = [Sun, CloudSun, Shuffle, CircleHelp];
 // Where each subject planet sits around the supernova: orbit radius (px)
@@ -232,6 +239,58 @@ export default function Home() {
   useEffect(() => {
     if (session?.role) void load();
   }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  // The open page is kept for this tab, so a refresh (easily done by
+  // accident on a tablet) returns to it at the same scroll position. A
+  // practice then continues from its saved progress.
+  const placeKey = `arinova-place:${session?.role}`;
+  const restored = useRef(false);
+  const pendingScroll = useRef<{ view: View; y: number } | null>(null);
+  useEffect(() => {
+    if (restored.current || loading || !session?.role) return;
+    restored.current = true;
+    let place: Place | null = null;
+    try {
+      place = JSON.parse(sessionStorage.getItem(placeKey) ?? 'null');
+    } catch {}
+    if (!place) return;
+    const set = sets.find((s) => s.id === place.setId);
+    const parentOnly = place.view === 'progress' || place.view === 'manage';
+    if (parentOnly && session.role !== 'parent') return;
+    if (['study', 'quiz'].includes(place.view) && !set) return;
+    if (place.view === 'result' && !place.result) return;
+    setSubject(place.subject);
+    if (set) setSelected(set);
+    if (place.result) setResult(place.result);
+    if (place.view === 'quiz') start(set!);
+    else setView(place.view);
+    pendingScroll.current = { view: place.view, y: place.scrollY };
+  }, [loading, session]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Scrolls once the restored page has rendered.
+  useEffect(() => {
+    if (pendingScroll.current?.view !== view) return;
+    window.scrollTo(0, pendingScroll.current.y);
+    pendingScroll.current = null;
+  }, [view, loading]);
+  useEffect(() => {
+    if (!restored.current || !session?.role) return;
+    const save = () => {
+      try {
+        sessionStorage.setItem(
+          placeKey,
+          JSON.stringify({
+            view,
+            subject,
+            setId: selected?.id,
+            ...(view === 'result' && result ? { result } : {}),
+            scrollY: window.scrollY,
+          } satisfies Place),
+        );
+      } catch {}
+    };
+    save();
+    window.addEventListener('scroll', save, { passive: true });
+    return () => window.removeEventListener('scroll', save);
+  }, [view, subject, selected, result, session, loading]); // eslint-disable-line react-hooks/exhaustive-deps
   function navigate(v: View) {
     setView(v);
     setError('');
@@ -595,6 +654,10 @@ export default function Home() {
               title={t.logout}
               onClick={async () => {
                 await fetch('/api/auth', { method: 'DELETE' });
+                try {
+                  sessionStorage.removeItem(placeKey);
+                } catch {}
+                restored.current = false;
                 setSession({ role: null, demo: false });
                 setLoginRole('learner');
                 setShowPassword(false);

@@ -46,6 +46,11 @@
 * {
   box-sizing: border-box;
 }
+/* No pull-down-to-refresh: on a tablet it happens by accident while scrolling. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
 body {
   margin: 0;
   background: var(--bg);
