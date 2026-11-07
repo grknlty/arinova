@@ -12,41 +12,87 @@ export const imageData = z
   .string()
   .max(1500000)
   .regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+=*$/);
-export const setSchema = z.object({
-  title: z.string().trim().min(1).max(150),
-  subject: z.string().trim().min(1).max(80).transform(canonicalSubject),
-  language: z.enum(['nl', 'tr', 'en']),
-  description: z.string().max(1000).default(''),
-  material: z.string().max(50000).default(''),
-  // How the material arrived, for the parent's history of added material.
-  source: z.enum(['word', 'json', 'api']).optional(),
-  fileName: z.string().trim().max(200).optional(),
-  // School context shown on the card, e.g. "Les 3 tot en met 5", "Groep 7–8".
-  lesson: z.string().trim().min(1).max(100).optional(),
-  group: z.string().trim().min(1).max(60).optional(),
-  questions: z
-    .array(
-      z
-        .object({
-          prompt: z.string().trim().min(1).max(3000),
-          options: z.array(z.string().trim().min(1).max(1000)).min(2).max(6),
-          correctIndex: z.number().int().min(0),
-          explanation: z.string().max(5000).default(''),
-          image: imageData.optional(),
-          optionImages: z.array(imageData.nullable()).optional(),
-        })
-        .refine(
-          (q) => q.correctIndex < q.options.length,
-          'correctIndex must refer to an option',
-        )
-        .refine(
-          (q) => !q.optionImages || q.optionImages.length === q.options.length,
-          'optionImages needs one entry (or null) per option',
-        ),
+// Kinds of tests a set can declare. Only those with one correct option can
+// be practised so far; the others are named so they are refused clearly.
+export const testTypes = [
+  'single-choice',
+  'true-false',
+  'multiple-choice',
+  'type-answer',
+] as const;
+export const difficulties = ['easy', 'medium', 'hard'] as const;
+export type TestType = (typeof testTypes)[number];
+export type Difficulty = (typeof difficulties)[number];
+export const setSchema = z
+  .object({
+    title: z.string().trim().min(1).max(150),
+    subject: z.string().trim().min(1).max(80).transform(canonicalSubject),
+    language: z.enum(['nl', 'tr', 'en']),
+    description: z.string().max(1000).default(''),
+    material: z.string().max(50000).default(''),
+    // How the material arrived, for the parent's history of added material.
+    source: z.enum(['word', 'json', 'api']).optional(),
+    fileName: z.string().trim().max(200).optional(),
+    // School context shown on the card, e.g. "Les 3 tot en met 5", "Groep 7–8".
+    lesson: z.string().trim().min(1).max(100).optional(),
+    group: z.string().trim().min(1).max(60).optional(),
+    testType: z.enum(testTypes).optional(),
+    difficulty: z.enum(difficulties).optional(),
+    // The day the author made the test; createdAt is when it was imported.
+    addedDate: z.iso.date().optional(),
+    // Checked against the questions, not stored: the count is always derived.
+    questionCount: z.number().int().min(1).optional(),
+    questions: z
+      .array(
+        z
+          .object({
+            prompt: z.string().trim().min(1).max(3000),
+            options: z.array(z.string().trim().min(1).max(1000)).min(2).max(6),
+            correctIndex: z.number().int().min(0),
+            explanation: z.string().max(5000).default(''),
+            image: imageData.optional(),
+            optionImages: z.array(imageData.nullable()).optional(),
+          })
+          .refine(
+            (q) => q.correctIndex < q.options.length,
+            'correctIndex must refer to an option',
+          )
+          .refine(
+            (q) =>
+              !q.optionImages || q.optionImages.length === q.options.length,
+            'optionImages needs one entry (or null) per option',
+          ),
+      )
+      .min(1)
+      .max(100),
+  })
+  .superRefine((set, ctx) => {
+    if (set.testType === 'multiple-choice' || set.testType === 'type-answer')
+      ctx.addIssue({
+        code: 'custom',
+        path: ['testType'],
+        message: `${set.testType} tests cannot be imported yet; use single-choice or true-false`,
+      });
+    if (set.testType === 'true-false')
+      set.questions.forEach((q, i) => {
+        if (q.options.length !== 2)
+          ctx.addIssue({
+            code: 'custom',
+            path: ['questions', i, 'options'],
+            message: 'a true-false question needs exactly 2 options',
+          });
+      });
+    if (
+      set.questionCount !== undefined &&
+      set.questionCount !== set.questions.length
     )
-    .min(1)
-    .max(100),
-});
+      ctx.addIssue({
+        code: 'custom',
+        path: ['questionCount'],
+        message: `says ${set.questionCount} but the set has ${set.questions.length} questions`,
+      });
+  })
+  .transform(({ questionCount: _, ...set }) => set);
 export type StudySet = z.infer<typeof setSchema> & {
   id: string;
   createdAt: string;

@@ -81,6 +81,9 @@ export const schema = `
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS file_name text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS lesson text;
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_type text;
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS difficulty text;
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS added_date date;
   ALTER TABLE public.arinova_tests
     ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES public.arinova_groups(id);
   CREATE INDEX IF NOT EXISTS arinova_answers_question
@@ -136,8 +139,8 @@ export async function insertSet(client: Client, set: StudySet) {
   const test = await client.query(
     `INSERT INTO public.arinova_tests
        (id, subject_id, title, description, material, language, is_sample, created_at,
-        source, file_name, lesson, group_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        source, file_name, lesson, group_id, test_type, difficulty, added_date)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
      ON CONFLICT (id) DO NOTHING`,
     [
       set.id,
@@ -152,6 +155,9 @@ export async function insertSet(client: Client, set: StudySet) {
       set.fileName ?? null,
       set.lesson ?? null,
       group,
+      set.testType ?? null,
+      set.difficulty ?? null,
+      set.addedDate ?? null,
     ],
   );
   if (!test.rowCount) return;
@@ -246,7 +252,8 @@ export async function readSets(client: Client): Promise<StudySet[]> {
   const result = await client.query(`
     SELECT t.id, t.title, s.subject_name AS subject, t.language, t.description,
       t.material, t.is_sample, t.created_at, t.source, t.file_name, t.deleted_at,
-      t.lesson, g.name AS group_name,
+      t.lesson, g.name AS group_name, t.test_type, t.difficulty,
+      to_char(t.added_date, 'YYYY-MM-DD') AS added_date,
       COALESCE((
         -- Pictures are listed as the URLs that serve them, not their data.
         SELECT jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
@@ -287,6 +294,9 @@ export async function readSets(client: Client): Promise<StudySet[]> {
     ...(r.file_name ? { fileName: r.file_name } : {}),
     ...(r.lesson ? { lesson: r.lesson } : {}),
     ...(r.group_name ? { group: r.group_name } : {}),
+    ...(r.test_type ? { testType: r.test_type } : {}),
+    ...(r.difficulty ? { difficulty: r.difficulty } : {}),
+    ...(r.added_date ? { addedDate: r.added_date } : {}),
     ...(r.deleted_at ? { deletedAt: r.deleted_at.toISOString() } : {}),
   }));
 }

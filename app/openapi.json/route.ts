@@ -60,6 +60,34 @@ export function GET(req: Request) {
             },
             language: { type: 'string', enum: ['nl', 'tr', 'en'] },
             description: { type: 'string', maxLength: 1000 },
+            questionCount: {
+              type: 'integer',
+              minimum: 1,
+              description:
+                'Optional. Number of questions; the test is refused if it differs from the questions sent.',
+            },
+            testType: {
+              type: 'string',
+              enum: ['single-choice', 'true-false'],
+              description:
+                'Optional. single-choice: one correct option; true-false: 2 options, one correct.',
+            },
+            difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+            lesson: {
+              type: 'string',
+              maxLength: 100,
+              description: 'e.g. Les 4',
+            },
+            group: {
+              type: 'string',
+              maxLength: 60,
+              description: 'School group, e.g. Groep 7 or Groep 7–8.',
+            },
+            addedDate: {
+              type: 'string',
+              format: 'date',
+              description: 'Optional. The day the test was made, YYYY-MM-DD.',
+            },
             material: {
               type: 'string',
               maxLength: 50000,

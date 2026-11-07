@@ -42,16 +42,16 @@ Passwords and keys go in Vercel settings, never Git, browser code, or chat. Pare
 
 With PostgreSQL, content and answers are stored relationally:
 
-| Table                           | Columns                                                                                                                                                  |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `arinova_groups`                | `id`, `name`                                                                                                                                             |
-| `arinova_subjects`              | `id`, `subject_name`, `group_id`                                                                                                                         |
-| `arinova_users`                 | `id`, `name`, `user_name`, `role` (`parent`/`learner`), `group_id`                                                                                       |
-| `arinova_tests`                 | `id`, `subject_id`, `title`, `description`, `material`, `language`, `is_sample`, `created_at`, `source`, `file_name`, `lesson`, `group_id`, `deleted_at` |
-| `arinova_questions`             | `id`, `subject_id`, `test_id`, `position`, `question_text`, `explanation`, `answer_count`, `image`                                                       |
-| `arinova_options`               | `id`, `question_id`, `position`, `option_text`, `is_answer`, `image`                                                                                     |
-| `arinova_attempts`              | `id`, `user_id`, `test_id`, `correct`, `total`, `created_at`                                                                                             |
-| `arinova_user_question_answers` | `id`, `attempt_id`, `user_id`, `question_id`, `options_id` (null when skipped), `is_correct`, `confidence`, `answered_at`                                |
+| Table                           | Columns                                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `arinova_groups`                | `id`, `name`                                                                                                                                                                                      |
+| `arinova_subjects`              | `id`, `subject_name`, `group_id`                                                                                                                                                                  |
+| `arinova_users`                 | `id`, `name`, `user_name`, `role` (`parent`/`learner`), `group_id`                                                                                                                                |
+| `arinova_tests`                 | `id`, `subject_id`, `title`, `description`, `material`, `language`, `is_sample`, `created_at`, `source`, `file_name`, `lesson`, `group_id`, `test_type`, `difficulty`, `added_date`, `deleted_at` |
+| `arinova_questions`             | `id`, `subject_id`, `test_id`, `position`, `question_text`, `explanation`, `answer_count`, `image`                                                                                                |
+| `arinova_options`               | `id`, `question_id`, `position`, `option_text`, `is_answer`, `image`                                                                                                                              |
+| `arinova_attempts`              | `id`, `user_id`, `test_id`, `correct`, `total`, `created_at`                                                                                                                                      |
+| `arinova_user_question_answers` | `id`, `attempt_id`, `user_id`, `question_id`, `options_id` (null when skipped), `is_correct`, `confidence`, `answered_at`                                                                         |
 
 A test is one toets; an attempt is one practice session through it. The parent and learner sign-in roles each have a user row, seeded on first use; set `LEARNER_NAME` and `LEARNER_GROUP` to change the defaults (`Arin`, `Groep 7–8`). Sets and attempts saved by earlier versions in `arinova_records` are copied into these tables once and kept there with kind `sets_migrated`/`attempts_migrated`. `arinova_records` still holds the space-friend photos.
 
@@ -82,6 +82,8 @@ Files in the generated “toets” layout are read as well: `{ subject, title, t
 ### JSON
 
 A set contains a study text and 1–100 questions. Every question has 2–6 options, a zero-based correctIndex, an optional explanation, and optionally an `image` (data URL) and `optionImages` (one data URL or null per option). The interface accepts up to 4 MB per upload.
+
+General information about the set is optional: `questionCount` (checked against the questions, not stored), `testType` (`single-choice`, or `true-false` with 2 options per question; `multiple-choice` and `type-answer` are refused for now), `difficulty` (`easy`, `medium`, `hard`), `lesson`, `group` (for example `Groep 7`) and `addedDate` (`YYYY-MM-DD`, the day the test was made). The practice card shows the test type, difficulty and this date; without `addedDate` it shows the import date. `skills/arinova-questions` is a skill for ChatGPT or Claude that writes tests in this format.
 
 ```json
 {

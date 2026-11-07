@@ -97,6 +97,9 @@ test(
             fileName: 'Toets.docx',
             lesson: 'Les 3 tot en met 5',
             group: 'Groep 6',
+            testType: 'single-choice' as const,
+            difficulty: 'easy' as const,
+            addedDate: '2026-11-07',
           };
           await addSets([set]);
           const attempt = grade(
@@ -113,6 +116,9 @@ test(
           assert.equal((await find()).fileName, 'Toets.docx');
           assert.equal((await find()).lesson, 'Les 3 tot en met 5');
           assert.equal((await find()).group, 'Groep 6');
+          assert.equal((await find()).testType, 'single-choice');
+          assert.equal((await find()).difficulty, 'easy');
+          assert.equal((await find()).addedDate, '2026-11-07');
           assert.equal(await setDeleted(set.id, true), true);
           assert.ok((await find()).deletedAt);
           assert.ok((await list('attempts')).some((a) => a.id === attempt.id));

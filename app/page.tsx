@@ -42,7 +42,14 @@ import {
   canonicalSubject,
   subjectLabel,
 } from '@/lib/subjects';
-import type { StudySet, PublicSet, Answer, Attempt } from '@/lib/model';
+import type {
+  StudySet,
+  PublicSet,
+  Answer,
+  Attempt,
+  TestType,
+  Difficulty,
+} from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
 import {
@@ -106,6 +113,7 @@ type Draft = {
   title?: string;
   subject?: string;
   language?: Language;
+  questionCount?: number;
   questions?: unknown[];
 };
 const partSizes = [5, 10, 20];
@@ -127,6 +135,11 @@ function split<T extends Draft>(set: T, size: number): T[] {
     return {
       ...set,
       title: `${set.title} (${word} ${i + 1}/${count})`,
+      // A count that was right is kept right per part; a wrong one is left
+      // for the server to refuse, so missing questions are not hidden.
+      ...(set.questionCount === questions.length
+        ? { questionCount: part.length }
+        : {}),
       questions: part,
     };
   });
@@ -1491,6 +1504,18 @@ function SetViewer({
     </dialog>
   );
 }
+type Words = (typeof words)[Language];
+const typeLabels: Record<TestType, (t: Words) => string> = {
+  'single-choice': (t) => t.typeSingleChoice,
+  'true-false': (t) => t.typeTrueFalse,
+  'multiple-choice': (t) => t.typeMultipleChoice,
+  'type-answer': (t) => t.typeTypeAnswer,
+};
+const difficultyLabels: Record<Difficulty, (t: Words) => string> = {
+  easy: (t) => t.difficultyEasy,
+  medium: (t) => t.difficultyMedium,
+  hard: (t) => t.difficultyHard,
+};
 // Facts about a set for its card. Older sets have no lesson or group
 // fields, so those are looked for in the title and description.
 function SetFacts({
@@ -1510,12 +1535,24 @@ function SetFacts({
     [t.factSubject, subjectLabel(set.subject, lang)],
     [t.factLesson, set.lesson ?? lessonIn(text) ?? '—'],
     [t.factGroup, set.group ?? groupIn(text) ?? '—'],
+    // Sets from before test types existed all have one correct answer.
+    [t.factType, typeLabels[set.testType ?? 'single-choice'](t)],
+    [
+      t.factDifficulty,
+      set.difficulty ? difficultyLabels[set.difficulty](t) : '—',
+    ],
     [
       t.factAdded,
-      new Date(set.createdAt).toLocaleDateString(lang, {
-        timeZone: 'Europe/Amsterdam',
-        dateStyle: 'medium',
-      }),
+      // The author's date is a calendar day; the import time is a moment.
+      set.addedDate
+        ? new Date(`${set.addedDate}T12:00:00Z`).toLocaleDateString(lang, {
+            timeZone: 'UTC',
+            dateStyle: 'medium',
+          })
+        : new Date(set.createdAt).toLocaleDateString(lang, {
+            timeZone: 'Europe/Amsterdam',
+            dateStyle: 'medium',
+          }),
     ],
   ];
   return (

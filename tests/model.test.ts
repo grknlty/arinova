@@ -58,6 +58,31 @@ test('import validates correct indices, sizes and supported content languages', 
   );
 });
 
+test('import keeps test type, difficulty and date, and checks the count', () => {
+  const two = { prompt: 'Q', options: ['Waar', 'Niet waar'], correctIndex: 0 };
+  const set = setSchema.parse({
+    ...sample,
+    testType: 'single-choice',
+    difficulty: 'hard',
+    addedDate: '2026-11-07',
+    questionCount: sample.questions.length,
+  });
+  assert.equal(set.testType, 'single-choice');
+  assert.equal(set.difficulty, 'hard');
+  assert.equal(set.addedDate, '2026-11-07');
+  assert.equal('questionCount' in set, false);
+  const refused = (extra: object) =>
+    !setSchema.safeParse({ ...sample, ...extra }).success;
+  assert.ok(refused({ questionCount: sample.questions.length + 1 }));
+  assert.ok(refused({ difficulty: 'very hard' }));
+  assert.ok(refused({ addedDate: '7-11-2026' }));
+  assert.ok(refused({ addedDate: '2026-02-30' }));
+  assert.ok(refused({ testType: 'multiple-choice' }));
+  assert.ok(refused({ testType: 'type-answer' }));
+  assert.ok(refused({ testType: 'true-false' }));
+  assert.ok(!refused({ testType: 'true-false', questions: [two] }));
+});
+
 test('import maps subject shorthands to the fixed school subjects', () => {
   const subjectOf = (subject: string) =>
     setSchema.parse({ ...sample, subject }).subject;
