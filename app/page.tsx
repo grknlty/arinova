@@ -211,6 +211,7 @@ export default function Home() {
   // Materials page: the chosen subject (id), material and what is shown of it.
   const [materialSubject, setMaterialSubject] = useState('');
   const [materialId, setMaterialId] = useState('');
+  const [allMaterials, setAllMaterials] = useState(false);
   const [materialTab, setMaterialTab] = useState<'questions' | 'results'>(
     'questions',
   );
@@ -1165,168 +1166,180 @@ export default function Home() {
             <span className="eyebrow muted">{t.overview}</span>
             <h1>{t.dashboard}</h1>
             <p className="page-intro">{t.dashboardText}</p>
-            {resultSubjects.length > 0 && (
-              <fieldset className="result-filters subject-filters">
-                <legend>{t.bySubject}</legend>
-                {[
-                  { name: 'all', label: t.all, score: null },
-                  ...resultSubjects.map((s) => ({
-                    name: s.name,
-                    label: subjectLabel(s.name, lang),
-                    score: s.total
-                      ? Math.round((s.correct / s.total) * 100)
-                      : null,
-                  })),
-                ].map((s) => (
-                  <label key={s.name}>
-                    <input
-                      type="radio"
-                      name="progress-subject"
-                      value={s.name}
-                      checked={progressSubject === s.name}
-                      onChange={() => setProgressSubject(s.name)}
-                    />
-                    {s.label}
-                    {s.score !== null && (
-                      <span className="count">{s.score}%</span>
-                    )}
-                  </label>
-                ))}
-              </fieldset>
-            )}
-            <div className="stat-grid">
-              <div>
-                <span>{t.attempts}</span>
-                <strong>{shownCounted.length}</strong>
-                <BookOpen />
-              </div>
-              <div>
-                <span>{t.accuracy}</span>
-                <strong>
-                  {total ? Math.round((correct / total) * 100) : 0}
-                  <small>%</small>
-                </strong>
-                <Check />
-              </div>
-              <div>
-                <span>{t.help}</span>
-                <strong>{uncertain}</strong>
-                <CircleHelp />
-              </div>
-            </div>
-            <div className="breakdown">
-              <span className="good">
-                {correct} {t.correct}
-              </span>
-              <span className="bad">
-                {wrong} {t.wrong}
-              </span>
-              <span>
-                {total - correct - wrong} {t.unanswered}
-              </span>
-            </div>
-            <p className="content-note">{t.progressNote}</p>
-            <h2>{t.confidence}</h2>
-            <div className="confidence-grid">
-              {feelings.map((feeling, i) => {
-                const Icon = feelingIcons[i];
-                const group = allAnswers.filter(
-                  (a) => a.confidence === feeling,
-                );
-                // No longer offered in practice; shown only for older answers.
-                if (feeling === 'best_guess' && !group.length) return null;
-                return (
-                  <div key={feeling}>
-                    <span className={`feeling-icon ${feeling}`}>
-                      <Icon size={22} aria-hidden="true" />
-                    </span>
-                    <span>{t[feeling]}</span>
-                    <strong>{group.length}</strong>
-                    <small>
-                      {group.filter((a) => a.correct).length}{' '}
-                      {t.correct.toLowerCase()}
-                    </small>
-                  </div>
-                );
-              })}
-            </div>
-            <details className="missed-section">
-              <summary>
-                <h2>{t.missed}</h2>
-                {missed.length > 0 && (
-                  <span className="pill bad">{missed.length}</span>
-                )}
-                <ChevronDown className="chevron" size={24} aria-hidden="true" />
-              </summary>
-              {missed.length ? (
-                <div className="missed">
-                  {missed.map((m, i) => (
-                    <article className="review-card" key={i}>
-                      <div className="review-heading">
-                        <span className="pill bad">
-                          {m.wrong}/{m.total} {t.wrong.toLowerCase()}
-                        </span>
-                        <span className="confidence-label">{m.title}</span>
-                      </div>
-                      <h3>{m.prompt}</h3>
-                      <QuestionDetail
-                        question={m.question}
-                        prompt={m.prompt}
-                        chosen={m.lastOption}
-                        chosenText={m.last}
-                        chosenLabel={t.lastWrong}
-                        correctAnswer={m.correctAnswer}
-                        lang={lang}
-                      />
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="content-note">{t.noMissed}</p>
+            <div className="progress-layout">
+              {resultSubjects.length > 0 && (
+                <nav className="paper subject-list" aria-label={t.bySubject}>
+                  <h2>{t.bySubject}</h2>
+                  <ul>
+                    {[
+                      { name: 'all', label: t.all, score: null },
+                      ...resultSubjects.map((s) => ({
+                        name: s.name,
+                        label: subjectLabel(s.name, lang),
+                        score: s.total
+                          ? Math.round((s.correct / s.total) * 100)
+                          : null,
+                      })),
+                    ].map((s) => (
+                      <li key={s.name}>
+                        <button
+                          aria-current={progressSubject === s.name}
+                          onClick={() => setProgressSubject(s.name)}
+                        >
+                          <span>{s.label}</span>
+                          {s.score !== null && (
+                            <span className="count-small">{s.score}%</span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
               )}
-            </details>
-            <h2>{t.recent}</h2>
-            {shownAttempts.length ? (
-              shownAttempts.map((a) => (
-                <details
-                  className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
-                  key={a.id}
-                >
+              <div className="progress-main">
+                <div className="stat-grid">
+                  <div>
+                    <span>{t.attempts}</span>
+                    <strong>{shownCounted.length}</strong>
+                    <BookOpen />
+                  </div>
+                  <div>
+                    <span>{t.accuracy}</span>
+                    <strong>
+                      {total ? Math.round((correct / total) * 100) : 0}
+                      <small>%</small>
+                    </strong>
+                    <Check />
+                  </div>
+                  <div>
+                    <span>{t.answeredWrong}</span>
+                    <strong>
+                      {total ? Math.round((wrong / total) * 100) : 0}
+                      <small>%</small>
+                    </strong>
+                    <X />
+                  </div>
+                  <div>
+                    <span>{t.help}</span>
+                    <strong>{uncertain}</strong>
+                    <CircleHelp />
+                  </div>
+                </div>
+                {total > 0 && (
+                  <section className="paper progress-chart">
+                    <ScoreChart answers={allAnswers} lang={lang} />
+                  </section>
+                )}
+                <p className="content-note">{t.progressNote}</p>
+                <h2>{t.confidence}</h2>
+                <div className="confidence-grid">
+                  {feelings.map((feeling, i) => {
+                    const Icon = feelingIcons[i];
+                    const group = allAnswers.filter(
+                      (a) => a.confidence === feeling,
+                    );
+                    // No longer offered in practice; shown only for older answers.
+                    if (feeling === 'best_guess' && !group.length) return null;
+                    return (
+                      <div key={feeling}>
+                        <span className={`feeling-icon ${feeling}`}>
+                          <Icon size={22} aria-hidden="true" />
+                        </span>
+                        <span>{t[feeling]}</span>
+                        <strong>{group.length}</strong>
+                        <small>
+                          {group.filter((a) => a.correct).length}{' '}
+                          {t.correct.toLowerCase()}
+                        </small>
+                      </div>
+                    );
+                  })}
+                </div>
+                <details className="missed-section">
                   <summary>
-                    <span className="attempt-icon">
-                      <BookOpen size={20} />
-                    </span>
-                    <span>
-                      <strong>{a.title}</strong>
-                      <small>
-                        {new Date(a.createdAt).toLocaleString(lang, {
-                          timeZone: 'Europe/Amsterdam',
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        })}
-                      </small>
-                      {fromDeleted(a) && (
-                        <span className="pill bad">{t.deletedResult}</span>
-                      )}
-                    </span>
-                    <span className="attempt-score">
-                      {a.correct}/{a.total}
-                    </span>
+                    <h2>{t.missed}</h2>
+                    {missed.length > 0 && (
+                      <span className="pill bad">{missed.length}</span>
+                    )}
+                    <ChevronDown
+                      className="chevron"
+                      size={24}
+                      aria-hidden="true"
+                    />
                   </summary>
-                  <FilteredReview
-                    attempt={a}
-                    lang={lang}
-                    questions={a.answers.map((_, i) => questionOf(a.setId, i))}
-                  />
+                  {missed.length ? (
+                    <div className="missed">
+                      {missed.map((m, i) => (
+                        <article className="review-card" key={i}>
+                          <div className="review-heading">
+                            <span className="pill bad">
+                              {m.wrong}/{m.total} {t.wrong.toLowerCase()}
+                            </span>
+                            <span className="confidence-label">{m.title}</span>
+                          </div>
+                          <h3>{m.prompt}</h3>
+                          <QuestionDetail
+                            question={m.question}
+                            prompt={m.prompt}
+                            chosen={m.lastOption}
+                            chosenText={m.last}
+                            chosenLabel={t.lastWrong}
+                            correctAnswer={m.correctAnswer}
+                            lang={lang}
+                          />
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="content-note">{t.noMissed}</p>
+                  )}
                 </details>
-              ))
-            ) : (
-              <div className="empty">
-                <Telescope size={40} aria-hidden="true" />
-                <h3>{t.noAttempts}</h3>
-                <p>{t.noAttemptsText}</p>
+                <h2>{t.recent}</h2>
+                {shownAttempts.length ? (
+                  shownAttempts.map((a) => (
+                    <details
+                      className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
+                      key={a.id}
+                    >
+                      <summary>
+                        <span className="attempt-icon">
+                          <BookOpen size={20} />
+                        </span>
+                        <span>
+                          <strong>{a.title}</strong>
+                          <small>
+                            {new Date(a.createdAt).toLocaleString(lang, {
+                              timeZone: 'Europe/Amsterdam',
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            })}
+                          </small>
+                          {fromDeleted(a) && (
+                            <span className="pill bad">{t.deletedResult}</span>
+                          )}
+                        </span>
+                        <span className="attempt-score">
+                          {a.correct}/{a.total}
+                        </span>
+                      </summary>
+                      <FilteredReview
+                        attempt={a}
+                        lang={lang}
+                        questions={a.answers.map((_, i) =>
+                          questionOf(a.setId, i),
+                        )}
+                      />
+                    </details>
+                  ))
+                ) : (
+                  <div className="empty">
+                    <Telescope size={40} aria-hidden="true" />
+                    <h3>{t.noAttempts}</h3>
+                    <p>{t.noAttemptsText}</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </>
         )}
         {view === 'materials' &&
@@ -1340,8 +1353,12 @@ export default function Home() {
             const material = materials.find((s) => s.id === materialId) as
               StudySet | undefined;
             const results = attempts.filter((a) => a.setId === materialId);
-            // Deleted material is listed apart, below the rest.
-            const active = materials.filter((s) => !s.deletedAt);
+            // Deleted material is listed apart, below the rest. The newest
+            // four show first; the others wait behind a button.
+            const active = materials
+              .filter((s) => !s.deletedAt)
+              .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+            const listed = allMaterials ? active : active.slice(0, 4);
             const deleted = materials.filter((s) => s.deletedAt);
             const row = (s: (typeof materials)[number]) => {
               const practised = attempts.filter((a) => a.setId === s.id).length;
@@ -1418,6 +1435,7 @@ export default function Home() {
                             aria-current={s.id === materialSubject}
                             onClick={() => {
                               setMaterialSubject(s.id);
+                              setAllMaterials(false);
                               setMaterialId('');
                             }}
                           >
@@ -1441,6 +1459,26 @@ export default function Home() {
                     ) : !material ? (
                       <>
                         <h2>{subjectLabel(chosen.name, lang)}</h2>
+                        {!active.length && (
+                          <p className="muted">{t.noMaterials}</p>
+                        )}
+                        <ul className="material-list">{listed.map(row)}</ul>
+                        {active.length > 4 && (
+                          <button
+                            className="text-button more-materials"
+                            aria-expanded={allMaterials}
+                            onClick={() => setAllMaterials(!allMaterials)}
+                          >
+                            {allMaterials
+                              ? t.showFewer
+                              : `${t.showAll} (${active.length})`}
+                            <ChevronDown
+                              className="chevron"
+                              size={16}
+                              aria-hidden="true"
+                            />
+                          </button>
+                        )}
                         <CardLayoutEditor
                           key={chosen.id}
                           subjectId={chosen.id}
@@ -1448,22 +1486,18 @@ export default function Home() {
                           t={t}
                           onSaved={load}
                         />
-                        {!active.length && (
-                          <p className="muted">{t.noMaterials}</p>
-                        )}
-                        <ul className="material-list">{active.map(row)}</ul>
                         {deleted.length > 0 && (
-                          <section className="deleted-materials">
-                            <h3>
+                          <details className="details-editor deleted-materials">
+                            <summary>
                               {t.deletedMaterials}
                               <span className="count-small">
                                 {deleted.length}
                               </span>
-                            </h3>
+                            </summary>
                             <ul className="material-list">
                               {deleted.map(row)}
                             </ul>
-                          </section>
+                          </details>
                         )}
                       </>
                     ) : (
@@ -2279,23 +2313,43 @@ function ResultSummary({
   filter: ResultFilter;
   onFilter: (f: ResultFilter) => void;
 }) {
+  return (
+    <section className="result-summary paper">
+      <ScoreChart answers={attempt.answers} lang={lang} />
+      <ResultFilters
+        answers={attempt.answers}
+        lang={lang}
+        filter={filter}
+        onFilter={onFilter}
+      />
+    </section>
+  );
+}
+// A ring of correct, wrong and unanswered answers with a legend beside it.
+function ScoreChart({
+  answers,
+  lang,
+}: {
+  answers: Attempt['answers'];
+  lang: Language;
+}) {
   const t = words[lang];
-  const total = attempt.answers.length;
+  const total = answers.length;
   const parts = [
     {
       key: 'correct',
       label: t.correct,
-      n: attempt.answers.filter((a) => a.correct).length,
+      n: answers.filter((a) => a.correct).length,
     },
     {
       key: 'wrong',
       label: t.wrong,
-      n: attempt.answers.filter(resultFilters.wrong).length,
+      n: answers.filter(resultFilters.wrong).length,
     },
     {
       key: 'skipped',
       label: t.unanswered,
-      n: attempt.answers.filter((a) => a.option === null).length,
+      n: answers.filter((a) => a.option === null).length,
     },
   ] as const;
   const r = 52;
@@ -2304,65 +2358,57 @@ function ResultSummary({
   // A 2px gap between segments, none when one segment fills the ring.
   const gap = shown.length > 1 ? 2 : 0;
   let at = 0;
-  const pct = (n: number) => Math.round((n / total) * 100);
+  const pct = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   return (
-    <section className="result-summary paper">
-      <div className="result-chart">
-        <svg
-          viewBox="0 0 140 140"
-          role="img"
-          aria-label={parts.map((p) => `${p.label}: ${p.n}`).join(', ')}
-        >
-          {shown.map((p) => {
-            const length = (p.n / total) * circumference;
-            const segment = (
-              <circle
-                key={p.key}
-                cx="70"
-                cy="70"
-                r={r}
-                fill="none"
-                stroke={donutColours[p.key]}
-                strokeWidth="20"
-                strokeDasharray={`${Math.max(length - gap, 0.1)} ${circumference}`}
-                strokeDashoffset={-at}
-                transform="rotate(-90 70 70)"
-              >
-                <title>{`${p.label}: ${p.n} (${pct(p.n)}%)`}</title>
-              </circle>
-            );
-            at += length;
-            return segment;
-          })}
-          <text x="70" y="68" textAnchor="middle" className="donut-value">
-            {pct(parts[0].n)}%
-          </text>
-          <text x="70" y="88" textAnchor="middle" className="donut-label">
-            {t.correct.toLowerCase()}
-          </text>
-        </svg>
-        <ul className="result-legend">
-          {parts.map((p) => (
-            <li key={p.key}>
-              <span
-                className="swatch"
-                style={{ background: donutColours[p.key] }}
-                aria-hidden="true"
-              />
-              <span>{p.label}</span>
-              <strong>{p.n}</strong>
-              <small>{pct(p.n)}%</small>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <ResultFilters
-        answers={attempt.answers}
-        lang={lang}
-        filter={filter}
-        onFilter={onFilter}
-      />
-    </section>
+    <div className="result-chart">
+      <svg
+        viewBox="0 0 140 140"
+        role="img"
+        aria-label={parts.map((p) => `${p.label}: ${p.n}`).join(', ')}
+      >
+        {shown.map((p) => {
+          const length = (p.n / total) * circumference;
+          const segment = (
+            <circle
+              key={p.key}
+              cx="70"
+              cy="70"
+              r={r}
+              fill="none"
+              stroke={donutColours[p.key]}
+              strokeWidth="20"
+              strokeDasharray={`${Math.max(length - gap, 0.1)} ${circumference}`}
+              strokeDashoffset={-at}
+              transform="rotate(-90 70 70)"
+            >
+              <title>{`${p.label}: ${p.n} (${pct(p.n)}%)`}</title>
+            </circle>
+          );
+          at += length;
+          return segment;
+        })}
+        <text x="70" y="68" textAnchor="middle" className="donut-value">
+          {pct(parts[0].n)}%
+        </text>
+        <text x="70" y="88" textAnchor="middle" className="donut-label">
+          {t.correct.toLowerCase()}
+        </text>
+      </svg>
+      <ul className="result-legend">
+        {parts.map((p) => (
+          <li key={p.key}>
+            <span
+              className="swatch"
+              style={{ background: donutColours[p.key] }}
+              aria-hidden="true"
+            />
+            <span>{p.label}</span>
+            <strong>{p.n}</strong>
+            <small>{pct(p.n)}%</small>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 // Buttons that pick which answers are listed, each with how many it shows.

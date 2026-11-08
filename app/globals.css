@@ -1160,9 +1160,34 @@ footer[hidden] {
   color: var(--muted);
   margin-bottom: 30px;
 }
+/* Progress: subjects on the left, the numbers for the chosen one beside. */
+.progress-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.progress-layout > .subject-list {
+  position: sticky;
+  top: 20px;
+  margin: 0;
+  padding: 18px;
+}
+.progress-layout > .subject-list h2 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+.progress-main {
+  min-width: 0;
+}
+.progress-chart {
+  max-width: none;
+  margin: 16px 0 0;
+  padding: 22px 28px;
+}
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 .stat-grid > div {
@@ -1207,26 +1232,12 @@ footer[hidden] {
   color: var(--good);
 }
 .stat-grid > div:nth-child(3) svg {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+.stat-grid > div:nth-child(4) svg {
   background: #ffe4f0;
   color: #c81f6b;
-}
-.breakdown {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  font-size: 14px;
-  font-weight: 700;
-}
-.breakdown span {
-  padding: 7px 14px;
-  border-radius: 999px;
-  background: #fff;
-  border: 2px solid var(--line);
-}
-.breakdown .good,
-.breakdown .bad {
-  border-color: transparent;
 }
 .confidence-grid {
   display: grid;
@@ -1582,11 +1593,6 @@ footer[hidden] {
 }
 .review-card .set-viewer-options {
   margin: 4px 0 12px;
-}
-.subject-filters {
-  margin: 0 0 24px;
-  padding: 0;
-  border-top: 0;
 }
 /* Theme, lesson and test style filters on a subject's page, on one line. */
 .grouping-filters {
@@ -2005,18 +2011,23 @@ textarea {
   background: var(--bad-bg);
   color: var(--bad);
 }
-.deleted-materials {
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 2px dashed var(--line);
+.material-pane .details-editor {
+  margin: 18px 0 0;
 }
-.deleted-materials h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 8px;
-  font-size: 16px;
+.deleted-materials summary {
   color: var(--muted);
+}
+.deleted-materials summary .count-small {
+  margin-left: 8px;
+}
+.deleted-materials .material-list {
+  padding: 0 14px 14px;
+}
+.more-materials {
+  margin-top: 6px;
+}
+.more-materials[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
 }
 .material-list button.deleted strong {
   color: var(--muted);
@@ -2050,9 +2061,18 @@ textarea {
   color: var(--primary);
   border-bottom-color: var(--primary);
 }
+@media (max-width: 1000px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 700px) {
-  .materials {
+  .materials,
+  .progress-layout {
     grid-template-columns: 1fr;
+  }
+  .progress-layout > .subject-list {
+    position: static;
   }
 }
 /* Add material: compact, as a working page for the parent */
