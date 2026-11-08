@@ -1651,13 +1651,14 @@ function ResultsViewer({
 }) {
   const t = words[lang];
   const dialog = useRef<HTMLDialogElement>(null);
+  const [filter, setFilter] = useState<ResultFilter>('all');
   useEffect(() => {
     dialog.current?.showModal();
   }, []);
   return (
     <dialog
       ref={dialog}
-      className="set-viewer"
+      className="set-viewer results-viewer"
       aria-labelledby="results-viewer-title"
       onClose={onClose}
       onClick={(e) => e.target === dialog.current && dialog.current.close()}
@@ -1677,6 +1678,13 @@ function ResultsViewer({
             <X size={22} aria-hidden="true" />
           </button>
         </header>
+        <ResultFilters
+          answers={attempts.flatMap((a) => a.answers)}
+          lang={lang}
+          filter={filter}
+          onFilter={setFilter}
+          name="previous-result-filter"
+        />
         {attempts.map((a) => (
           <details className="attempt" key={a.id}>
             <summary>
@@ -1696,7 +1704,12 @@ function ResultsViewer({
                 {a.correct}/{a.total}
               </span>
             </summary>
-            <Review attempt={a} lang={lang} questions={set.questions} />
+            <Review
+              attempt={a}
+              lang={lang}
+              questions={set.questions}
+              show={resultFilters[filter]}
+            />
           </details>
         ))}
       </div>
@@ -1843,13 +1856,6 @@ function ResultSummary({
   const gap = shown.length > 1 ? 2 : 0;
   let at = 0;
   const pct = (n: number) => Math.round((n / total) * 100);
-  const options: [ResultFilter, string][] = [
-    ['all', t.filterAll],
-    ['wrong', t.wrong],
-    ['correct', t.correct],
-    ['unsure', t.filterUnsure],
-    ['not_understood', t.filterNotUnderstood],
-  ];
   return (
     <section className="result-summary paper">
       <div className="result-chart">
@@ -1901,25 +1907,56 @@ function ResultSummary({
           ))}
         </ul>
       </div>
-      <fieldset className="result-filters">
-        <legend>{t.showAnswers}</legend>
-        {options.map(([value, label]) => (
-          <label key={value}>
-            <input
-              type="radio"
-              name="result-filter"
-              value={value}
-              checked={filter === value}
-              onChange={() => onFilter(value)}
-            />
-            {label}
-            <span className="count">
-              {attempt.answers.filter(resultFilters[value]).length}
-            </span>
-          </label>
-        ))}
-      </fieldset>
+      <ResultFilters
+        answers={attempt.answers}
+        lang={lang}
+        filter={filter}
+        onFilter={onFilter}
+      />
     </section>
+  );
+}
+// Buttons that pick which answers are listed, each with how many it shows.
+function ResultFilters({
+  answers,
+  lang,
+  filter,
+  onFilter,
+  name = 'result-filter',
+}: {
+  answers: Attempt['answers'];
+  lang: Language;
+  filter: ResultFilter;
+  onFilter: (f: ResultFilter) => void;
+  name?: string;
+}) {
+  const t = words[lang];
+  const options: [ResultFilter, string][] = [
+    ['all', t.filterAll],
+    ['wrong', t.wrong],
+    ['correct', t.correct],
+    ['unsure', t.filterUnsure],
+    ['not_understood', t.filterNotUnderstood],
+  ];
+  return (
+    <fieldset className="result-filters">
+      <legend>{t.showAnswers}</legend>
+      {options.map(([value, label]) => (
+        <label key={value}>
+          <input
+            type="radio"
+            name={name}
+            value={value}
+            checked={filter === value}
+            onChange={() => onFilter(value)}
+          />
+          {label}
+          <span className="count">
+            {answers.filter(resultFilters[value]).length}
+          </span>
+        </label>
+      ))}
+    </fieldset>
   );
 }
 type ShownQuestion = PublicSet['questions'][number];

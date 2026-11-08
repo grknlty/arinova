@@ -202,6 +202,17 @@ try {
   await page.getByRole('radio', { name: /^Incorrect/ }).check();
   await review.getByText('No questions in this group.').waitFor();
   await page.getByRole('radio', { name: /^All/ }).check();
+  // Previous results have the same filters, across every practice.
+  await page.getByRole('button', { name: 'Language', exact: true }).click();
+  await card.getByRole('button', { name: 'Previous results' }).click();
+  const past = page.getByRole('dialog', { name: 'Browser workflow test' });
+  await past.locator('summary').first().click();
+  await past.getByRole('radio', { name: /Not sure/ }).check();
+  assert.equal(await past.locator('.review-card').count(), 1);
+  await past.getByRole('radio', { name: /^Incorrect/ }).check();
+  await past.getByText('No questions in this group.').waitFor();
+  await page.keyboard.press('Escape');
+  await past.waitFor({ state: 'detached' });
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page.getByRole('button', { name: 'Parent', exact: true }).click();
   await page
@@ -215,7 +226,10 @@ try {
   assert.equal(attempts[0].correct, 1);
   assert.equal(attempts[0].answers[0].confidence, 'unsure');
   assert.equal(attempts[0].answers[1].selected, null);
-  await page.locator('summary').click();
+  await page
+    .locator('summary')
+    .filter({ hasText: 'Browser workflow test' })
+    .click();
   await page.getByText('Correct, but still unsure', { exact: true }).waitFor();
   // The parent can open a set from the history to see its answers.
   await page.getByRole('button', { name: 'Add material', exact: true }).click();
