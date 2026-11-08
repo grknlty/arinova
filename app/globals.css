@@ -1908,6 +1908,19 @@ textarea {
   background: var(--bad-bg);
   color: var(--bad);
 }
+.deleted-materials {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px dashed var(--line);
+}
+.deleted-materials h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--muted);
+}
 .material-list button.deleted strong {
   color: var(--muted);
 }

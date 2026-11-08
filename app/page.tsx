@@ -1266,6 +1266,50 @@ export default function Home() {
             const material = materials.find((s) => s.id === materialId) as
               StudySet | undefined;
             const results = attempts.filter((a) => a.setId === materialId);
+            // Deleted material is listed apart, below the rest.
+            const active = materials.filter((s) => !s.deletedAt);
+            const deleted = materials.filter((s) => s.deletedAt);
+            const row = (s: (typeof materials)[number]) => {
+              const practised = attempts.filter((a) => a.setId === s.id).length;
+              return (
+                <li key={s.id}>
+                  <button
+                    className={s.deletedAt ? 'deleted' : ''}
+                    onClick={() => {
+                      setMaterialId(s.id);
+                      setMaterialTab('questions');
+                    }}
+                  >
+                    <strong>{s.title}</strong>
+                    <span>
+                      {s.questions.length} {t.questions} · {practised}×{' '}
+                      {t.practised}
+                      {s.group && ` · ${s.group}`}
+                    </span>
+                    {s.deletedAt && (
+                      <span className="pill bad">
+                        {t.deletedOn}{' '}
+                        {new Date(s.deletedAt).toLocaleDateString(lang)}
+                      </span>
+                    )}
+                  </button>
+                  {/* Deleting keeps Nova's results; it can be undone. */}
+                  <button
+                    className="material-delete"
+                    disabled={busy}
+                    aria-label={`${s.deletedAt ? t.restore : t.delete}: ${s.title}`}
+                    onClick={() => setDeleted(s, !s.deletedAt)}
+                  >
+                    {s.deletedAt ? (
+                      <RotateCcw size={16} aria-hidden="true" />
+                    ) : (
+                      <Trash2 size={16} aria-hidden="true" />
+                    )}
+                    {s.deletedAt ? t.restore : t.delete}
+                  </button>
+                </li>
+              );
+            };
             return (
               <div className="manage">
                 <div className="materials-heading">
@@ -1323,56 +1367,23 @@ export default function Home() {
                     ) : !material ? (
                       <>
                         <h2>{subjectLabel(chosen.name, lang)}</h2>
-                        {!materials.length && (
+                        {!active.length && (
                           <p className="muted">{t.noMaterials}</p>
                         )}
-                        <ul className="material-list">
-                          {materials.map((s) => {
-                            const practised = attempts.filter(
-                              (a) => a.setId === s.id,
-                            ).length;
-                            return (
-                              <li key={s.id}>
-                                <button
-                                  className={s.deletedAt ? 'deleted' : ''}
-                                  onClick={() => {
-                                    setMaterialId(s.id);
-                                    setMaterialTab('questions');
-                                  }}
-                                >
-                                  <strong>{s.title}</strong>
-                                  <span>
-                                    {s.questions.length} {t.questions} ·{' '}
-                                    {practised}× {t.practised}
-                                    {s.group && ` · ${s.group}`}
-                                  </span>
-                                  {s.deletedAt && (
-                                    <span className="pill bad">
-                                      {t.deletedOn}{' '}
-                                      {new Date(s.deletedAt).toLocaleDateString(
-                                        lang,
-                                      )}
-                                    </span>
-                                  )}
-                                </button>
-                                {/* Deleting keeps Nova's results; it can be undone. */}
-                                <button
-                                  className="material-delete"
-                                  disabled={busy}
-                                  aria-label={`${s.deletedAt ? t.restore : t.delete}: ${s.title}`}
-                                  onClick={() => setDeleted(s, !s.deletedAt)}
-                                >
-                                  {s.deletedAt ? (
-                                    <RotateCcw size={16} aria-hidden="true" />
-                                  ) : (
-                                    <Trash2 size={16} aria-hidden="true" />
-                                  )}
-                                  {s.deletedAt ? t.restore : t.delete}
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
+                        <ul className="material-list">{active.map(row)}</ul>
+                        {deleted.length > 0 && (
+                          <section className="deleted-materials">
+                            <h3>
+                              {t.deletedMaterials}
+                              <span className="count-small">
+                                {deleted.length}
+                              </span>
+                            </h3>
+                            <ul className="material-list">
+                              {deleted.map(row)}
+                            </ul>
+                          </section>
+                        )}
                       </>
                     ) : (
                       <>
