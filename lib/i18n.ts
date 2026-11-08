@@ -13,6 +13,7 @@ export const words = {
     questions: 'vragen',
     sample: 'Voorbeeldmateriaal',
     all: 'Alle vakken',
+    bySubject: 'Per vak',
     ready: 'Klaar voor jouw volgende stap',
     readyText: 'Je hoeft het nog niet te kunnen. Daar is oefenen voor.',
     language: 'Taal',
@@ -181,6 +182,7 @@ export const words = {
     questions: 'questions',
     sample: 'Sample material',
     all: 'All subjects',
+    bySubject: 'By subject',
     ready: 'Ready for your next little step',
     readyText: 'You don’t have to know it yet. That’s what practice is for.',
     language: 'Language',
@@ -347,6 +349,7 @@ export const words = {
     questions: 'soru',
     sample: 'Örnek materyal',
     all: 'Tüm dersler',
+    bySubject: 'Derslere göre',
     ready: 'Bir sonraki küçük adımına hazır',
     readyText:
       'Henüz bilmiyor olabilirsin. Zaten bunun için alıştırma yapıyoruz.',

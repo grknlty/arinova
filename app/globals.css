@@ -1994,6 +1994,27 @@ footer[hidden] {
   margin-left: auto;
   flex: none;
 }
+.set-viewer-options li.wrong {
+  background: var(--bad-bg);
+  color: var(--bad);
+  font-weight: 700;
+}
+.set-viewer-options .option-tag {
+  margin-left: auto;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.set-viewer-options .option-tag + svg {
+  margin-left: 0;
+}
+.review-card .set-viewer-options {
+  margin: 4px 0 12px;
+}
+.subject-filters {
+  margin: 0 0 24px;
+  padding: 0;
+  border-top: 0;
+}
 @media (max-width: 580px) {
   .set-viewer-inner {
     padding: 0 16px 16px;

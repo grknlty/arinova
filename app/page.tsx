@@ -204,6 +204,8 @@ export default function Home() {
   const [json, setJson] = useState('');
   const [partSize, setPartSize] = useState(0);
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
+  // The subject the progress page is narrowed to.
+  const [progressSubject, setProgressSubject] = useState('all');
   // The set opened from the history, shown in a window with its answers.
   const [viewing, setViewing] = useState<StudySet | null>(null);
   // The set whose earlier results are shown in a window.
@@ -535,19 +537,41 @@ export default function Home() {
       !s.deletedAt &&
       (subject === 'all' || canonicalSubject(s.subject) === subject),
   );
-  const allAnswers = attempts.flatMap((a) => a.answers);
+  // Subjects that have results, each with its share of correct answers.
+  // Fixed subjects come in their usual order, any others after them.
+  const order = (name: string) =>
+    subjects.findIndex((s) => s.name === name) + 1 || 99;
+  const resultSubjects = [
+    ...new Set(attempts.map((a) => canonicalSubject(a.subject))),
+  ]
+    .sort((a, b) => order(a) - order(b))
+    .map((name) => {
+      const answers = attempts
+        .filter((a) => canonicalSubject(a.subject) === name)
+        .flatMap((a) => a.answers);
+      return {
+        name,
+        total: answers.length,
+        correct: answers.filter((a) => a.correct).length,
+      };
+    });
+  const shownAttempts =
+    progressSubject === 'all'
+      ? attempts
+      : attempts.filter((a) => canonicalSubject(a.subject) === progressSubject);
+  const allAnswers = shownAttempts.flatMap((a) => a.answers);
   // Questions answered wrong at least once, most often wrong first.
-  const imageOf = (setId: string, question: number) =>
-    sets.find((s) => s.id === setId)?.questions[question]?.image;
+  const questionOf = (setId: string, question: number) =>
+    sets.find((s) => s.id === setId)?.questions[question];
   const missed = Object.values(
-    [...attempts]
+    [...shownAttempts]
       .reverse()
       .flatMap((a) =>
         a.answers.map((x, i) => ({
           ...x,
           key: `${a.setId}:${i}`,
           title: a.title,
-          image: imageOf(a.setId, i),
+          question: questionOf(a.setId, i),
         })),
       )
       .reduce<
@@ -556,27 +580,30 @@ export default function Home() {
           {
             prompt: string;
             title: string;
-            image?: string;
+            question?: ShownQuestion;
             correctAnswer: string;
             wrong: number;
             total: number;
             last: string | null;
+            lastOption: number | null;
           }
         >
       >((all, x) => {
         const m = (all[x.key] ??= {
           prompt: x.prompt,
           title: x.title,
-          image: x.image,
+          question: x.question,
           correctAnswer: x.correctAnswer,
           wrong: 0,
           total: 0,
           last: null,
+          lastOption: null,
         });
         m.total++;
         if (!x.correct) {
           m.wrong++;
           m.last = x.selected;
+          m.lastOption = x.option;
         }
         return all;
       }, {}),
@@ -1062,7 +1089,7 @@ export default function Home() {
             <Review
               attempt={result}
               lang={lang}
-              images={selected?.questions.map((q) => q.image)}
+              questions={selected?.questions}
               show={resultFilters[resultFilter]}
             />
           </>
@@ -1072,10 +1099,37 @@ export default function Home() {
             <span className="eyebrow muted">{t.overview}</span>
             <h1>{t.dashboard}</h1>
             <p className="page-intro">{t.dashboardText}</p>
+            {resultSubjects.length > 0 && (
+              <fieldset className="result-filters subject-filters">
+                <legend>{t.bySubject}</legend>
+                {[
+                  { name: 'all', label: t.all, score: null },
+                  ...resultSubjects.map((s) => ({
+                    name: s.name,
+                    label: subjectLabel(s.name, lang),
+                    score: Math.round((s.correct / s.total) * 100),
+                  })),
+                ].map((s) => (
+                  <label key={s.name}>
+                    <input
+                      type="radio"
+                      name="progress-subject"
+                      value={s.name}
+                      checked={progressSubject === s.name}
+                      onChange={() => setProgressSubject(s.name)}
+                    />
+                    {s.label}
+                    {s.score !== null && (
+                      <span className="count">{s.score}%</span>
+                    )}
+                  </label>
+                ))}
+              </fieldset>
+            )}
             <div className="stat-grid">
               <div>
                 <span>{t.attempts}</span>
-                <strong>{attempts.length}</strong>
+                <strong>{shownAttempts.length}</strong>
                 <BookOpen />
               </div>
               <div>
@@ -1140,19 +1194,15 @@ export default function Home() {
                       <span className="confidence-label">{m.title}</span>
                     </div>
                     <h3>{m.prompt}</h3>
-                    {m.image && (
-                      <img
-                        className="question-image"
-                        src={m.image}
-                        alt={t.questionImage}
-                      />
-                    )}
-                    <p>
-                      {t.lastWrong}: <strong>{m.last ?? t.skipped}</strong>
-                    </p>
-                    <p>
-                      {t.rightAnswer}: <strong>{m.correctAnswer}</strong>
-                    </p>
+                    <QuestionDetail
+                      question={m.question}
+                      prompt={m.prompt}
+                      chosen={m.lastOption}
+                      chosenText={m.last}
+                      chosenLabel={t.lastWrong}
+                      correctAnswer={m.correctAnswer}
+                      lang={lang}
+                    />
                   </article>
                 ))}
               </div>
@@ -1160,8 +1210,8 @@ export default function Home() {
               <p className="content-note">{t.noMissed}</p>
             )}
             <h2>{t.recent}</h2>
-            {attempts.length ? (
-              attempts.map((a) => (
+            {shownAttempts.length ? (
+              shownAttempts.map((a) => (
                 <details className="attempt" key={a.id}>
                   <summary>
                     <span className="attempt-icon">
@@ -1184,7 +1234,7 @@ export default function Home() {
                   <Review
                     attempt={a}
                     lang={lang}
-                    images={a.answers.map((_, i) => imageOf(a.setId, i))}
+                    questions={a.answers.map((_, i) => questionOf(a.setId, i))}
                   />
                 </details>
               ))
@@ -1656,11 +1706,7 @@ function ResultsViewer({
                 {a.correct}/{a.total}
               </span>
             </summary>
-            <Review
-              attempt={a}
-              lang={lang}
-              images={a.answers.map((_, i) => set.questions[i]?.image)}
-            />
+            <Review attempt={a} lang={lang} questions={set.questions} />
           </details>
         ))}
       </div>
@@ -1853,15 +1899,97 @@ function ResultSummary({
     </section>
   );
 }
+type ShownQuestion = PublicSet['questions'][number];
+// A question as it was asked: its picture and every option, with the right
+// one and the chosen one marked. The set may have changed since; then only
+// the chosen and right answers are named.
+function QuestionDetail({
+  question,
+  prompt,
+  chosen,
+  chosenText,
+  chosenLabel,
+  correctAnswer,
+  lang,
+}: {
+  question?: ShownQuestion;
+  prompt: string;
+  chosen: number | null;
+  chosenText: string | null;
+  chosenLabel: string;
+  correctAnswer: string;
+  lang: Language;
+}) {
+  const t = words[lang];
+  const q = question?.prompt === prompt ? question : undefined;
+  return (
+    <>
+      {question?.image && (
+        <img
+          className="question-image"
+          src={question.image}
+          alt={t.questionImage}
+        />
+      )}
+      {q ? (
+        <>
+          <ul className="set-viewer-options">
+            {q.options.map((o, j) => {
+              const right = o === correctAnswer;
+              const picked = j === chosen;
+              return (
+                <li key={j} className={right ? 'right' : picked ? 'wrong' : ''}>
+                  <span className="option-letter">{'ABCDEF'[j]}</span>
+                  {q.optionImages?.[j] && (
+                    <img
+                      className="option-image"
+                      src={q.optionImages[j]!}
+                      alt=""
+                    />
+                  )}
+                  <span>{o}</span>
+                  {picked && (
+                    <small className="option-tag">{chosenLabel}</small>
+                  )}
+                  {right ? (
+                    <Check size={18} aria-label={t.rightAnswer} />
+                  ) : picked ? (
+                    <X size={18} aria-label={t.wrong} />
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+          {chosen === null && (
+            <p>
+              {chosenLabel}: <strong>{t.skipped}</strong>
+            </p>
+          )}
+        </>
+      ) : (
+        <>
+          <p>
+            {chosenLabel}: <strong>{chosenText ?? t.skipped}</strong>
+          </p>
+          {chosenText !== correctAnswer && (
+            <p>
+              {t.rightAnswer}: <strong>{correctAnswer}</strong>
+            </p>
+          )}
+        </>
+      )}
+    </>
+  );
+}
 function Review({
   attempt,
   lang,
-  images = [],
+  questions = [],
   show = () => true,
 }: {
   attempt: Attempt;
   lang: Language;
-  images?: (string | undefined)[];
+  questions?: (ShownQuestion | undefined)[];
   show?: (a: Attempt['answers'][number]) => boolean;
 }) {
   const t = words[lang];
@@ -1889,21 +2017,15 @@ function Review({
             <h3>
               {i + 1}. {a.prompt}
             </h3>
-            {images[i] && (
-              <img
-                className="question-image"
-                src={images[i]}
-                alt={t.questionImage}
-              />
-            )}
-            <p>
-              {t.yourAnswer}: <strong>{a.selected ?? t.skipped}</strong>
-            </p>
-            {!a.correct && (
-              <p>
-                {t.rightAnswer}: <strong>{a.correctAnswer}</strong>
-              </p>
-            )}
+            <QuestionDetail
+              question={questions[i]}
+              prompt={a.prompt}
+              chosen={a.option}
+              chosenText={a.selected}
+              chosenLabel={t.yourAnswer}
+              correctAnswer={a.correctAnswer}
+              lang={lang}
+            />
             {a.explanation && <p className="explanation">{a.explanation}</p>}
             {a.correct && a.confidence !== 'sure' && (
               <span className="review-note">{t.guessedCorrect}</span>
