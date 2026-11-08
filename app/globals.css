@@ -1568,26 +1568,21 @@ footer[hidden] {
   padding: 0;
   border-top: 0;
 }
-/* Theme, lesson and test style filters on a subject's page: one row each. */
+/* Theme, lesson and test style filters on a subject's page, on one line. */
 .grouping-filters {
-  display: grid;
-  gap: 12px;
+  display: flex;
+  gap: 10px;
   margin: -8px 0 24px;
 }
-.grouping-filters .result-filters {
-  margin: 0;
-  padding: 0;
-  border-top: 0;
-  gap: 8px;
+.grouping-filters .field {
+  flex: 1 1 0;
+  max-width: 260px;
+  min-width: 0;
 }
-.grouping-filters legend {
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: var(--muted);
-}
-.grouping-filters label {
-  min-height: 40px;
-  padding: 0 12px;
+.grouping-filters select {
+  min-height: 44px;
+  font-weight: 700;
+  text-overflow: ellipsis;
 }
 .details-editor {
   margin: 0 0 18px;

@@ -37,8 +37,8 @@ export function matchesGrouping(set: AnySet, grouping: Grouping) {
   return keys.every((k) => !grouping[k] || set[k] === grouping[k]);
 }
 
-// Chips for each grouping that at least one set in the subject has; a
-// subject without any shows nothing.
+// A dropdown for each grouping that at least one set in the subject has, all
+// on one line; a subject without any shows nothing.
 export function GroupingFilters({
   sets,
   grouping,
@@ -62,36 +62,33 @@ export function GroupingFilters({
   return (
     <div className="grouping-filters" aria-label={t.filtersLabel} role="group">
       {groups.map(({ key, options }) => (
-        <fieldset className="result-filters" key={key}>
-          <legend>{label[key]}</legend>
-          {['', ...options].map((value) => (
-            <label key={value}>
-              <input
-                type="radio"
-                name={`grouping-${key}`}
-                value={value}
-                checked={(grouping[key] ?? '') === value}
-                onChange={() =>
-                  onChange({ ...grouping, [key]: value || undefined })
-                }
-              />
-              {!value
-                ? t.filterAll
-                : key === 'testStyle'
-                  ? styleLabels[value as TestStyle](t)
-                  : value}
-              <span className="count">
-                {
+        <label className="field" key={key}>
+          {label[key]}
+          <select
+            value={grouping[key] ?? ''}
+            onChange={(e) =>
+              onChange({ ...grouping, [key]: e.target.value || undefined })
+            }
+          >
+            {['', ...options].map((value) => (
+              <option key={value} value={value}>
+                {`${
+                  !value
+                    ? t.filterAll
+                    : key === 'testStyle'
+                      ? styleLabels[value as TestStyle](t)
+                      : value
+                } (${
                   sets.filter(
                     (s) =>
                       (!value || s[key] === value) &&
                       matchesGrouping(s, { ...grouping, [key]: undefined }),
                   ).length
-                }
-              </span>
-            </label>
-          ))}
-        </fieldset>
+                })`}
+              </option>
+            ))}
+          </select>
+        </label>
       ))}
     </div>
   );
