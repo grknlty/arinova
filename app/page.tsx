@@ -1355,6 +1355,20 @@ export default function Home() {
                                     </span>
                                   )}
                                 </button>
+                                {/* Deleting keeps Nova's results; it can be undone. */}
+                                <button
+                                  className="material-delete"
+                                  disabled={busy}
+                                  aria-label={`${s.deletedAt ? t.restore : t.delete}: ${s.title}`}
+                                  onClick={() => setDeleted(s, !s.deletedAt)}
+                                >
+                                  {s.deletedAt ? (
+                                    <RotateCcw size={16} aria-hidden="true" />
+                                  ) : (
+                                    <Trash2 size={16} aria-hidden="true" />
+                                  )}
+                                  {s.deletedAt ? t.restore : t.delete}
+                                </button>
                               </li>
                             );
                           })}
