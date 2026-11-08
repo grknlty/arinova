@@ -107,15 +107,15 @@ try {
     .fill('test-parent-password');
   await page.getByRole('button', { name: 'Inloggen', exact: true }).click();
   await page
-    .getByRole('heading', { name: 'Hoi Arin, klaar voor een ontdekking?' })
+    .getByRole('heading', { name: 'Hoi Nova, klaar voor een ontdekking?' })
     .waitFor();
   await page.getByRole('combobox', { name: 'Taal' }).selectOption('tr');
   await page
-    .getByRole('heading', { name: 'Merhaba Arin, keşfetmeye hazır mısın?' })
+    .getByRole('heading', { name: 'Merhaba Nova, keşfetmeye hazır mısın?' })
     .waitFor();
   await page.getByRole('combobox').selectOption('en');
   await page
-    .getByRole('heading', { name: 'Hi Arin, ready to discover?' })
+    .getByRole('heading', { name: 'Hi Nova, ready to discover?' })
     .waitFor();
   await page.getByRole('button', { name: 'Add material', exact: true }).click();
   await page.getByLabel('JSON', { exact: true }).fill(
@@ -156,7 +156,7 @@ try {
     .fill('test-learner-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page
-    .getByRole('heading', { name: 'Hi Arin, ready to discover?' })
+    .getByRole('heading', { name: 'Hi Nova, ready to discover?' })
     .waitFor();
   assert.equal((await page.request.get(url + '/api/progress')).status(), 200);
   const sets = await (await page.request.get(url + '/api/sets')).json();
@@ -220,7 +220,7 @@ try {
     .fill('test-parent-password');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.getByRole('button', { name: 'Progress', exact: true }).click();
-  await page.getByRole('heading', { name: 'Watch Arin grow' }).waitFor();
+  await page.getByRole('heading', { name: 'Watch Nova grow' }).waitFor();
   const attempts = await (await page.request.get(url + '/api/progress')).json();
   assert.equal(attempts.length, 1);
   assert.equal(attempts[0].correct, 1);

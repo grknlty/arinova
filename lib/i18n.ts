@@ -4,7 +4,7 @@ export const words = {
     progress: 'Voortgang',
     manage: 'Materiaal toevoegen',
     tagline: 'Elke dag een beetje wijzer.',
-    welcome: 'Hoi Arin, klaar voor een ontdekking?',
+    welcome: 'Hoi Nova, klaar voor een ontdekking?',
     intro:
       'Kies iets om te leren. Neem je tijd, probeer het en ontdek wat je al kunt.',
     eyebrow: 'JOUW KLEINE STAPPEN, GROTE ONTDEKKINGEN',
@@ -59,7 +59,7 @@ export const words = {
     difficultyMedium: 'Gemiddeld',
     difficultyHard: 'Moeilijk',
     historyText:
-      'Alles wat is toegevoegd, het nieuwste eerst. Verwijderen haalt een oefening uit de leerplek; de resultaten van Arin blijven bewaard bij Voortgang.',
+      'Alles wat is toegevoegd, het nieuwste eerst. Verwijderen haalt een oefening uit de leerplek; de resultaten van Nova blijven bewaard bij Voortgang.',
     sourceWord: 'Word-bestand',
     sourceJson: 'JSON',
     sourceApi: 'Via ChatGPT / API',
@@ -70,7 +70,7 @@ export const words = {
     restore: 'Terugzetten',
     deletedOn: 'Verwijderd op',
     confirmDelete:
-      '“{title}” verwijderen uit de leerplek? De resultaten van Arin blijven bewaard en je kunt de oefening later terugzetten.',
+      '“{title}” verwijderen uit de leerplek? De resultaten van Nova blijven bewaard en je kunt de oefening later terugzetten.',
     questionImage: 'Afbeelding bij de vraag',
     next: 'Volgende vraag',
     finish: 'Bekijk mijn resultaat',
@@ -87,8 +87,8 @@ export const words = {
     explanation: 'Uitleg',
     retry: 'Nog een keer oefenen',
     parent: 'Ouder',
-    learner: 'Arin',
-    login: 'Welkom bij Arinova',
+    learner: 'Nova',
+    login: 'Welkom bij Nova',
     loginText: 'Een fijne plek om te leren en te groeien.',
     password: 'Wachtwoord',
     showPassword: 'Wachtwoord tonen',
@@ -100,7 +100,7 @@ export const words = {
     reload: 'Opnieuw laden',
     friends: 'Ruimtevrienden',
     friendsText:
-      'Kies voor Arin, Neco, Mia en Piso een foto en zet het gezicht in de cirkel. De foto’s blijven privé: alleen wie is ingelogd ziet ze. Zonder foto blijft de tekening staan.',
+      'Kies voor Nova, Neco, Mia en Piso een foto en zet het gezicht in de cirkel. De foto’s blijven privé: alleen wie is ingelogd ziet ze. Zonder foto blijft de tekening staan.',
     choosePhoto: 'Kies een foto',
     useDrawing: 'Tekening gebruiken',
     dragHint: 'Sleep de foto zodat het gezicht in de cirkel past.',
@@ -109,8 +109,8 @@ export const words = {
     saveFace: 'Opslaan',
     noAttempts: 'De eerste stap begint met een oefening.',
     noAttemptsText:
-      'Zodra Arin een oefening afrondt, zie je hier de resultaten en hoe zeker ze zich voelde.',
-    dashboard: 'Zien hoe Arin groeit',
+      'Zodra Nova een oefening afrondt, zie je hier de resultaten en hoe zeker ze zich voelde.',
+    dashboard: 'Zien hoe Nova groeit',
     dashboardText:
       'Een goed antwoord vertelt niet het hele verhaal. Bekijk ook waar ze twijfelt of hulp nodig heeft.',
     attempts: 'Oefeningen afgerond',
@@ -175,7 +175,7 @@ export const words = {
     progress: 'Progress',
     manage: 'Add material',
     tagline: 'A little wiser every day.',
-    welcome: 'Hi Arin, ready to discover?',
+    welcome: 'Hi Nova, ready to discover?',
     intro:
       'Choose something to learn. Take your time, give it a go, and discover what you already know.',
     eyebrow: 'YOUR SMALL STEPS, BIG DISCOVERIES',
@@ -230,7 +230,7 @@ export const words = {
     difficultyMedium: 'Medium',
     difficultyHard: 'Hard',
     historyText:
-      'Everything that was added, newest first. Deleting removes a practice from the learning space; Arin’s results stay in Progress.',
+      'Everything that was added, newest first. Deleting removes a practice from the learning space; Nova’s results stay in Progress.',
     sourceWord: 'Word file',
     sourceJson: 'JSON',
     sourceApi: 'Via ChatGPT / API',
@@ -241,7 +241,7 @@ export const words = {
     restore: 'Restore',
     deletedOn: 'Deleted on',
     confirmDelete:
-      'Delete “{title}” from the learning space? Arin’s results are kept and you can restore the practice later.',
+      'Delete “{title}” from the learning space? Nova’s results are kept and you can restore the practice later.',
     questionImage: 'Picture for the question',
     next: 'Next question',
     finish: 'See my results',
@@ -258,8 +258,8 @@ export const words = {
     explanation: 'Explanation',
     retry: 'Practise again',
     parent: 'Parent',
-    learner: 'Arin',
-    login: 'Welcome to Arinova',
+    learner: 'Nova',
+    login: 'Welcome to Nova',
     loginText: 'A happy place to learn and grow.',
     password: 'Password',
     showPassword: 'Show password',
@@ -271,7 +271,7 @@ export const words = {
     reload: 'Reload',
     friends: 'Space friends',
     friendsText:
-      'Choose a photo for Arin, Neco, Mia and Piso and fit the face in the circle. Photos stay private: only signed-in family members see them. Without a photo, the drawing stays.',
+      'Choose a photo for Nova, Neco, Mia and Piso and fit the face in the circle. Photos stay private: only signed-in family members see them. Without a photo, the drawing stays.',
     choosePhoto: 'Choose a photo',
     useDrawing: 'Use the drawing',
     dragHint: 'Drag the photo so the face fits in the circle.',
@@ -280,8 +280,8 @@ export const words = {
     saveFace: 'Save',
     noAttempts: 'The first step starts with practice.',
     noAttemptsText:
-      'When Arin finishes a practice, her results and confidence will appear here.',
-    dashboard: 'Watch Arin grow',
+      'When Nova finishes a practice, her results and confidence will appear here.',
+    dashboard: 'Watch Nova grow',
     dashboardText:
       'A right answer doesn’t tell the whole story. See where she feels unsure or needs a helping hand.',
     attempts: 'Practices completed',
@@ -344,7 +344,7 @@ export const words = {
     progress: 'Gelişim',
     manage: 'Materyal ekle',
     tagline: 'Her gün biraz daha öğren.',
-    welcome: 'Merhaba Arin, keşfetmeye hazır mısın?',
+    welcome: 'Merhaba Nova, keşfetmeye hazır mısın?',
     intro:
       'Öğrenmek istediğin bir konu seç. Acele etme, dene ve neler bildiğini keşfet.',
     eyebrow: 'KÜÇÜK ADIMLARIN, BÜYÜK KEŞİFLERİN',
@@ -400,7 +400,7 @@ export const words = {
     difficultyMedium: 'Orta',
     difficultyHard: 'Zor',
     historyText:
-      'Eklenen her şey, en yenisi önce. Silmek alıştırmayı öğrenme alanından kaldırır; Arin’in sonuçları Gelişim bölümünde kalır.',
+      'Eklenen her şey, en yenisi önce. Silmek alıştırmayı öğrenme alanından kaldırır; Nova’nın sonuçları Gelişim bölümünde kalır.',
     sourceWord: 'Word dosyası',
     sourceJson: 'JSON',
     sourceApi: 'ChatGPT / API ile',
@@ -411,7 +411,7 @@ export const words = {
     restore: 'Geri al',
     deletedOn: 'Silinme tarihi',
     confirmDelete:
-      '“{title}” öğrenme alanından silinsin mi? Arin’in sonuçları kalır ve alıştırmayı sonra geri alabilirsin.',
+      '“{title}” öğrenme alanından silinsin mi? Nova’nın sonuçları kalır ve alıştırmayı sonra geri alabilirsin.',
     questionImage: 'Soruya ait resim',
     next: 'Sonraki soru',
     finish: 'Sonucumu gör',
@@ -428,8 +428,8 @@ export const words = {
     explanation: 'Açıklama',
     retry: 'Tekrar çalış',
     parent: 'Ebeveyn',
-    learner: 'Arin',
-    login: 'Arinova’ya hoş geldin',
+    learner: 'Nova',
+    login: 'Nova’ya hoş geldin',
     loginText: 'Öğrenmek ve gelişmek için güzel bir yer.',
     password: 'Şifre',
     showPassword: 'Şifreyi göster',
@@ -441,7 +441,7 @@ export const words = {
     reload: 'Yeniden yükle',
     friends: 'Uzay arkadaşları',
     friendsText:
-      'Arin, Neco, Mia ve Piso için bir fotoğraf seç ve yüzü daireye yerleştir. Fotoğraflar gizli kalır: yalnızca giriş yapanlar görür. Fotoğraf yoksa çizim kalır.',
+      'Nova, Neco, Mia ve Piso için bir fotoğraf seç ve yüzü daireye yerleştir. Fotoğraflar gizli kalır: yalnızca giriş yapanlar görür. Fotoğraf yoksa çizim kalır.',
     choosePhoto: 'Fotoğraf seç',
     useDrawing: 'Çizimi kullan',
     dragHint: 'Yüz daireye sığacak şekilde fotoğrafı sürükle.',
@@ -450,8 +450,8 @@ export const words = {
     saveFace: 'Kaydet',
     noAttempts: 'İlk adım bir alıştırmayla başlar.',
     noAttemptsText:
-      'Arin bir alıştırmayı bitirdiğinde sonuçlarını ve kendine ne kadar güvendiğini burada görebilirsin.',
-    dashboard: 'Arin’in gelişimini izle',
+      'Nova bir alıştırmayı bitirdiğinde sonuçlarını ve kendine ne kadar güvendiğini burada görebilirsin.',
+    dashboard: 'Nova’nın gelişimini izle',
     dashboardText:
       'Doğru cevap her şeyi anlatmaz. Nerelerde kararsız kaldığını veya yardıma ihtiyaç duyduğunu da gör.',
     attempts: 'Tamamlanan alıştırma',

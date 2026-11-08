@@ -114,7 +114,7 @@ export async function seedUsers(client: Client) {
     `INSERT INTO public.arinova_users (name, user_name, role, group_id)
      VALUES ('Ouder', 'parent', 'parent', NULL), ($1, 'learner', 'learner', $2)
      ON CONFLICT (role) DO NOTHING`,
-    [process.env.LEARNER_NAME || 'Arin', group.rows[0].id],
+    [process.env.LEARNER_NAME || 'Nova', group.rows[0].id],
   );
 }
 

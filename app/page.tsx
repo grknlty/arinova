@@ -340,7 +340,7 @@ export default function Home() {
   function updateAnswer(patch: Partial<Answer>) {
     setAnswers((a) => a.map((v, i) => (i === index ? { ...v, ...patch } : v)));
   }
-  // Deleting keeps Arin's earlier answers; the set only leaves her library.
+  // Deleting keeps Nova's earlier answers; the set only leaves her library.
   async function setDeleted(s: StudySet | PublicSet, deleted: boolean) {
     if (deleted && !window.confirm(t.confirmDelete.replace('{title}', s.title)))
       return;
@@ -436,7 +436,7 @@ export default function Home() {
             <span className="brand-icon">
               <Sparkle fill="currentColor" />
             </span>
-            arinova<span className="brand-dot">.</span>
+            nova<span className="brand-dot">.</span>
           </div>
           <h1>{t.login}</h1>
           <p>{t.loginText}</p>
@@ -613,12 +613,12 @@ export default function Home() {
         <button
           className="brand"
           onClick={() => navigate('library')}
-          aria-label="Arinova"
+          aria-label="Nova"
         >
           <span className="brand-icon">
             <Sparkle fill="currentColor" />
           </span>
-          arinova<span className="brand-dot">.</span>
+          nova<span className="brand-dot">.</span>
         </button>
         <nav aria-label={t.library}>
           <button
@@ -1251,7 +1251,7 @@ export default function Home() {
                     );
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'arinova-example.json';
+                    a.download = 'nova-example.json';
                     a.click();
                     URL.revokeObjectURL(url);
                   }}
@@ -1472,7 +1472,7 @@ export default function Home() {
       )}
       <footer>
         <div className="brand small">
-          <Sparkle size={20} fill="currentColor" aria-hidden="true" /> arinova.
+          <Sparkle size={20} fill="currentColor" aria-hidden="true" /> nova.
         </div>
         <span>{t.tagline}</span>
         <span>NL · TR · EN</span>
@@ -1481,7 +1481,7 @@ export default function Home() {
   );
 }
 // The parent's look at a whole set: every question with the right answer
-// marked, and how often Arin answered it wrong. Esc or the backdrop closes it.
+// marked, and how often Nova answered it wrong. Esc or the backdrop closes it.
 function SetViewer({
   set,
   attempts,

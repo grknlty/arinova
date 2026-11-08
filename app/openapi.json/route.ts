@@ -20,10 +20,10 @@ export function GET(req: Request) {
   return Response.json({
     openapi: '3.1.0',
     info: {
-      title: 'Arinova',
+      title: 'Nova',
       version: '1.0.0',
       description:
-        'Adds practice tests with multiple-choice questions to Arinova, a family learning space.',
+        'Adds practice tests with multiple-choice questions to Nova, a family learning space.',
     },
     servers: [{ url: origin(req) }],
     paths: {

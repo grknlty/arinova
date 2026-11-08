@@ -5,7 +5,7 @@ import type { Faces, Friend } from '@/lib/faces';
 import type { words } from '@/lib/i18n';
 
 const friends: { id: Friend; name: string }[] = [
-  { id: 'arin', name: 'Arin' },
+  { id: 'arin', name: 'Nova' },
   { id: 'neco', name: 'Neco' },
   { id: 'mia', name: 'Mia' },
   { id: 'piso', name: 'Piso' },

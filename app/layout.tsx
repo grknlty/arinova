@@ -17,7 +17,7 @@ const heading = Exo_2({
 });
 
 export const metadata: Metadata = {
-  title: 'Arinova · Kleine stappen, grote ontdekkingen',
+  title: 'Nova · Kleine stappen, grote ontdekkingen',
   description:
     'Een fijne plek om te leren, oefenen en groeien. Nederlands, Türkçe, English.',
 };

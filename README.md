@@ -1,4 +1,4 @@
-# Arinova
+# Nova
 
 A private family learning space: study notes, tablet-friendly multiple-choice practices, and a parent dashboard that records correctness **and** confidence. Dutch is the default UI language, with Turkish and English throughout. Content retains its author’s language; changing the UI language does not translate school material.
 
@@ -34,7 +34,7 @@ For production-mode local testing, supply the same variables as Vercel and a Pos
    - `LEARNER_PASSWORD`: a separate learner password.
    - `SESSION_SECRET`: at least 32 random characters (`openssl rand -hex 32`).
    - `IMPORT_API_TOKEN`: a different random token of at least 32 characters; needed only for API imports.
-4. Deploy. Import a set as Parent, sign in as Arin to finish it, then as Parent again to verify that the result and confidence appear. This verifies database persistence as well as deployment.
+4. Deploy. Import a set as Parent, sign in as Nova to finish it, then as Parent again to verify that the result and confidence appear. This verifies database persistence as well as deployment.
 
 Passwords and keys go in Vercel settings, never Git, browser code, or chat. Parent login can import material and see all attempts; learner login can study and submit attempts. Signed, HttpOnly, SameSite cookies expire after one day. Answer keys are removed from learner set responses and grading happens on the server. This version supports **one family and one learner**. Login attempts are rate-limited in PostgreSQL. Rotate SESSION_SECRET to invalidate existing sessions. The import token authorizes creating sets only.
 
@@ -53,7 +53,7 @@ With PostgreSQL, content and answers are stored relationally:
 | `arinova_attempts`              | `id`, `user_id`, `test_id`, `correct`, `total`, `created_at`                                                                                                                                      |
 | `arinova_user_question_answers` | `id`, `attempt_id`, `user_id`, `question_id`, `options_id` (null when skipped), `is_correct`, `confidence`, `answered_at`                                                                         |
 
-A test is one toets; an attempt is one practice session through it. The parent and learner sign-in roles each have a user row, seeded on first use; set `LEARNER_NAME` and `LEARNER_GROUP` to change the defaults (`Arin`, `Groep 7–8`). Sets and attempts saved by earlier versions in `arinova_records` are copied into these tables once and kept there with kind `sets_migrated`/`attempts_migrated`. `arinova_records` still holds the space-friend photos.
+A test is one toets; an attempt is one practice session through it. The parent and learner sign-in roles each have a user row, seeded on first use; set `LEARNER_NAME` and `LEARNER_GROUP` to change the defaults (`Nova`, `Groep 7–8`). Sets and attempts saved by earlier versions in `arinova_records` are copied into these tables once and kept there with kind `sets_migrated`/`attempts_migrated`. `arinova_records` still holds the space-friend photos.
 
 Example: questions answered wrong most often.
 
@@ -69,7 +69,7 @@ GROUP BY q.id ORDER BY wrong DESC LIMIT 20;
 
 In the parent’s **Add material** tab, upload a Word test (.docx), download the example JSON, or upload/paste a JSON study set.
 
-Below the upload box, **Added material** lists every set, newest first: when and how it was added (Word file, JSON, or ChatGPT/API), its file name, subject, number of questions and how often it was practised. **Delete** removes a set from the learning space after a confirmation; Arin’s results for it stay in Progress, and **Restore** puts it back. Each practice card shows the number of questions, options per question, subject, lesson, group and date added. Lesson and group come from the material (a Word header such as “Les 3 tot en met 5 • Groep 7–8”, the JSON fields `lesson` and `group`, or the generated format’s `lessons`); for older sets they are read from the title or description. Changing the interface language translates the app’s labels, not the school material.
+Below the upload box, **Added material** lists every set, newest first: when and how it was added (Word file, JSON, or ChatGPT/API), its file name, subject, number of questions and how often it was practised. **Delete** removes a set from the learning space after a confirmation; Nova’s results for it stay in Progress, and **Restore** puts it back. Each practice card shows the number of questions, options per question, subject, lesson, group and date added. Lesson and group come from the material (a Word header such as “Les 3 tot en met 5 • Groep 7–8”, the JSON fields `lesson` and `group`, or the generated format’s `lessons`); for older sets they are read from the title or description. Changing the interface language translates the app’s labels, not the school material.
 
 ### Word tests
 
@@ -133,7 +133,7 @@ curl --fail-with-body "$ARINOVA_URL/api/sets" \
 - Confidence values: `sure`, `unsure`, `best_guess`, `not_understood`.
 - `GET /api/progress`: parent only; complete attempt history including per-question feedback.
 
-While practising, Arin can tick “I don’t understand the question” (which also lets her skip it) or “I’m not sure about my answer”; both are optional, and no tick is recorded as `sure`. Leaving a practice keeps her place and answers in that browser, so starting it again continues at the same question; finishing it clears this. Correctness and confidence are independent: a guessed correct answer remains a learning signal. Unanswered questions count separately from incorrect choices. The dashboard includes repeated attempts and records timestamps; it is not a claim of mastery.
+While practising, Nova can tick “I don’t understand the question” (which also lets her skip it) or “I’m not sure about my answer”; both are optional, and no tick is recorded as `sure`. Leaving a practice keeps her place and answers in that browser, so starting it again continues at the same question; finishing it clears this. Correctness and confidence are independent: a guessed correct answer remains a learning signal. Unanswered questions count separately from incorrect choices. The dashboard includes repeated attempts and records timestamps; it is not a claim of mastery.
 
 ## Current scope and next steps
 
