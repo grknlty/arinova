@@ -1911,8 +1911,17 @@ function SetQuestions({
     </>
   );
 }
-// Every finished practice of one set, newest first, each opening to its
-// answers, with filters over all of their answers.
+// Which practices the results list shows, by their share of right answers.
+type ScoreFilter = 'all' | 'perfect' | 'none' | 'below70' | 'below50';
+const scoreFilters: Record<ScoreFilter, (a: Attempt) => boolean> = {
+  all: () => true,
+  perfect: (a) => a.correct === a.total,
+  none: (a) => a.correct === 0,
+  below70: (a) => a.correct < a.total * 0.7,
+  below50: (a) => a.correct < a.total * 0.5,
+};
+// Every finished practice of one set, newest first, narrowed by score; each
+// opens to its answers with its own answer filters.
 function SetResults({
   set,
   attempts,
@@ -1923,17 +1932,37 @@ function SetResults({
   lang: Language;
 }) {
   const t = words[lang];
-  const [filter, setFilter] = useState<ResultFilter>('all');
+  const [filter, setFilter] = useState<ScoreFilter>('all');
+  const options: [ScoreFilter, string][] = [
+    ['all', t.filterAll],
+    ['perfect', t.scorePerfect],
+    ['none', t.scoreNone],
+    ['below70', t.scoreBelow70],
+    ['below50', t.scoreBelow50],
+  ];
+  const shown = attempts.filter(scoreFilters[filter]);
   return (
     <>
-      <ResultFilters
-        answers={attempts.flatMap((a) => a.answers)}
-        lang={lang}
-        filter={filter}
-        onFilter={setFilter}
-        name="previous-result-filter"
-      />
-      {attempts.map((a) => (
+      <fieldset className="result-filters">
+        <legend>{t.showResults}</legend>
+        {options.map(([value, label]) => (
+          <label key={value}>
+            <input
+              type="radio"
+              name={`score-filter-${set.id}`}
+              value={value}
+              checked={filter === value}
+              onChange={() => setFilter(value)}
+            />
+            {label}
+            <span className="count">
+              {attempts.filter(scoreFilters[value]).length}
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      {!shown.length && <p className="muted">{t.noResultsInFilter}</p>}
+      {shown.map((a) => (
         <details className="attempt" key={a.id}>
           <summary>
             <span className="attempt-icon">
@@ -1952,12 +1981,7 @@ function SetResults({
               {a.correct}/{a.total}
             </span>
           </summary>
-          <Review
-            attempt={a}
-            lang={lang}
-            questions={set.questions}
-            show={resultFilters[filter]}
-          />
+          <FilteredReview attempt={a} lang={lang} questions={set.questions} />
         </details>
       ))}
     </>
