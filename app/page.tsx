@@ -35,6 +35,7 @@ import {
   History,
   ChevronDown,
   FolderOpen,
+  Tags,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -87,6 +88,7 @@ type View =
   | 'progress'
   | 'materials'
   | 'manage'
+  | 'catalog'
   | 'study'
   | 'quiz'
   | 'result';
@@ -263,7 +265,9 @@ export default function Home() {
     } catch {}
     if (!place) return;
     const set = sets.find((s) => s.id === place.setId);
-    const parentOnly = ['progress', 'materials', 'manage'].includes(place.view);
+    const parentOnly = ['progress', 'materials', 'manage', 'catalog'].includes(
+      place.view,
+    );
     if (parentOnly && session.role !== 'parent') return;
     if (['study', 'quiz'].includes(place.view) && !set) return;
     if (place.view === 'result' && !place.result) return;
@@ -677,7 +681,9 @@ export default function Home() {
               </button>
               <button
                 className={
-                  view === 'materials' || view === 'manage' ? 'active' : ''
+                  ['materials', 'manage', 'catalog'].includes(view)
+                    ? 'active'
+                    : ''
                 }
                 onClick={() => navigate('materials')}
               >
@@ -1264,13 +1270,22 @@ export default function Home() {
               <div className="manage">
                 <div className="materials-heading">
                   <h1>{t.materials}</h1>
-                  <button
-                    className="button primary"
-                    onClick={() => navigate('manage')}
-                  >
-                    <Plus size={18} aria-hidden="true" />
-                    {t.manage}
-                  </button>
+                  <div className="heading-actions">
+                    <button
+                      className="button secondary"
+                      onClick={() => navigate('catalog')}
+                    >
+                      <Tags size={18} aria-hidden="true" />
+                      {t.catalogTitle}
+                    </button>
+                    <button
+                      className="button primary"
+                      onClick={() => navigate('manage')}
+                    >
+                      <Plus size={18} aria-hidden="true" />
+                      {t.manage}
+                    </button>
+                  </div>
                 </div>
                 <div className="materials">
                   <nav
@@ -1406,6 +1421,17 @@ export default function Home() {
               </div>
             );
           })()}
+        {view === 'catalog' && (
+          <div className="manage">
+            <button className="back" onClick={() => navigate('materials')}>
+              <ArrowLeft size={16} />
+              {t.materials}
+            </button>
+            <h1>{t.catalogTitle}</h1>
+            <p className="page-intro">{t.catalogText}</p>
+            <CatalogEditor catalog={catalog} t={t} onChanged={load} />
+          </div>
+        )}
         {view === 'manage' && (
           <div className="manage">
             <button className="back" onClick={() => navigate('materials')}>
@@ -1414,7 +1440,6 @@ export default function Home() {
             </button>
             <h1>{t.importTitle}</h1>
             <p className="page-intro">{t.importText}</p>
-            <CatalogEditor catalog={catalog} t={t} onChanged={load} />
             <section className="paper import">
               <h2>{t.addTests}</h2>
               <div className="catalog-row">
@@ -1460,10 +1485,26 @@ export default function Home() {
                 </label>
               </div>
               {importGroup && !groupSubjects.length && (
-                <p className="form-error">{t.noSubjectsInGroup}</p>
+                <p className="form-error">
+                  {t.noSubjectsInGroup}{' '}
+                  <button
+                    className="text-button"
+                    onClick={() => navigate('catalog')}
+                  >
+                    {t.manageCatalog}
+                  </button>
+                </p>
               )}
               {!subjectName ? (
-                <p className="muted">{t.chooseGroupSubject}</p>
+                <p className="muted">
+                  {t.chooseGroupSubject}{' '}
+                  <button
+                    className="text-button"
+                    onClick={() => navigate('catalog')}
+                  >
+                    {t.manageCatalog}
+                  </button>
+                </p>
               ) : (
                 <>
                   <div className="import-actions">

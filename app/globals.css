@@ -1808,6 +1808,11 @@ textarea {
   gap: 12px;
   margin-bottom: 14px;
 }
+.heading-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .materials {
   display: grid;
   grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
@@ -2029,7 +2034,7 @@ textarea {
   min-width: 0;
 }
 .add-row select {
-  flex: 0 1 150px;
+  flex: 0 1 190px;
   min-width: 0;
 }
 .catalog .success,

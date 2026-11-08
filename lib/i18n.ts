@@ -91,6 +91,10 @@ export const words = {
     noResultsInFilter: 'Geen resultaten bij dit filter.',
     resultsTab: 'Resultaten',
     noResults: 'Nova heeft dit nog niet geoefend.',
+    catalogTitle: 'Groepen en vakken',
+    catalogText:
+      'Voeg groepen en vakken toe, of wijzig een naam met het potlood. Toetsen en resultaten blijven bij hun vak.',
+    manageCatalog: 'Groepen en vakken beheren',
     groupsTitle: 'Groepen',
     subjectsTitle: 'Vakken',
     rename: 'Naam wijzigen',
@@ -298,6 +302,10 @@ export const words = {
     noResultsInFilter: 'No results for this filter.',
     resultsTab: 'Results',
     noResults: 'Nova has not practised this yet.',
+    catalogTitle: 'Groups and subjects',
+    catalogText:
+      'Add groups and subjects, or change a name with the pencil. Tests and results stay with their subject.',
+    manageCatalog: 'Manage groups and subjects',
     groupsTitle: 'Groups',
     subjectsTitle: 'Subjects',
     rename: 'Rename',
@@ -503,6 +511,10 @@ export const words = {
     noResultsInFilter: 'Bu filtreye uyan sonuç yok.',
     resultsTab: 'Sonuçlar',
     noResults: 'Nova bunu henüz çalışmadı.',
+    catalogTitle: 'Gruplar ve dersler',
+    catalogText:
+      'Grup ve ders ekle ya da kalemle bir adı değiştir. Testler ve sonuçlar derslerinde kalır.',
+    manageCatalog: 'Grupları ve dersleri yönet',
     groupsTitle: 'Gruplar',
     subjectsTitle: 'Dersler',
     rename: 'Yeniden adlandır',
