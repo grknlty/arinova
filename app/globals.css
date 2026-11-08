@@ -1326,7 +1326,7 @@ footer[hidden] {
   max-width: none;
   margin-top: 24px;
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 .import h2 {
   margin: 0;
@@ -1669,45 +1669,144 @@ textarea {
   flex-shrink: 0;
 }
 
-/* Add group and subject */
+/* Add material: compact, as a working page for the parent */
+.manage h1 {
+  font-size: clamp(24px, 3vw, 30px);
+  margin: 6px 0 4px;
+}
+.manage .page-intro {
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+.manage .paper {
+  max-width: none;
+  margin: 16px 0 0;
+  padding: 18px 22px;
+  border-radius: 18px;
+}
+.manage .paper h2 {
+  font-size: 19px;
+  margin: 0 0 10px;
+}
+.manage .button {
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+.manage textarea {
+  height: 160px;
+  padding: 12px 14px;
+  margin-top: 6px;
+}
+.manage .import-preview {
+  margin: 0;
+  padding: 12px 16px;
+}
+.manage .history-list li {
+  padding: 10px 12px;
+}
 .catalog {
-  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px 32px;
+  align-items: start;
+}
+.name-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.name-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 2px 4px 2px 12px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.name-list .name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.name-list .detail {
+  font-size: 13px;
+  color: var(--muted);
+}
+.name-list input {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+}
+.small-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+}
+.small-icon:hover:not(:disabled) {
+  background: var(--soft);
+  color: var(--primary);
+}
+.add-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.add-row input,
+.add-row select,
+.field input,
+.field select {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+}
+.add-row input {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.add-row select {
+  flex: 0 1 150px;
+  min-width: 0;
+}
+.catalog .success,
+.catalog .form-error {
+  margin: 8px 0 0;
+  font-size: 14px;
 }
 .catalog-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
   align-items: start;
-}
-.catalog-form {
-  max-width: none;
-  margin: 0;
-  display: grid;
-  gap: 16px;
-  align-content: start;
-}
-.catalog-form h2 {
-  margin: 0;
-}
-.catalog-form > .button {
-  justify-self: start;
 }
 .field {
   display: grid;
-  gap: 6px;
-  font-size: 15px;
+  gap: 4px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--muted);
 }
 .field input,
 .field select {
   width: 100%;
-  min-height: 48px;
-  padding: 0 14px;
-  border: 2px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
-  color: var(--ink);
   font-weight: 400;
 }
 .field select:disabled {

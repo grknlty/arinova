@@ -103,17 +103,30 @@ export const tables = [
   'arinova_user_question_answers',
 ];
 
-// The learner's school group, which imported subjects are filed under.
+// The learner's school group when the learner is first set up; after that it
+// can be renamed, so it is found by the learner's row, not by this name.
 export const learnerGroup = () => process.env.LEARNER_GROUP || 'Groep 7–8';
 
-// Groups and subjects the parent can choose from when adding questions.
+// Groups and subjects the parent can choose from when adding tests. Both keep
+// their id when renamed; a subject names its group.
 export type Catalog = {
-  groups: string[];
-  subjects: { name: string; group: string | null }[];
+  groups: { id: string; name: string }[];
+  subjects: { id: string; name: string; group: string | null }[];
 };
 
-// One family with one learner: both sign-in roles get a user row.
+// One family with one learner: both sign-in roles get a user row. The
+// learner's group is only made with the learner, so a renamed group is not
+// made again on the next start.
 export async function seedUsers(client: Client) {
+  const roles = (
+    await client.query('SELECT role FROM public.arinova_users')
+  ).rows.map((r) => r.role);
+  if (!roles.includes('parent'))
+    await client.query(
+      `INSERT INTO public.arinova_users (name, user_name, role)
+       VALUES ('Ouder', 'parent', 'parent')`,
+    );
+  if (roles.includes('learner')) return;
   const group = await client.query(
     `INSERT INTO public.arinova_groups (name) VALUES ($1)
      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
@@ -121,8 +134,7 @@ export async function seedUsers(client: Client) {
   );
   await client.query(
     `INSERT INTO public.arinova_users (name, user_name, role, group_id)
-     VALUES ('Ouder', 'parent', 'parent', NULL), ($1, 'learner', 'learner', $2)
-     ON CONFLICT (role) DO NOTHING`,
+     VALUES ($1, 'learner', 'learner', $2)`,
     [process.env.LEARNER_NAME || 'Nova', group.rows[0].id],
   );
 }
@@ -386,17 +398,18 @@ export async function readImage(
 
 export async function readCatalog(client: Client): Promise<Catalog> {
   const groups = await client.query(
-    'SELECT name FROM public.arinova_groups ORDER BY name',
+    'SELECT id, name FROM public.arinova_groups ORDER BY name',
   );
   const subjects = await client.query(
-    `SELECT s.subject_name, g.name AS group_name
+    `SELECT s.id, s.subject_name, g.name AS group_name
      FROM public.arinova_subjects s
      LEFT JOIN public.arinova_groups g ON g.id = s.group_id
      ORDER BY s.subject_name`,
   );
   return {
-    groups: groups.rows.map((r) => r.name),
+    groups: groups.rows.map((r) => ({ id: r.id, name: r.name })),
     subjects: subjects.rows.map((r) => ({
+      id: r.id,
       name: r.subject_name,
       group: r.group_name,
     })),
@@ -421,7 +434,7 @@ export async function insertGroup(client: Client, name: string) {
 export async function insertSubject(
   client: Client,
   name: string,
-  group: string,
+  groupId: string,
 ): Promise<{ created: true } | { created: false; group: string | null }> {
   const existing = await client.query(
     `SELECT s.id, g.name AS group_name FROM public.arinova_subjects s
@@ -431,16 +444,47 @@ export async function insertSubject(
   );
   const row = existing.rows[0];
   if (row?.group_name) return { created: false, group: row.group_name };
-  const groupId = '(SELECT id FROM public.arinova_groups WHERE name = $2)';
   const done = row
     ? await client.query(
-        `UPDATE public.arinova_subjects SET group_id = ${groupId} WHERE id = $1`,
-        [row.id, group],
+        'UPDATE public.arinova_subjects SET group_id = $2 WHERE id = $1',
+        [row.id, groupId],
       )
     : await client.query(
         `INSERT INTO public.arinova_subjects (subject_name, group_id)
-         VALUES ($1, ${groupId}) ON CONFLICT (subject_name) DO NOTHING`,
-        [name, group],
+         VALUES ($1, $2) ON CONFLICT (subject_name) DO NOTHING`,
+        [name, groupId],
       );
   return done.rowCount ? { created: true } : { created: false, group: null };
+}
+
+export type Renamed = 'renamed' | 'exists' | 'missing';
+
+// Renames a group or subject in place: tests, users and subjects point at its
+// id, so they follow. Another one with the name (in any case) blocks it.
+export async function renameRecord(
+  client: Client,
+  kind: 'group' | 'subject',
+  id: string,
+  name: string,
+): Promise<Renamed> {
+  const [table, column] =
+    kind === 'group'
+      ? ['public.arinova_groups', 'name']
+      : ['public.arinova_subjects', 'subject_name'];
+  const taken = await client.query(
+    `SELECT 1 FROM ${table} WHERE lower(${column}) = lower($2) AND id <> $1`,
+    [id, name],
+  );
+  if (taken.rowCount) return 'exists';
+  try {
+    const done = await client.query(
+      `UPDATE ${table} SET ${column} = $2 WHERE id = $1`,
+      [id, name],
+    );
+    return done.rowCount ? 'renamed' : 'missing';
+  } catch (error) {
+    // A rename that raced another to the same name.
+    if ((error as { code?: string }).code === '23505') return 'exists';
+    throw error;
+  }
 }

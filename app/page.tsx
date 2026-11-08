@@ -180,7 +180,7 @@ export default function Home() {
   const [loginRole, setLoginRole] = useState('learner');
   const [json, setJson] = useState('');
   const [partSize, setPartSize] = useState(0);
-  // The group and subject that imported tests are added to.
+  // The group and subject (ids) that imported tests are added to.
   const [importGroup, setImportGroup] = useState('');
   const [importSubject, setImportSubject] = useState('');
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
@@ -602,7 +602,9 @@ export default function Home() {
     }
   })();
   const preview = drafts.flatMap((d) => split(d, partSize));
-  const groupSubjects = catalog.subjects.filter((s) => s.group === importGroup);
+  const groupName = catalog.groups.find((g) => g.id === importGroup)?.name;
+  const groupSubjects = catalog.subjects.filter((s) => s.group === groupName);
+  const subjectName = groupSubjects.find((s) => s.id === importSubject)?.name;
   const longest = Math.max(0, ...drafts.map((d) => d.questions?.length ?? 0));
   const total = allAnswers.length;
   const correct = allAnswers.filter((a) => a.correct).length;
@@ -1197,7 +1199,7 @@ export default function Home() {
           </>
         )}
         {view === 'manage' && (
-          <>
+          <div className="manage">
             <span className="eyebrow muted">{t.manage}</span>
             <h1>{t.importTitle}</h1>
             <p className="page-intro">{t.importText}</p>
@@ -1219,7 +1221,9 @@ export default function Home() {
                       {t.chooseGroup}
                     </option>
                     {catalog.groups.map((g) => (
-                      <option key={g}>{g}</option>
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
                     ))}
                   </select>
                 </label>
@@ -1237,7 +1241,7 @@ export default function Home() {
                       {t.chooseSubject}
                     </option>
                     {groupSubjects.map((s) => (
-                      <option key={s.name} value={s.name}>
+                      <option key={s.id} value={s.id}>
                         {subjectLabel(s.name, lang)}
                       </option>
                     ))}
@@ -1247,7 +1251,7 @@ export default function Home() {
               {importGroup && !groupSubjects.length && (
                 <p className="form-error">{t.noSubjectsInGroup}</p>
               )}
-              {!importSubject ? (
+              {!subjectName ? (
                 <p className="muted">{t.chooseGroupSubject}</p>
               ) : (
                 <>
@@ -1355,8 +1359,7 @@ export default function Home() {
                           <li key={i}>
                             <strong>{p.title}</strong>
                             <span>
-                              {subjectLabel(importSubject, lang)} ·{' '}
-                              {importGroup}
+                              {subjectLabel(subjectName, lang)} · {groupName}
                             </span>
                             <span>
                               {p.questions?.length ?? 0} {t.questions}
@@ -1396,8 +1399,8 @@ export default function Home() {
                       const upload = preview.map((p) => ({
                         ...p,
                         ...origin,
-                        subject: importSubject,
-                        group: importGroup,
+                        subject: subjectName,
+                        group: groupName,
                       }));
                       try {
                         const r = await fetch('/api/sets', {
@@ -1517,7 +1520,7 @@ export default function Home() {
                 onClose={() => setViewing(null)}
               />
             )}
-          </>
+          </div>
         )}
       </main>
       {resultsOf && (

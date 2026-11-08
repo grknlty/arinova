@@ -12,17 +12,20 @@ import {
   learnerGroup,
   readAttempts,
   readCatalog,
+  renameRecord,
   markDeleted,
   readImage,
   readSets,
   type Catalog,
+  type Renamed,
 } from './records';
 type Data = {
   sets: StudySet[];
   attempts: Attempt[];
-  // Added by the parent; older files have neither.
-  groups?: string[];
-  subjects?: { name: string; group: string }[];
+  // Groups and subjects with ids, so they can be renamed; older files have
+  // neither, and files from before ids have groups as plain names.
+  groups?: { id: string; name: string }[];
+  subjects?: { id?: string; name: string; group: string }[];
 };
 const globalStore = globalThis as unknown as {
   arinovaQueue?: Promise<unknown>;
@@ -117,48 +120,118 @@ export async function setDeleted(setId: string, deleted: boolean) {
   });
   return found;
 }
-// Groups and subjects, as the database keeps them: the learner's group always
-// exists, and subjects of imported sets are filed under it.
+// Gives every group and subject in a local file an id, as the database
+// does: groups and subjects of imported sets are added, and the first group
+// (the learner's) is made when there is none. True when anything changed.
+function withIds(data: Data) {
+  const before = JSON.stringify([data.groups, data.subjects]);
+  const groups = (
+    (data.groups ?? []) as ({ id: string; name: string } | string)[]
+  ).map((g) =>
+    typeof g === 'string' ? { id: crypto.randomUUID(), name: g } : g,
+  );
+  const has = (name: string) =>
+    groups.some((g) => g.name.toLocaleLowerCase() === name.toLocaleLowerCase());
+  if (!groups.length)
+    groups.push({ id: crypto.randomUUID(), name: learnerGroup() });
+  for (const set of data.sets)
+    if (set.group && !has(set.group))
+      groups.push({ id: crypto.randomUUID(), name: set.group });
+  const subjects = (data.subjects ?? []).map((s) => ({
+    ...s,
+    id: s.id ?? crypto.randomUUID(),
+  }));
+  for (const set of data.sets)
+    if (!subjects.some((s) => s.name === set.subject))
+      subjects.push({
+        id: crypto.randomUUID(),
+        name: set.subject,
+        group: groups[0].name,
+      });
+  data.groups = groups;
+  data.subjects = subjects;
+  return JSON.stringify([data.groups, data.subjects]) !== before;
+}
+async function localCatalog() {
+  // Ids are saved first and read back, so callers see the stored ones.
+  if (withIds(await local())) await writeLocal(withIds);
+  const data = await local();
+  withIds(data);
+  return data as Data & {
+    groups: { id: string; name: string }[];
+    subjects: { id: string; name: string; group: string }[];
+  };
+}
 export async function catalog(): Promise<Catalog> {
   const db = await database();
   if (db) return readCatalog(db);
-  const data = await local();
-  const subjects = [...(data.subjects ?? [])];
-  for (const set of data.sets)
-    if (!subjects.some((s) => s.name === set.subject))
-      subjects.push({ name: set.subject, group: learnerGroup() });
-  const groups = new Set([
-    learnerGroup(),
-    ...(data.groups ?? []),
-    ...data.sets.flatMap((s) => (s.group ? [s.group] : [])),
-  ]);
+  const data = await localCatalog();
   return {
-    groups: [...groups].sort(),
-    subjects: subjects.sort((a, b) => a.name.localeCompare(b.name)),
+    groups: [...data.groups].sort((a, b) => a.name.localeCompare(b.name)),
+    subjects: [...data.subjects].sort((a, b) => a.name.localeCompare(b.name)),
   };
 }
+const same = (a: string, b: string) =>
+  a.toLocaleLowerCase() === b.toLocaleLowerCase();
 // False when the group already exists.
 export async function addGroup(name: string) {
   const db = await database();
   if (db) return insertGroup(db, name);
-  const key = name.toLocaleLowerCase();
-  if ((await catalog()).groups.some((g) => g.toLocaleLowerCase() === key))
+  if ((await localCatalog()).groups.some((g) => same(g.name, name)))
     return false;
-  await writeLocal((data) => (data.groups = [...(data.groups ?? []), name]));
+  await writeLocal((data) => {
+    withIds(data);
+    data.groups!.push({ id: crypto.randomUUID(), name });
+  });
   return true;
 }
-// The group must exist. When the subject exists already (in any case), says
-// which group it belongs to.
-export async function addSubject(name: string, group: string) {
+// The group (by id) must exist. When the subject exists already (in any
+// case), says which group it belongs to.
+export async function addSubject(name: string, groupId: string) {
   const db = await database();
-  if (db) return insertSubject(db, name, group);
-  const key = name.toLocaleLowerCase();
-  const existing = (await catalog()).subjects.find(
-    (s) => s.name.toLocaleLowerCase() === key,
-  );
+  if (db) return insertSubject(db, name, groupId);
+  const data = await localCatalog();
+  const existing = data.subjects.find((s) => same(s.name, name));
   if (existing) return { created: false as const, group: existing.group };
-  await writeLocal(
-    (data) => (data.subjects = [...(data.subjects ?? []), { name, group }]),
-  );
+  const group = data.groups.find((g) => g.id === groupId)!.name;
+  await writeLocal((data) => {
+    withIds(data);
+    data.subjects!.push({ id: crypto.randomUUID(), name, group });
+  });
   return { created: true as const };
+}
+// Renames a group or subject, keeping its id. In a local file sets and
+// results keep names, so they are renamed along with it.
+export async function renameEntry(
+  kind: 'group' | 'subject',
+  id: string,
+  name: string,
+): Promise<Renamed> {
+  const db = await database();
+  if (db) return renameRecord(db, kind, id, name);
+  let result: Renamed = 'missing';
+  await writeLocal((data) => {
+    withIds(data);
+    const list = (kind === 'group' ? data.groups : data.subjects) as {
+      id: string;
+      name: string;
+    }[];
+    const item = list.find((x) => x.id === id);
+    if (!item) return;
+    if (list.some((x) => x.id !== id && same(x.name, name))) {
+      result = 'exists';
+      return;
+    }
+    const old = item.name;
+    item.name = name;
+    result = 'renamed';
+    if (kind === 'group') {
+      for (const s of data.subjects!) if (s.group === old) s.group = name;
+      for (const s of data.sets) if (s.group === old) s.group = name;
+    } else {
+      for (const s of data.sets) if (s.subject === old) s.subject = name;
+      for (const a of data.attempts) if (a.subject === old) a.subject = name;
+    }
+  });
+  return result;
 }

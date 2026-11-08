@@ -9,6 +9,7 @@ import {
   catalog,
   image,
   list,
+  renameEntry,
   setDeleted,
 } from '../lib/store';
 import { tables } from '../lib/records';
@@ -168,23 +169,59 @@ test(
         assert.equal(await image(set.id, 0, 1), png);
         assert.equal(await image(set.id, 0, 0), null);
       });
-      await t.test('adds groups and subjects in a group', async () => {
-        const group = `Groep ${crypto.randomUUID()}`;
-        const subject = `Vak ${crypto.randomUUID()}`;
-        assert.equal(await addGroup(group), true);
-        assert.equal(await addGroup(group), false);
-        assert.equal(await addGroup(group.toUpperCase()), false);
-        assert.deepEqual(await addSubject(subject, group), { created: true });
-        assert.deepEqual(await addSubject(subject.toUpperCase(), 'Groep 7–8'), {
-          created: false,
-          group,
-        });
-        assert.ok(
-          (await catalog()).subjects.some(
-            (s) => s.name === subject && s.group === group,
-          ),
-        );
-      });
+      await t.test(
+        'adds and renames groups and subjects, keeping their ids',
+        async () => {
+          const group = `Groep ${crypto.randomUUID()}`;
+          const subject = `Vak ${crypto.randomUUID()}`;
+          assert.equal(await addGroup(group), true);
+          assert.equal(await addGroup(group.toUpperCase()), false);
+          const groupId = (await catalog()).groups.find(
+            (g) => g.name === group,
+          )!.id;
+          assert.deepEqual(await addSubject(subject, groupId), {
+            created: true,
+          });
+          assert.deepEqual(await addSubject(subject.toUpperCase(), groupId), {
+            created: false,
+            group,
+          });
+          const subjectId = (await catalog()).subjects.find(
+            (s) => s.name === subject,
+          )!.id;
+          const set = {
+            ...sample,
+            id: crypto.randomUUID(),
+            createdAt: new Date().toISOString(),
+            title: 'Hernoemen',
+            subject,
+            group,
+          };
+          delete (set as { sample?: boolean }).sample;
+          await addSets([set]);
+          const renamedGroup = `${group} nieuw`;
+          const renamedSubject = `${subject} nieuw`;
+          assert.equal(
+            await renameEntry('group', groupId, renamedGroup),
+            'renamed',
+          );
+          assert.equal(
+            await renameEntry('subject', subjectId, 'Taal'),
+            'exists',
+          );
+          assert.equal(
+            await renameEntry('subject', subjectId, renamedSubject),
+            'renamed',
+          );
+          assert.deepEqual(
+            (await catalog()).subjects.find((s) => s.id === subjectId),
+            { id: subjectId, name: renamedSubject, group: renamedGroup },
+          );
+          const stored = (await list('sets')).find((s) => s.id === set.id);
+          assert.equal(stored?.subject, renamedSubject);
+          assert.equal(stored?.group, renamedGroup);
+        },
+      );
       await t.test(
         'login limiting persists and enforces its limit in PostgreSQL',
         async () => {

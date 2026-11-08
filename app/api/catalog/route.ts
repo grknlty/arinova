@@ -1,18 +1,41 @@
 import { z } from 'zod';
 import { role, sameOrigin } from '@/lib/auth';
 import { canonicalSubject } from '@/lib/subjects';
-import { addGroup, addSubject, catalog } from '@/lib/store';
+import { addGroup, addSubject, catalog, renameEntry } from '@/lib/store';
 import { body, unavailable } from '@/lib/http';
 
-const name = (max: number) => z.string().trim().min(1).max(max);
-const input = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('group'), name: name(60) }),
+const groupName = z.string().trim().min(1).max(60);
+const subjectName = z
+  .string()
+  .trim()
+  .min(1)
+  .max(80)
+  .transform(canonicalSubject);
+const added = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('group'), name: groupName }),
   z.object({
     kind: z.literal('subject'),
-    name: name(80).transform(canonicalSubject),
-    group: name(60),
+    name: subjectName,
+    groupId: z.string().uuid(),
   }),
 ]);
+const renamed = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('group'),
+    id: z.string().uuid(),
+    name: groupName,
+  }),
+  z.object({
+    kind: z.literal('subject'),
+    id: z.string().uuid(),
+    name: subjectName,
+  }),
+]);
+
+const parent = async (req: Request) =>
+  sameOrigin(req) && (await role()) === 'parent';
+const invalid = (error: string) =>
+  Response.json({ code: 'INVALID', error }, { status: 400 });
 
 export async function GET() {
   if (!(await role())) return new Response(null, { status: 401 });
@@ -25,19 +48,13 @@ export async function GET() {
 
 // Parent only: adds a group, or a subject filed under an existing group.
 export async function POST(req: Request) {
-  if (!sameOrigin(req) || (await role()) !== 'parent')
-    return new Response(null, { status: 403 });
+  if (!(await parent(req))) return new Response(null, { status: 403 });
   let data;
   try {
-    data = input.parse(await body(req));
+    data = added.parse(await body(req));
   } catch {
-    return Response.json(
-      {
-        code: 'INVALID',
-        error:
-          'Send { "kind": "group", "name" } or { "kind": "subject", "name", "group" }',
-      },
-      { status: 400 },
+    return invalid(
+      'Send { "kind": "group", "name" } or { "kind": "subject", "name", "groupId" }',
     );
   }
   try {
@@ -45,12 +62,35 @@ export async function POST(req: Request) {
       return (await addGroup(data.name))
         ? Response.json({ name: data.name }, { status: 201 })
         : Response.json({ code: 'EXISTS' }, { status: 409 });
-    if (!(await catalog()).groups.includes(data.group))
+    if (!(await catalog()).groups.some((g) => g.id === data.groupId))
       return Response.json({ code: 'NO_GROUP' }, { status: 400 });
-    const result = await addSubject(data.name, data.group);
+    const result = await addSubject(data.name, data.groupId);
     return result.created
       ? Response.json({ name: data.name }, { status: 201 })
       : Response.json({ code: 'EXISTS', group: result.group }, { status: 409 });
+  } catch {
+    return unavailable();
+  }
+}
+
+// Parent only: renames a group or subject; its id, and everything that
+// points at it, stays the same.
+export async function PATCH(req: Request) {
+  if (!(await parent(req))) return new Response(null, { status: 403 });
+  let data;
+  try {
+    data = renamed.parse(await body(req));
+  } catch {
+    return invalid('Send { "kind": "group" or "subject", "id", "name" }');
+  }
+  try {
+    const result = await renameEntry(data.kind, data.id, data.name);
+    return result === 'renamed'
+      ? Response.json({ name: data.name })
+      : Response.json(
+          { code: result === 'exists' ? 'EXISTS' : 'NOT_FOUND' },
+          { status: result === 'exists' ? 409 : 404 },
+        );
   } catch {
     return unavailable();
   }

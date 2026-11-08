@@ -1,34 +1,105 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-test('groups, and subjects in a group, match names in any case', async () => {
+test('groups and subjects get ids, match names in any case and rename in place', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'arinova-catalog-'));
   process.env.ARINOVA_DATA_DIR = dir;
   delete process.env.DATABASE_URL;
   delete process.env.POSTGRES_URL;
   delete process.env.LEARNER_GROUP;
   try {
+    // A file from before ids: groups as names, a subject without an id.
+    await writeFile(
+      path.join(dir, 'store.json'),
+      JSON.stringify({
+        sets: [],
+        attempts: [],
+        groups: ['Groep 7–8'],
+        subjects: [{ name: 'Taal', group: 'Groep 7–8' }],
+      }),
+    );
     const store = await import('../lib/store');
-    assert.deepEqual(await store.catalog(), {
-      groups: ['Groep 7–8'],
-      subjects: [],
-    });
+    const first = await store.catalog();
+    assert.deepEqual(
+      first.groups.map((g) => g.name),
+      ['Groep 7–8'],
+    );
+    assert.ok(first.groups[0].id && first.subjects[0].id);
+    // Ids are kept from one read to the next.
+    assert.deepEqual(await store.catalog(), first);
+
     assert.equal(await store.addGroup('Groep 5'), true);
-    assert.equal(await store.addGroup('Groep 5'), false);
     assert.equal(await store.addGroup('groep 5'), false);
-    assert.deepEqual(await store.addSubject('Engels', 'Groep 5'), {
+    const groep5 = (await store.catalog()).groups.find(
+      (g) => g.name === 'Groep 5',
+    )!;
+    assert.deepEqual(await store.addSubject('Engels', groep5.id), {
       created: true,
     });
-    assert.deepEqual(await store.addSubject('engels', 'Groep 7–8'), {
+    assert.deepEqual(await store.addSubject('engels', first.groups[0].id), {
       created: false,
       group: 'Groep 5',
     });
-    assert.deepEqual((await store.catalog()).subjects, [
-      { name: 'Engels', group: 'Groep 5' },
-    ]);
+
+    const set = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      title: 'Dieren',
+      subject: 'Engels',
+      language: 'en' as const,
+      description: '',
+      material: '',
+      group: 'Groep 5',
+      questions: [
+        {
+          prompt: 'Dog?',
+          options: ['Hond', 'Kat'],
+          correctIndex: 0,
+          explanation: '',
+        },
+      ],
+    };
+    await store.addSets([set]);
+    const engels = (await store.catalog()).subjects.find(
+      (s) => s.name === 'Engels',
+    )!;
+    assert.equal(
+      await store.renameEntry('group', groep5.id, 'Groep 6'),
+      'renamed',
+    );
+    assert.equal(
+      await store.renameEntry('subject', engels.id, 'taal'),
+      'exists',
+    );
+    assert.equal(
+      await store.renameEntry('subject', engels.id, 'English'),
+      'renamed',
+    );
+    assert.equal(
+      await store.renameEntry('group', crypto.randomUUID(), 'X'),
+      'missing',
+    );
+    const after = await store.catalog();
+    assert.deepEqual(
+      after.groups.map((g) => [g.id, g.name]).sort(),
+      [
+        [first.groups[0].id, 'Groep 7–8'],
+        [groep5.id, 'Groep 6'],
+      ].sort(),
+    );
+    assert.deepEqual(
+      after.subjects.find((s) => s.id === engels.id),
+      { id: engels.id, name: 'English', group: 'Groep 6' },
+    );
+    // Sets keep names in a local file, so they follow the rename.
+    const saved = JSON.parse(
+      await readFile(path.join(dir, 'store.json'), 'utf8'),
+    );
+    assert.equal(saved.sets[0].subject, 'English');
+    assert.equal(saved.sets[0].group, 'Groep 6');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
