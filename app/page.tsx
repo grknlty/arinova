@@ -940,21 +940,24 @@ export default function Home() {
             <div className="subject-cards">
               {[
                 { id: 'all', name: 'all', label: t.all, Icon: Sparkle },
-                ...subjects.map((s) => ({
-                  id: s.id,
-                  name: s.name as string,
-                  label: subjectLabel(s.name, lang),
-                  Icon: subjectIcons[s.id],
-                })),
-                // Subjects the parent added beyond the fixed ones.
-                ...catalog.subjects
-                  .filter((s) => !findSubject(s.name))
-                  .map((s, i) => ({
-                    id: `custom-${i}`,
-                    name: s.name,
-                    label: s.name,
-                    Icon: Sparkle,
+                // By name, as the page's language shows it, with the
+                // subjects the parent added beyond the fixed ones.
+                ...[
+                  ...subjects.map((s) => ({
+                    id: s.id as string,
+                    name: s.name as string,
+                    label: subjectLabel(s.name, lang),
+                    Icon: subjectIcons[s.id],
                   })),
+                  ...catalog.subjects
+                    .filter((s) => !findSubject(s.name))
+                    .map((s, i) => ({
+                      id: `custom-${i}`,
+                      name: s.name,
+                      label: s.name,
+                      Icon: Sparkle,
+                    })),
+                ].sort((a, b) => a.label.localeCompare(b.label, lang)),
               ].map(({ id, name, label, Icon }) => (
                 <button
                   key={id}
