@@ -14,6 +14,7 @@ import {
   Eye,
   EyeOff,
   CloudSun,
+  Flag,
   Shuffle,
   RotateCw,
   Download,
@@ -75,15 +76,26 @@ import {
 } from './set-grouping';
 import { Dropdown } from './dropdown';
 import type { Catalog } from '@/lib/records';
+type Doubts = {
+  unsure?: boolean;
+  notUnderstood?: boolean;
+  oddOptions?: boolean;
+};
 type Progress = {
   answers: Answer[];
-  doubts: Record<number, { unsure?: boolean; notUnderstood?: boolean }>;
+  doubts: Record<number, Doubts>;
   index: number;
 };
 // Which answers the result page lists; "unsure" includes the older
 // "best guess" answers.
 type ResultFilter =
-  'all' | 'wrong' | 'correct' | 'unanswered' | 'unsure' | 'not_understood';
+  | 'all'
+  | 'wrong'
+  | 'correct'
+  | 'unanswered'
+  | 'unsure'
+  | 'not_understood'
+  | 'odd_options';
 const resultFilters: Record<
   ResultFilter,
   (a: Attempt['answers'][number]) => boolean
@@ -94,6 +106,7 @@ const resultFilters: Record<
   unanswered: (a) => a.option === null,
   unsure: (a) => a.confidence === 'unsure' || a.confidence === 'best_guess',
   not_understood: (a) => a.confidence === 'not_understood',
+  odd_options: (a) => !!a.oddOptions,
 };
 type View =
   | 'library'
@@ -365,11 +378,10 @@ export default function Home() {
     navigate('quiz');
   }
   // Optional checkboxes per question. Not understanding the question is the
-  // stronger signal, so it wins when both are ticked.
-  const [doubts, setDoubts] = useState<
-    Record<number, { unsure?: boolean; notUnderstood?: boolean }>
-  >({});
-  function toggleDoubt(key: 'unsure' | 'notUnderstood', value: boolean) {
+  // stronger signal, so it wins when both are ticked. Odd options are noted
+  // apart, with either.
+  const [doubts, setDoubts] = useState<Record<number, Doubts>>({});
+  function toggleDoubt(key: keyof Doubts, value: boolean) {
     const next = { ...doubts[index], [key]: value };
     setDoubts((d) => ({ ...d, [index]: next }));
     updateAnswer({
@@ -378,6 +390,7 @@ export default function Home() {
         : next.unsure
           ? 'unsure'
           : 'sure',
+      oddOptions: next.oddOptions || undefined,
     });
   }
   useEffect(() => {
@@ -693,6 +706,7 @@ export default function Home() {
   const correct = allAnswers.filter((a) => a.correct).length;
   const wrong = allAnswers.filter(resultFilters.wrong).length;
   const skipped = allAnswers.filter((a) => a.option === null).length;
+  const oddOptions = allAnswers.filter(resultFilters.odd_options).length;
   const percent = (n: number) => (total ? Math.round((n / total) * 100) : 0);
   // Each test is listed once, at its latest try, with the earlier tries
   // under it. Filtered, only the counted latest tries have the answers
@@ -761,6 +775,7 @@ export default function Home() {
     unanswered: t.unanswered,
     unsure: t.unsure,
     not_understood: t.not_understood,
+    odd_options: t.odd_options,
   };
   // A row beside the chart: a swatch for the chart's parts, an icon for the
   // rest. Rows with a filter list the matching practice sessions below.
@@ -1231,7 +1246,7 @@ export default function Home() {
                   <span className="feeling-icon not_understood">
                     <CircleHelp size={22} aria-hidden="true" />
                   </span>
-                  {t.not_understood}
+                  <span>{t.not_understood}</span>
                 </label>
                 <label>
                   <input
@@ -1242,7 +1257,20 @@ export default function Home() {
                   <span className="feeling-icon unsure">
                     <CloudSun size={22} aria-hidden="true" />
                   </span>
-                  {t.unsureAnswer}
+                  <span>{t.unsureAnswer}</span>
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!!doubts[index]?.oddOptions}
+                    onChange={(e) =>
+                      toggleDoubt('oddOptions', e.target.checked)
+                    }
+                  />
+                  <span className="feeling-icon odd_options">
+                    <Flag size={22} aria-hidden="true" />
+                  </span>
+                  <span>{t.oddOptionsDoubt}</span>
                 </label>
               </fieldset>
               <div className="quiz-bottom">
@@ -1408,6 +1436,14 @@ export default function Home() {
                                 });
                               },
                             )}
+                            {statRow({
+                              key: 'odd_options',
+                              label: t.odd_options,
+                              value: `${percent(oddOptions)}%`,
+                              count: oddOptions,
+                              Icon: Flag,
+                              filter: 'odd_options',
+                            })}
                           </ul>
                         </div>
                       }
@@ -2707,6 +2743,7 @@ function ResultFilters({
     ['unanswered', t.unanswered],
     ['unsure', t.filterUnsure],
     ['not_understood', t.filterNotUnderstood],
+    ['odd_options', t.odd_options],
   ];
   return (
     <fieldset className="result-filters">
@@ -2871,8 +2908,15 @@ function Review({
                     ? t.unanswered
                     : t.wrong}
               </span>
-              {a.confidence !== 'sure' && (
-                <span className="confidence-label">{t[a.confidence]}</span>
+              {(a.confidence !== 'sure' || a.oddOptions) && (
+                <span className="confidence-label">
+                  {[
+                    a.confidence !== 'sure' && t[a.confidence],
+                    a.oddOptions && t.odd_options,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
               )}
             </div>
             <h3 className="prompt">

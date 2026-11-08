@@ -200,6 +200,9 @@ export type PublicSet = Omit<StudySet, 'questions'> & {
 export const answerSchema = z.object({
   option: z.number().int().min(0).nullable(),
   confidence,
+  // The learner found the answer options odd: off-topic or absurd. Kept
+  // apart from the confidence, since it can come with any of them.
+  oddOptions: z.literal(true).optional(),
 });
 export const attemptSchema = z.object({
   setId: z.string().uuid(),

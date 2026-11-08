@@ -75,7 +75,7 @@ test(
           assert.deepEqual(stored, set);
           const attempt = grade(set, [
             { option: 2, confidence: 'best_guess' },
-            { option: 0, confidence: 'sure' },
+            { option: 0, confidence: 'sure', oddOptions: true },
             { option: null, confidence: 'not_understood' },
           ]);
           await addAttempt(attempt, 'learner');
@@ -92,6 +92,16 @@ test(
              LEFT JOIN public.arinova_options o ON o.id = x.options_id
              WHERE x.attempt_id = $1 ORDER BY q.position`,
             [attempt.id],
+          );
+          assert.deepEqual(
+            (
+              await db.query(
+                `SELECT odd_options FROM public.arinova_user_question_answers
+                 WHERE attempt_id = $1 ORDER BY odd_options DESC LIMIT 1`,
+                [attempt.id],
+              )
+            ).rows[0].odd_options,
+            true,
           );
           assert.deepEqual(
             rows.rows.map((r) => [

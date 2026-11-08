@@ -79,6 +79,8 @@ export const schema = `
   -- Optional pictures as data URLs; added after the first release.
   ALTER TABLE public.arinova_questions ADD COLUMN IF NOT EXISTS image text;
   ALTER TABLE public.arinova_options ADD COLUMN IF NOT EXISTS image text;
+  ALTER TABLE public.arinova_user_question_answers
+    ADD COLUMN IF NOT EXISTS odd_options boolean NOT NULL DEFAULT false;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS source text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS file_name text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
@@ -278,9 +280,9 @@ export async function insertAttempt(
   if (!created.rowCount) return;
   await client.query(
     `INSERT INTO public.arinova_user_question_answers
-       (attempt_id, user_id, question_id, options_id, is_correct, confidence, answered_at)
-     SELECT $1, $2, q.id, o.id, a.correct, a.confidence, $4
-     FROM jsonb_to_recordset($3) AS a(position integer, option integer, correct boolean, confidence text)
+       (attempt_id, user_id, question_id, options_id, is_correct, confidence, odd_options, answered_at)
+     SELECT $1, $2, q.id, o.id, a.correct, a.confidence, COALESCE(a.odd_options, false), $4
+     FROM jsonb_to_recordset($3) AS a(position integer, option integer, correct boolean, confidence text, odd_options boolean)
      JOIN public.arinova_questions q ON q.test_id = $5 AND q.position = a.position
      LEFT JOIN public.arinova_options o ON o.question_id = q.id AND o.position = a.option`,
     [
@@ -292,6 +294,7 @@ export async function insertAttempt(
           option: a.option,
           correct: a.correct,
           confidence: a.confidence,
+          odd_options: !!a.oddOptions,
         })),
       ),
       attempt.createdAt,
@@ -440,7 +443,9 @@ export async function readAttempts(client: Client): Promise<Attempt[]> {
                             ORDER BY c.position LIMIT 1),
           'correct', x.is_correct,
           'explanation', q.explanation
-        ) ORDER BY q.position)
+        ) || CASE WHEN x.odd_options THEN '{"oddOptions": true}'::jsonb
+                  ELSE '{}'::jsonb END
+        ORDER BY q.position)
         FROM public.arinova_user_question_answers x
         JOIN public.arinova_questions q ON q.id = x.question_id
         LEFT JOIN public.arinova_options o ON o.id = x.options_id
