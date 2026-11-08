@@ -1256,6 +1256,9 @@ footer[hidden] {
 .progress-main {
   min-width: 0;
 }
+.progress-main .grouping-filters {
+  margin: 0;
+}
 .progress-chart {
   max-width: none;
   margin: 16px 0 0;

@@ -239,6 +239,8 @@ export default function Home() {
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
   // The subject the progress page is narrowed to.
   const [progressSubject, setProgressSubject] = useState('all');
+  // Group, theme, lesson and test style chosen on the progress page.
+  const [progressGrouping, setProgressGrouping] = useState<Grouping>({});
   // Picking Incorrect or a doubt on the progress page lists only the
   // practice sessions with such answers, opened at them.
   const [sessionFilter, setSessionFilter] = useState<ResultFilter>('all');
@@ -626,15 +628,25 @@ export default function Home() {
         correct: answers.filter((a) => a.correct).length,
       };
     });
-  const shownAttempts =
-    progressSubject === 'all'
-      ? attempts
-      : attempts.filter((a) => canonicalSubject(a.subject) === progressSubject);
+  const inProgressSubject = (a: Attempt) =>
+    progressSubject === 'all' ||
+    canonicalSubject(a.subject) === progressSubject;
+  // The sets with counted results in the chosen subject, to filter by.
+  const progressSets = sets.filter((s) =>
+    latestAttempts.some((a) => a.setId === s.id && inProgressSubject(a)),
+  );
+  const filtering = Object.values(progressGrouping).some(Boolean);
+  const inProgressGrouping = (a: Attempt) => {
+    if (!filtering) return true;
+    const set = sets.find((s) => s.id === a.setId);
+    return !!set && matchesGrouping(set, progressGrouping);
+  };
+  const shownAttempts = attempts.filter(
+    (a) => inProgressSubject(a) && inProgressGrouping(a),
+  );
   const shownCounted = shownAttempts.filter((a) => !fromDeleted(a));
   const shownLatest = latestAttempts.filter(
-    (a) =>
-      progressSubject === 'all' ||
-      canonicalSubject(a.subject) === progressSubject,
+    (a) => inProgressSubject(a) && inProgressGrouping(a),
   );
   const allAnswers = shownLatest.flatMap((a) => a.answers);
   // Questions answered wrong at least once, most often wrong first.
@@ -1367,6 +1379,7 @@ export default function Home() {
                         aria-current={progressSubject === s.name}
                         onClick={() => {
                           setProgressSubject(s.name);
+                          setProgressGrouping({});
                           setSessionFilter('all');
                         }}
                       >
@@ -1380,6 +1393,20 @@ export default function Home() {
                 </ul>
               </nav>
               <div className="progress-main">
+                <GroupingFilters
+                  sets={progressSets}
+                  grouping={progressGrouping}
+                  t={t}
+                  order={
+                    progressSubject === 'all'
+                      ? undefined
+                      : orderOf(progressSubject)
+                  }
+                  onChange={(g) => {
+                    setProgressGrouping(g);
+                    setSessionFilter('all');
+                  }}
+                />
                 {total > 0 && (
                   <section className="paper progress-chart">
                     <ScoreChart
