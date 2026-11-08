@@ -128,6 +128,8 @@ curl --fail-with-body "$ARINOVA_URL/api/sets" \
 ```
 
 - `POST /api/sets`: parent cookie or import token; returns `{ "id": "…" }`, status 201. An array of up to 50 sets is saved in one transaction and returns `{ "ids": […] }`.
+- `GET /api/format`: public; the study set format as `{ schema, subjects, example, rules }` (JSON Schema, a set that imports as it is, and the writing rules).
+- `POST /api/format`: parent cookie or import token; checks a set (or an array) without saving it. Returns `{ "valid": true, "questionCounts": […], "set": … }` with the set as it would be stored, or status 400 with `{ "valid": false, "error": "…" }`.
 - `PATCH /api/sets/{id}`: parent only; body `{ "deleted": true }` hides a set from the learning space (answers are kept), `false` restores it.
 - `POST /api/import`: parent cookie or import token; body is a .docx file. Returns the draft sets without saving them.
 - `GET /api/sets`: signed-in parent/learner; learner response omits answer keys.
