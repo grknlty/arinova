@@ -1754,6 +1754,31 @@ footer[hidden] {
   flex: 1;
   font-weight: 700;
 }
+/* Details after the card's count wait behind "more details". */
+.fact-order li.behind-more {
+  border-style: dashed;
+  opacity: 0.65;
+}
+.fact-order li[data-more] {
+  position: relative;
+  margin-top: 26px;
+}
+.fact-order li[data-more]::before {
+  content: attr(data-more);
+  position: absolute;
+  left: 0;
+  top: -24px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.fact-count input {
+  max-width: 110px;
+}
+.set-facts .more-facts {
+  display: flex;
+  align-items: center;
+}
 @media (max-width: 580px) {
   .set-viewer-inner {
     padding: 0 16px 16px;

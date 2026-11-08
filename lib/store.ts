@@ -34,6 +34,7 @@ type Data = {
     name: string;
     group: string;
     factOrder?: FactKey[];
+    factCount?: number;
   }[];
 };
 const globalStore = globalThis as unknown as {
@@ -161,6 +162,7 @@ function withIds(data: Data) {
     name: string;
     group: string;
     factOrder?: FactKey[];
+    factCount?: number;
   }[] = [];
   for (const s of data.subjects ?? [])
     if (!subjects.some((x) => key(x.name) === key(s.name)))
@@ -191,6 +193,7 @@ async function localCatalog() {
       name: string;
       group: string;
       factOrder?: FactKey[];
+      factCount?: number;
     }[];
   };
 }
@@ -285,11 +288,16 @@ export async function setDetails(setId: string, details: SetDetails) {
   });
   return found;
 }
-// The order of the details on a subject's cards; empty goes back to the
-// default. False if the subject does not exist.
-export async function setFactOrder(id: string, order: FactKey[]) {
+// The order of the details on a subject's cards and how many show before
+// "more"; an empty order or no count goes back to the default. False if the
+// subject does not exist.
+export async function setFactOrder(
+  id: string,
+  order: FactKey[],
+  count: number | null,
+) {
   const db = await database();
-  if (db) return updateFactOrder(db, id, order);
+  if (db) return updateFactOrder(db, id, order, count);
   let found = false;
   await writeLocal((data) => {
     withIds(data);
@@ -298,6 +306,8 @@ export async function setFactOrder(id: string, order: FactKey[]) {
     found = true;
     if (order.length) subject.factOrder = order;
     else delete subject.factOrder;
+    if (count) subject.factCount = count;
+    else delete subject.factCount;
   });
   return found;
 }

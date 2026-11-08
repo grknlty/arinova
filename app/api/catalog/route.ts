@@ -43,6 +43,13 @@ const ordered = z.object({
   kind: z.literal('subject'),
   id: z.string().uuid(),
   factOrder: z.array(z.enum(factKeys)).max(factKeys.length),
+  factCount: z
+    .number()
+    .int()
+    .min(1)
+    .max(factKeys.length)
+    .nullable()
+    .default(null),
 });
 
 const parent = async (req: Request) =>
@@ -88,7 +95,8 @@ export async function POST(req: Request) {
 
 // Parent only: renames a group or subject; its id, and everything that
 // points at it, stays the same. With factOrder instead of a name, sets the
-// order of the details on the subject's material cards ([] for the default).
+// order of the details on the subject's material cards ([] for the default),
+// and with factCount how many show before "more" (null for the default).
 export async function PATCH(req: Request) {
   if (!(await parent(req))) return new Response(null, { status: 403 });
   let data;
@@ -101,8 +109,15 @@ export async function PATCH(req: Request) {
   }
   try {
     if ('factOrder' in data)
-      return (await setFactOrder(data.id, [...new Set(data.factOrder)]))
-        ? Response.json({ factOrder: data.factOrder })
+      return (await setFactOrder(
+        data.id,
+        [...new Set(data.factOrder)],
+        data.factCount,
+      ))
+        ? Response.json({
+            factOrder: data.factOrder,
+            factCount: data.factCount,
+          })
         : Response.json({ code: 'NOT_FOUND' }, { status: 404 });
     const result = await renameEntry(data.kind, data.id, data.name);
     return result === 'renamed'

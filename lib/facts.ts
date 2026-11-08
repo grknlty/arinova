@@ -20,3 +20,7 @@ export function factOrder(saved?: readonly string[] | null): FactKey[] {
   );
   return [...new Set([...known, ...factKeys])];
 }
+
+// How many details a card shows before its "more" link, unless the subject
+// sets another number.
+export const defaultFactCount = 5;

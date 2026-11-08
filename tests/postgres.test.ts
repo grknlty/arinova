@@ -160,7 +160,7 @@ test(
             (s) => s.name === set.subject,
           )!;
           assert.equal(
-            await setFactOrder(subject.id, ['questions', 'lesson']),
+            await setFactOrder(subject.id, ['questions', 'lesson'], 3),
             true,
           );
           assert.deepEqual(
@@ -169,7 +169,12 @@ test(
               .factOrder!.slice(0, 3),
             ['questions', 'lesson', 'group'],
           );
-          await setFactOrder(subject.id, []);
+          assert.equal(
+            (await catalog()).subjects.find((s) => s.id === subject.id)!
+              .factCount,
+            3,
+          );
+          await setFactOrder(subject.id, [], null);
           assert.equal(
             'factOrder' in
               (await catalog()).subjects.find((s) => s.id === subject.id)!,

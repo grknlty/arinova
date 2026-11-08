@@ -55,7 +55,7 @@ import type {
 } from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
-import { factOrder, type FactKey } from '@/lib/facts';
+import { defaultFactCount, factOrder, type FactKey } from '@/lib/facts';
 import { FactOrderEditor, factLabels } from './fact-order';
 import { CatalogEditor } from './catalog-editor';
 import {
@@ -541,13 +541,13 @@ export default function Home() {
     </button>
   );
   const subjectInfo = findSubject(subject);
-  // The order of the details on a subject's cards, as the parent set it.
-  const orderOf = (name: string) =>
-    factOrder(
-      catalog.subjects.find(
-        (s) => canonicalSubject(s.name) === canonicalSubject(name),
-      )?.factOrder,
+  // The order of the details on a subject's cards, and how many show before
+  // "more", as the parent set them.
+  const layoutOf = (name: string) =>
+    catalog.subjects.find(
+      (s) => canonicalSubject(s.name) === canonicalSubject(name),
     );
+  const orderOf = (name: string) => factOrder(layoutOf(name)?.factOrder);
   const SubjectIcon = subjectInfo ? subjectIcons[subjectInfo.id] : Sparkle;
   const visibleSets = sets.filter(
     (s) =>
@@ -847,6 +847,9 @@ export default function Home() {
                         set={s}
                         lang={lang}
                         order={orderOf(s.subject)}
+                        shown={
+                          layoutOf(s.subject)?.factCount ?? defaultFactCount
+                        }
                       />
                       {s.sample && (
                         <span className="sample-label">{t.sample}</span>
@@ -1401,6 +1404,7 @@ export default function Home() {
                           key={chosen.id}
                           subjectId={chosen.id}
                           saved={chosen.factOrder}
+                          savedCount={chosen.factCount}
                           t={t}
                           onSaved={load}
                         />
@@ -2166,12 +2170,16 @@ function SetFacts({
   set,
   lang,
   order = factOrder(),
+  shown,
 }: {
   set: StudySet | PublicSet;
   lang: Language;
   order?: FactKey[];
+  // How many details show before a "more details" link; all when left out.
+  shown?: number;
 }) {
   const t = words[lang];
+  const [open, setOpen] = useState(false);
   const labels = factLabels(t);
   const counts = set.questions.map((q) => q.options.length);
   const [low, high] = [Math.min(...counts), Math.max(...counts)];
@@ -2201,14 +2209,29 @@ function SetFacts({
   const facts = order
     .filter((key) => values[key] !== null)
     .map((key) => [labels[key], values[key]] as const);
+  const hidden = shown !== undefined && facts.length > shown;
   return (
     <dl className="set-facts">
-      {facts.map(([label, value]) => (
-        <div key={label}>
-          <dt>{label}</dt>
-          <dd>{value}</dd>
+      {(hidden && !open ? facts.slice(0, shown) : facts).map(
+        ([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ),
+      )}
+      {hidden && (
+        <div className="more-facts">
+          <button
+            type="button"
+            className="more-link"
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? t.fewerDetails : t.moreDetails}
+          </button>
         </div>
-      ))}
+      )}
     </dl>
   );
 }

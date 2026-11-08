@@ -89,6 +89,7 @@ export const schema = `
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS theme text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_style text;
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_order text[];
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_count integer;
   ALTER TABLE public.arinova_tests
     ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES public.arinova_groups(id);
   CREATE INDEX IF NOT EXISTS arinova_answers_question
@@ -120,8 +121,10 @@ export type Catalog = {
     id: string;
     name: string;
     group: string | null;
-    // The order of the details on its material cards, when set.
+    // The order of the details on its material cards, and how many show
+    // before "more", when set.
     factOrder?: FactKey[];
+    factCount?: number;
   }[];
 };
 
@@ -471,7 +474,8 @@ export async function readCatalog(client: Client): Promise<Catalog> {
     'SELECT id, name FROM public.arinova_groups ORDER BY name',
   );
   const subjects = await client.query(
-    `SELECT s.id, s.subject_name, g.name AS group_name, s.fact_order
+    `SELECT s.id, s.subject_name, g.name AS group_name, s.fact_order,
+       s.fact_count
      FROM public.arinova_subjects s
      LEFT JOIN public.arinova_groups g ON g.id = s.group_id
      ORDER BY s.subject_name`,
@@ -483,19 +487,23 @@ export async function readCatalog(client: Client): Promise<Catalog> {
       name: r.subject_name,
       group: r.group_name,
       ...(r.fact_order?.length ? { factOrder: factOrder(r.fact_order) } : {}),
+      ...(r.fact_count ? { factCount: r.fact_count } : {}),
     })),
   };
 }
 
-// An empty order goes back to the default; false if the subject is missing.
+// An empty order or no count goes back to the default; false if the
+// subject is missing.
 export async function updateFactOrder(
   client: Client,
   id: string,
   order: FactKey[],
+  count: number | null,
 ) {
   const result = await client.query(
-    'UPDATE public.arinova_subjects SET fact_order = $2 WHERE id = $1',
-    [id, order.length ? order : null],
+    `UPDATE public.arinova_subjects SET fact_order = $2, fact_count = $3
+     WHERE id = $1`,
+    [id, order.length ? order : null, count],
   );
   return !!result.rowCount;
 }

@@ -2,7 +2,12 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Check } from 'lucide-react';
 import type { words } from '@/lib/i18n';
-import { factKeys, factOrder, type FactKey } from '@/lib/facts';
+import {
+  defaultFactCount,
+  factKeys,
+  factOrder,
+  type FactKey,
+} from '@/lib/facts';
 
 type Words = (typeof words)['nl'];
 
@@ -20,19 +25,29 @@ export const factLabels = (t: Words): Record<FactKey, string> => ({
 });
 
 // The parent sets the order of the details on one subject's material cards,
-// moving each up or down; saving the default order clears the setting.
+// moving each up or down, and how many show before "more"; saving the
+// defaults clears the setting.
 export function FactOrderEditor({
   subjectId,
   saved,
+  savedCount,
   t,
   onSaved,
 }: {
   subjectId: string;
   saved?: FactKey[];
+  savedCount?: number;
   t: Words;
   onSaved: () => Promise<void> | void;
 }) {
   const [order, setOrder] = useState(() => factOrder(saved));
+  // Kept as typed, so the field can be cleared to type another number.
+  const [countText, setCountText] = useState(
+    String(savedCount ?? defaultFactCount),
+  );
+  const typed = Math.round(Number(countText));
+  const count =
+    typed >= 1 && typed <= factKeys.length ? typed : defaultFactCount;
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState({ ok: true, message: '' });
   const labels = factLabels(t);
@@ -42,7 +57,8 @@ export function FactOrderEditor({
     setOrder(next);
     setStatus({ ok: true, message: '' });
   };
-  const isDefault = order.every((k, i) => k === factKeys[i]);
+  const isDefaultOrder = order.every((k, i) => k === factKeys[i]);
+  const isDefault = isDefaultOrder && count === defaultFactCount;
   async function save() {
     setBusy(true);
     try {
@@ -52,7 +68,8 @@ export function FactOrderEditor({
         body: JSON.stringify({
           kind: 'subject',
           id: subjectId,
-          factOrder: isDefault ? [] : order,
+          factOrder: isDefaultOrder ? [] : order,
+          factCount: count === defaultFactCount ? null : count,
         }),
       });
       if (!r.ok) throw new Error();
@@ -69,9 +86,27 @@ export function FactOrderEditor({
       <summary>{t.factOrderTitle}</summary>
       <div className="fact-order-body">
         <p className="muted">{t.factOrderText}</p>
+        <label className="field fact-count">
+          {t.factCountLabel}
+          <input
+            type="number"
+            min={1}
+            max={factKeys.length}
+            value={countText}
+            onChange={(e) => {
+              setCountText(e.target.value);
+              setStatus({ ok: true, message: '' });
+            }}
+            onBlur={() => setCountText(String(count))}
+          />
+        </label>
         <ol>
           {order.map((key, i) => (
-            <li key={key}>
+            <li
+              key={key}
+              className={i >= count ? 'behind-more' : undefined}
+              data-more={i === count ? t.behindMore : undefined}
+            >
               <span>{labels[key]}</span>
               <button
                 type="button"
@@ -111,6 +146,7 @@ export function FactOrderEditor({
             disabled={busy || isDefault}
             onClick={() => {
               setOrder([...factKeys]);
+              setCountText(String(defaultFactCount));
               setStatus({ ok: true, message: '' });
             }}
           >
