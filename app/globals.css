@@ -1053,6 +1053,30 @@ svg {
   min-height: 48px;
   margin: 0 0 12px;
 }
+.card-description {
+  margin: 0 0 12px;
+}
+.card-description p {
+  margin: 0;
+}
+.card-description p.clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.more-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
 .sample-label {
   font-size: 13px;
   font-weight: 700;

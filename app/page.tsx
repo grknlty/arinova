@@ -835,7 +835,9 @@ export default function Home() {
                         <span>{t[s.language]}</span>
                       </div>
                       <h3>{s.title}</h3>
-                      {s.description && <p>{s.description}</p>}
+                      {s.description && (
+                        <CardDescription text={s.description} lang={lang} />
+                      )}
                       <SetFacts set={s} lang={lang} />
                       {s.sample && (
                         <span className="sample-label">{t.sample}</span>
@@ -1725,6 +1727,39 @@ const difficultyLabels: Record<Difficulty, (t: Words) => string> = {
   medium: (t) => t.difficultyMedium,
   hard: (t) => t.difficultyHard,
 };
+// A card's description, cut to two lines with a link to show the rest.
+function CardDescription({ text, lang }: { text: string; lang: Language }) {
+  const t = words[lang];
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [open, setOpen] = useState(false);
+  const [long, setLong] = useState(false);
+  useEffect(() => {
+    const p = ref.current;
+    if (!p || open) return;
+    const measure = () => setLong(p.scrollHeight > p.clientHeight + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(p);
+    return () => observer.disconnect();
+  }, [text, open]);
+  return (
+    <div className="card-description">
+      <p ref={ref} className={open ? undefined : 'clamped'}>
+        {text}
+      </p>
+      {long && (
+        <button
+          type="button"
+          className="more-link"
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? t.showLess : t.showMore}
+        </button>
+      )}
+    </div>
+  );
+}
 // Facts about a set for its card. Older sets have no lesson or group
 // fields, so those are looked for in the title and description.
 function SetFacts({
