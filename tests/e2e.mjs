@@ -59,6 +59,17 @@ try {
   const page = await browser.newPage({
     viewport: { width: 820, height: 1180 },
   });
+  // The language picker is a custom dropdown: open it, then pick the option.
+  const pickLanguage = async (code, name) => {
+    await (
+      name
+        ? page.getByRole('combobox', { name })
+        : page.getByRole('combobox').first()
+    ).click();
+    await page
+      .getByRole('option', { name: new RegExp(`^${code.toUpperCase()} ·`) })
+      .click();
+  };
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(url);
@@ -90,7 +101,7 @@ try {
     ],
   ]) {
     simulatedCode = code;
-    await page.getByRole('combobox').selectOption(language);
+    await pickLanguage(language);
     await page.locator('#login-password').fill('test-parent-password');
     await page.locator('button[type="submit"], form > button.primary').click();
     await page.getByRole('alert').filter({ hasText: message }).waitFor();
@@ -101,7 +112,7 @@ try {
         .waitFor();
   }
   await page.unroute('**/api/auth');
-  await page.getByRole('combobox').selectOption('nl');
+  await pickLanguage('nl');
   await page
     .getByLabel('Wachtwoord', { exact: true })
     .fill('test-parent-password');
@@ -109,11 +120,11 @@ try {
   await page
     .getByRole('heading', { name: 'Hoi Nova, klaar voor een ontdekking?' })
     .waitFor();
-  await page.getByRole('combobox', { name: 'Taal' }).selectOption('tr');
+  await pickLanguage('tr', 'Taal');
   await page
     .getByRole('heading', { name: 'Merhaba Nova, keşfetmeye hazır mısın?' })
     .waitFor();
-  await page.getByRole('combobox').selectOption('en');
+  await pickLanguage('en');
   await page
     .getByRole('heading', { name: 'Hi Nova, ready to discover?' })
     .waitFor();

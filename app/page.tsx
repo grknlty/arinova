@@ -57,6 +57,7 @@ import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
 import { defaultFactCount, factOrder, type FactKey } from '@/lib/facts';
 import { FactOrderEditor, factLabels } from './fact-order';
+import { Dropdown } from './dropdown';
 import { CatalogEditor } from './catalog-editor';
 import {
   DetailsEditor,
@@ -447,18 +448,18 @@ export default function Home() {
     }
   }
   const languagePicker = (
-    <label className="language">
-      <span className="sr-only">{t.language}</span>
-      <select
-        aria-label={t.language}
-        value={lang}
-        onChange={(e) => setLang(e.target.value as Language)}
-      >
-        <option value="nl">NL · Nederlands</option>
-        <option value="tr">TR · Türkçe</option>
-        <option value="en">EN · English</option>
-      </select>
-    </label>
+    <Dropdown
+      className="language"
+      label={t.language}
+      hideLabel
+      value={lang}
+      options={[
+        { value: 'nl', label: 'NL · Nederlands' },
+        { value: 'tr', label: 'TR · Türkçe' },
+        { value: 'en', label: 'EN · English' },
+      ]}
+      onChange={(value) => setLang(value as Language)}
+    />
   );
   if (!session?.role)
     return (
@@ -1511,46 +1512,34 @@ export default function Home() {
             <section className="paper import">
               <h2>{t.addTests}</h2>
               <div className="catalog-row">
-                <label className="field">
-                  {t.factGroup}
-                  <select
-                    value={importGroup}
-                    onChange={(e) => {
-                      setImportGroup(e.target.value);
-                      setImportSubject('');
-                      setSaved(false);
-                    }}
-                  >
-                    <option value="" disabled>
-                      {t.chooseGroup}
-                    </option>
-                    {catalog.groups.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="field">
-                  {t.factSubject}
-                  <select
-                    value={importSubject}
-                    disabled={!groupSubjects.length}
-                    onChange={(e) => {
-                      setImportSubject(e.target.value);
-                      setSaved(false);
-                    }}
-                  >
-                    <option value="" disabled>
-                      {t.chooseSubject}
-                    </option>
-                    {groupSubjects.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {subjectLabel(s.name, lang)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <Dropdown
+                  label={t.factGroup}
+                  placeholder={t.chooseGroup}
+                  value={importGroup}
+                  options={catalog.groups.map((g) => ({
+                    value: g.id,
+                    label: g.name,
+                  }))}
+                  onChange={(value) => {
+                    setImportGroup(value);
+                    setImportSubject('');
+                    setSaved(false);
+                  }}
+                />
+                <Dropdown
+                  label={t.factSubject}
+                  placeholder={t.chooseSubject}
+                  value={importSubject}
+                  disabled={!groupSubjects.length}
+                  options={groupSubjects.map((s) => ({
+                    value: s.id,
+                    label: subjectLabel(s.name, lang),
+                  }))}
+                  onChange={(value) => {
+                    setImportSubject(value);
+                    setSaved(false);
+                  }}
+                />
               </div>
               {importGroup && !groupSubjects.length && (
                 <p className="form-error">
@@ -1654,24 +1643,21 @@ export default function Home() {
                   {preview.length > 0 && (
                     <div className="import-preview">
                       {longest > partSizes[0] && (
-                        <label className="split">
-                          {t.splitLabel}
-                          <select
-                            value={partSize}
-                            onChange={(e) =>
-                              setPartSize(Number(e.target.value))
-                            }
-                          >
-                            <option value={0}>{t.noSplit}</option>
-                            {partSizes
+                        <Dropdown
+                          className="split"
+                          label={t.splitLabel}
+                          value={String(partSize)}
+                          options={[
+                            { value: '0', label: t.noSplit },
+                            ...partSizes
                               .filter((n) => n < longest)
-                              .map((n) => (
-                                <option key={n} value={n}>
-                                  {n} {t.perPart}
-                                </option>
-                              ))}
-                          </select>
-                        </label>
+                              .map((n) => ({
+                                value: String(n),
+                                label: `${n} ${t.perPart}`,
+                              })),
+                          ]}
+                          onChange={(value) => setPartSize(Number(value))}
+                        />
                       )}
                       <p>{t.checkImport}</p>
                       <ul>

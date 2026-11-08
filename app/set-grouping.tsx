@@ -56,8 +56,15 @@ function values(sets: AnySet[], key: Key) {
   ].sort(byName);
 }
 
+// The filter choice for sets that have no value for a grouping, such as
+// the sets without a lesson.
+const noValue = '\u0000';
+const fits = (set: AnySet, key: Key, value: string | undefined) =>
+  !value ||
+  (value === noValue ? !valueOf(set, key) : valueOf(set, key) === value);
+
 export function matchesGrouping(set: AnySet, grouping: Grouping) {
-  return keys.every((k) => !grouping[k] || valueOf(set, k) === grouping[k]);
+  return keys.every((k) => fits(set, k, grouping[k]));
 }
 
 // A dropdown for each grouping that at least one set in the subject has, all
@@ -95,10 +102,17 @@ export function GroupingFilters({
   const groups = [...keys]
     .sort((a, b) => position(a) - position(b))
     .filter((key) => key !== 'subjectName' || subjectLabel)
-    .map((key) => ({
-      key,
-      options: values(key === 'subjectName' ? sets : inSubject, key),
-    }))
+    .map((key) => {
+      const among = key === 'subjectName' ? sets : inSubject;
+      const options = values(among, key);
+      return {
+        key,
+        options:
+          options.length && among.some((s) => !valueOf(s, key))
+            ? [...options, noValue]
+            : options,
+      };
+    })
     .filter((g) => g.options.length);
   if (!groups.length) return null;
   return (
@@ -121,15 +135,17 @@ export function GroupingFilters({
             label: `${
               !value
                 ? t.filterAll
-                : key === 'testStyle'
-                  ? styleLabels[value as TestStyle](t)
-                  : key === 'subjectName'
-                    ? subjectLabel!(value)
-                    : value
+                : value === noValue
+                  ? t.detailNone
+                  : key === 'testStyle'
+                    ? styleLabels[value as TestStyle](t)
+                    : key === 'subjectName'
+                      ? subjectLabel!(value)
+                      : value
             } (${
               sets.filter(
                 (s) =>
-                  (!value || valueOf(s, key) === value) &&
+                  fits(s, key, value) &&
                   matchesGrouping(s, { ...grouping, [key]: undefined }),
               ).length
             })`,
@@ -173,9 +189,7 @@ export function DetailsEditor({
   const field = (key: keyof typeof form) => ({
     value: form[key],
     onChange: (
-      e: React.ChangeEvent<
-        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-      >,
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
       setForm({ ...form, [key]: e.target.value });
       setStatus({ ok: true, message: '' });
@@ -263,17 +277,21 @@ export function DetailsEditor({
               ))}
             </datalist>
           </label>
-          <label className="field">
-            {t.factStyle}
-            <select {...field('testStyle')}>
-              <option value="">{t.detailNone}</option>
-              {testStyles.map((s) => (
-                <option key={s} value={s}>
-                  {styleLabels[s](t)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Dropdown
+            label={t.factStyle}
+            value={form.testStyle}
+            options={[
+              { value: '', label: t.detailNone },
+              ...testStyles.map((s) => ({
+                value: s,
+                label: styleLabels[s](t),
+              })),
+            ]}
+            onChange={(testStyle) => {
+              setForm({ ...form, testStyle });
+              setStatus({ ok: true, message: '' });
+            }}
+          />
         </div>
         <div className="details-actions">
           <button

@@ -6,15 +6,25 @@ export type Choice = { value: string; label: string };
 
 // A select whose list opens below the button, or above it when there is no
 // room below in the window. Arrow keys, Enter and Escape work as in a select.
+// Until a value is chosen the button shows the placeholder, if there is one.
 export function Dropdown({
   label,
+  hideLabel = false,
   value,
   options,
+  placeholder,
+  disabled = false,
+  className = '',
   onChange,
 }: {
   label: string;
+  // Only for screen readers, where the place makes the meaning clear.
+  hideLabel?: boolean;
   value: string;
   options: Choice[];
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
   onChange: (value: string) => void;
 }) {
   const id = useId();
@@ -23,17 +33,15 @@ export function Dropdown({
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
   const [active, setActive] = useState(0);
-  const chosen = Math.max(
-    0,
-    options.findIndex((o) => o.value === value),
-  );
+  const found = options.findIndex((o) => o.value === value);
+  const chosen = found < 0 && placeholder === undefined ? 0 : found;
 
   function show() {
     const r = button.current!.getBoundingClientRect();
     const below = window.innerHeight - r.bottom;
     const needed = Math.min(options.length * 40 + 16, 300);
     setUp(below < needed && r.top > below);
-    setActive(chosen);
+    setActive(Math.max(0, chosen));
     setOpen(true);
   }
   function pick(i: number) {
@@ -53,8 +61,10 @@ export function Dropdown({
   }, [open]);
 
   return (
-    <div className="field dropdown" ref={box}>
-      <span id={`${id}-label`}>{label}</span>
+    <div className={`field dropdown ${className}`} ref={box}>
+      <span id={`${id}-label`} className={hideLabel ? 'sr-only' : undefined}>
+        {label}
+      </span>
       <button
         ref={button}
         type="button"
@@ -64,6 +74,7 @@ export function Dropdown({
         aria-controls={`${id}-list`}
         aria-labelledby={`${id}-label`}
         aria-activedescendant={open ? `${id}-${active}` : undefined}
+        disabled={disabled}
         onClick={() => (open ? setOpen(false) : show())}
         onBlur={() => setOpen(false)}
         onKeyDown={(e) => {
@@ -84,7 +95,9 @@ export function Dropdown({
           }
         }}
       >
-        <span>{options[chosen]?.label}</span>
+        <span className={chosen < 0 ? 'placeholder' : undefined}>
+          {chosen < 0 ? placeholder : options[chosen]?.label}
+        </span>
         <ChevronDown size={18} aria-hidden="true" />
       </button>
       {open && (

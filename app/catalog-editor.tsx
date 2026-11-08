@@ -4,6 +4,7 @@ import { Check, Pencil, Plus, X } from 'lucide-react';
 import type { words } from '@/lib/i18n';
 import type { Catalog } from '@/lib/records';
 import { subjects as fixedSubjects } from '@/lib/subjects';
+import { Dropdown } from './dropdown';
 
 type Words = (typeof words)['nl'];
 type Status = { message: string; ok: boolean };
@@ -258,20 +259,17 @@ export function CatalogEditor({
               setSubjectName('');
           }}
         >
-          <select
-            aria-label={t.factGroup}
+          <Dropdown
+            label={t.factGroup}
+            hideLabel
+            placeholder={t.chooseGroup}
             value={subjectGroup}
-            onChange={(e) => setSubjectGroup(e.target.value)}
-          >
-            <option value="" disabled>
-              {t.chooseGroup}
-            </option>
-            {catalog.groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+            options={catalog.groups.map((g) => ({
+              value: g.id,
+              label: g.name,
+            }))}
+            onChange={setSubjectGroup}
+          />
           <input
             aria-label={t.subjectName}
             placeholder={t.newSubject}
