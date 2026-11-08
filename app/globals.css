@@ -1076,7 +1076,8 @@ footer[hidden] {
   font-size: 13px;
   text-align: center;
 }
-.results-viewer .result-filters {
+.results-viewer .result-filters,
+.material-pane .result-filters {
   margin: 0 0 18px;
   padding: 0;
   border-top: 0;
@@ -1669,6 +1670,122 @@ textarea {
   flex-shrink: 0;
 }
 
+/* Materials: subjects, their material, and one material's questions or results */
+.materials-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.materials {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.manage .materials .paper {
+  margin: 0;
+}
+.subject-list ul,
+.material-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.subject-list button,
+.material-list button {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: none;
+  text-align: left;
+  font-weight: 700;
+}
+.subject-list button > span:first-child {
+  flex: 1;
+}
+.subject-list .detail {
+  order: 3;
+  width: 100%;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.subject-list button:hover,
+.material-list button:hover {
+  background: var(--soft);
+}
+.subject-list button[aria-current='true'] {
+  background: var(--soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.count-small {
+  min-width: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--primary);
+  font-size: 12px;
+  text-align: center;
+}
+.material-list button {
+  flex-direction: column;
+  align-items: flex-start;
+  border-color: var(--line);
+  background: #fff;
+}
+.material-list button span {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.material-list button.deleted strong {
+  color: var(--muted);
+}
+.material-list .pill {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.material-pane .back {
+  min-height: 32px;
+  margin-bottom: 4px;
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 14px;
+  border-bottom: 2px solid var(--line);
+}
+.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-bottom: -2px;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font-weight: 700;
+  color: var(--muted);
+}
+.tabs button[aria-selected='true'] {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+@media (max-width: 700px) {
+  .materials {
+    grid-template-columns: 1fr;
+  }
+}
 /* Add material: compact, as a working page for the parent */
 .manage h1 {
   font-size: clamp(24px, 3vw, 30px);

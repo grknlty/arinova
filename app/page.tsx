@@ -34,6 +34,7 @@ import {
   X,
   History,
   ChevronDown,
+  FolderOpen,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -74,7 +75,14 @@ const resultFilters: Record<
   not_understood: (a) => a.confidence === 'not_understood',
 };
 type View =
-  'library' | 'subject' | 'progress' | 'manage' | 'study' | 'quiz' | 'result';
+  | 'library'
+  | 'subject'
+  | 'progress'
+  | 'materials'
+  | 'manage'
+  | 'study'
+  | 'quiz'
+  | 'result';
 type Place = {
   view: View;
   subject: string;
@@ -180,6 +188,12 @@ export default function Home() {
   const [loginRole, setLoginRole] = useState('learner');
   const [json, setJson] = useState('');
   const [partSize, setPartSize] = useState(0);
+  // Materials page: the chosen subject (id), material and what is shown of it.
+  const [materialSubject, setMaterialSubject] = useState('');
+  const [materialId, setMaterialId] = useState('');
+  const [materialTab, setMaterialTab] = useState<'questions' | 'results'>(
+    'questions',
+  );
   // The group and subject (ids) that imported tests are added to.
   const [importGroup, setImportGroup] = useState('');
   const [importSubject, setImportSubject] = useState('');
@@ -240,7 +254,7 @@ export default function Home() {
     } catch {}
     if (!place) return;
     const set = sets.find((s) => s.id === place.setId);
-    const parentOnly = place.view === 'progress' || place.view === 'manage';
+    const parentOnly = ['progress', 'materials', 'manage'].includes(place.view);
     if (parentOnly && session.role !== 'parent') return;
     if (['study', 'quiz'].includes(place.view) && !set) return;
     if (place.view === 'result' && !place.result) return;
@@ -649,11 +663,13 @@ export default function Home() {
                 {t.progress}
               </button>
               <button
-                className={view === 'manage' ? 'active' : ''}
-                onClick={() => navigate('manage')}
+                className={
+                  view === 'materials' || view === 'manage' ? 'active' : ''
+                }
+                onClick={() => navigate('materials')}
               >
-                <Plus size={18} />
-                {t.manage}
+                <FolderOpen size={18} />
+                {t.materials}
               </button>
             </>
           )}
@@ -1198,9 +1214,162 @@ export default function Home() {
             )}
           </>
         )}
+        {view === 'materials' &&
+          (() => {
+            const chosen = catalog.subjects.find(
+              (s) => s.id === materialSubject,
+            );
+            const materials = chosen
+              ? sets.filter((s) => s.subject === chosen.name)
+              : [];
+            const material = materials.find((s) => s.id === materialId) as
+              StudySet | undefined;
+            const results = attempts.filter((a) => a.setId === materialId);
+            return (
+              <div className="manage">
+                <div className="materials-heading">
+                  <h1>{t.materials}</h1>
+                  <button
+                    className="button primary"
+                    onClick={() => navigate('manage')}
+                  >
+                    <Plus size={18} aria-hidden="true" />
+                    {t.manage}
+                  </button>
+                </div>
+                <div className="materials">
+                  <nav
+                    className="paper subject-list"
+                    aria-label={t.subjectsTitle}
+                  >
+                    <h2>{t.subjectsTitle}</h2>
+                    <ul>
+                      {catalog.subjects.map((s) => (
+                        <li key={s.id}>
+                          <button
+                            aria-current={s.id === materialSubject}
+                            onClick={() => {
+                              setMaterialSubject(s.id);
+                              setMaterialId('');
+                            }}
+                          >
+                            <span>{subjectLabel(s.name, lang)}</span>
+                            <span className="detail">{s.group}</span>
+                            <span className="count-small">
+                              {
+                                sets.filter(
+                                  (x) => x.subject === s.name && !x.deletedAt,
+                                ).length
+                              }
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                  <section className="paper material-pane">
+                    {!chosen ? (
+                      <p className="muted">{t.chooseSubjectFirst}</p>
+                    ) : !material ? (
+                      <>
+                        <h2>{subjectLabel(chosen.name, lang)}</h2>
+                        {!materials.length && (
+                          <p className="muted">{t.noMaterials}</p>
+                        )}
+                        <ul className="material-list">
+                          {materials.map((s) => {
+                            const practised = attempts.filter(
+                              (a) => a.setId === s.id,
+                            ).length;
+                            return (
+                              <li key={s.id}>
+                                <button
+                                  className={s.deletedAt ? 'deleted' : ''}
+                                  onClick={() => {
+                                    setMaterialId(s.id);
+                                    setMaterialTab('questions');
+                                  }}
+                                >
+                                  <strong>{s.title}</strong>
+                                  <span>
+                                    {s.questions.length} {t.questions} ·{' '}
+                                    {practised}× {t.practised}
+                                    {s.group && ` · ${s.group}`}
+                                  </span>
+                                  {s.deletedAt && (
+                                    <span className="pill bad">
+                                      {t.deletedOn}{' '}
+                                      {new Date(s.deletedAt).toLocaleDateString(
+                                        lang,
+                                      )}
+                                    </span>
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className="back"
+                          onClick={() => setMaterialId('')}
+                        >
+                          <ArrowLeft size={16} />
+                          {subjectLabel(chosen.name, lang)}
+                        </button>
+                        <h2>{material.title}</h2>
+                        <div className="tabs" role="tablist">
+                          {(
+                            [
+                              [
+                                'questions',
+                                t.factQuestions,
+                                material.questions.length,
+                              ],
+                              ['results', t.resultsTab, results.length],
+                            ] as const
+                          ).map(([tab, label, count]) => (
+                            <button
+                              key={tab}
+                              role="tab"
+                              aria-selected={materialTab === tab}
+                              onClick={() => setMaterialTab(tab)}
+                            >
+                              {label}
+                              <span className="count-small">{count}</span>
+                            </button>
+                          ))}
+                        </div>
+                        {materialTab === 'questions' ? (
+                          <SetQuestions
+                            set={material}
+                            attempts={results}
+                            lang={lang}
+                          />
+                        ) : results.length ? (
+                          <SetResults
+                            set={material}
+                            attempts={results}
+                            lang={lang}
+                          />
+                        ) : (
+                          <p className="muted">{t.noResults}</p>
+                        )}
+                      </>
+                    )}
+                  </section>
+                </div>
+              </div>
+            );
+          })()}
         {view === 'manage' && (
           <div className="manage">
-            <span className="eyebrow muted">{t.manage}</span>
+            <button className="back" onClick={() => navigate('materials')}>
+              <ArrowLeft size={16} />
+              {t.materials}
+            </button>
             <h1>{t.importTitle}</h1>
             <p className="page-intro">{t.importText}</p>
             <CatalogEditor catalog={catalog} t={t} onChanged={load} />
@@ -1582,63 +1751,7 @@ function SetViewer({
             <X size={22} aria-hidden="true" />
           </button>
         </header>
-        {set.description && <p>{set.description}</p>}
-        <SetFacts set={set} lang={lang} />
-        {set.material.trim() && (
-          <details className="set-viewer-material">
-            <summary>{t.material}</summary>
-            <div className="material">{set.material}</div>
-          </details>
-        )}
-        <ol className="set-viewer-questions">
-          {set.questions.map((q, i) => {
-            const answers = attempts.map((a) => a.answers[i]).filter(Boolean);
-            const wrong = answers.filter((a) => !a.correct).length;
-            return (
-              <li key={i}>
-                <div className="review-heading">
-                  <strong>
-                    {t.question} {i + 1}
-                  </strong>
-                  {answers.length > 0 && (
-                    <span className={`pill ${wrong ? 'bad' : 'good'}`}>
-                      {wrong}/{answers.length} {t.wrong.toLowerCase()}
-                    </span>
-                  )}
-                </div>
-                <h3>{q.prompt}</h3>
-                {q.image && (
-                  <img
-                    className="question-image"
-                    src={q.image}
-                    alt={t.questionImage}
-                  />
-                )}
-                <ul className="set-viewer-options">
-                  {q.options.map((o, j) => (
-                    <li key={j} className={j === q.correctIndex ? 'right' : ''}>
-                      <span className="option-letter">{'ABCDEF'[j]}</span>
-                      {q.optionImages?.[j] && (
-                        <img
-                          className="option-image"
-                          src={q.optionImages[j]!}
-                          alt=""
-                        />
-                      )}
-                      <span>{o}</span>
-                      {j === q.correctIndex && (
-                        <Check size={18} aria-label={t.rightAnswer} />
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {q.explanation && (
-                  <p className="explanation">{q.explanation}</p>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+        <SetQuestions set={set} attempts={attempts} lang={lang} />
       </div>
     </dialog>
   );
@@ -1658,7 +1771,6 @@ function ResultsViewer({
 }) {
   const t = words[lang];
   const dialog = useRef<HTMLDialogElement>(null);
-  const [filter, setFilter] = useState<ResultFilter>('all');
   useEffect(() => {
     dialog.current?.showModal();
   }, []);
@@ -1685,42 +1797,133 @@ function ResultsViewer({
             <X size={22} aria-hidden="true" />
           </button>
         </header>
-        <ResultFilters
-          answers={attempts.flatMap((a) => a.answers)}
-          lang={lang}
-          filter={filter}
-          onFilter={setFilter}
-          name="previous-result-filter"
-        />
-        {attempts.map((a) => (
-          <details className="attempt" key={a.id}>
-            <summary>
-              <span className="attempt-icon">
-                <BookOpen size={20} />
-              </span>
-              <span>
-                <strong>
-                  {new Date(a.createdAt).toLocaleString(lang, {
-                    timeZone: 'Europe/Amsterdam',
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}
-                </strong>
-              </span>
-              <span className="attempt-score">
-                {a.correct}/{a.total}
-              </span>
-            </summary>
-            <Review
-              attempt={a}
-              lang={lang}
-              questions={set.questions}
-              show={resultFilters[filter]}
-            />
-          </details>
-        ))}
+        <SetResults set={set} attempts={attempts} lang={lang} />
       </div>
     </dialog>
+  );
+}
+// A set's questions with the right answer marked, and how often Nova
+// answered each one wrong.
+function SetQuestions({
+  set,
+  attempts,
+  lang,
+}: {
+  set: StudySet;
+  attempts: Attempt[];
+  lang: Language;
+}) {
+  const t = words[lang];
+  return (
+    <>
+      {set.description && <p>{set.description}</p>}
+      <SetFacts set={set} lang={lang} />
+      {set.material.trim() && (
+        <details className="set-viewer-material">
+          <summary>{t.material}</summary>
+          <div className="material">{set.material}</div>
+        </details>
+      )}
+      <ol className="set-viewer-questions">
+        {set.questions.map((q, i) => {
+          const answers = attempts.map((a) => a.answers[i]).filter(Boolean);
+          const wrong = answers.filter((a) => !a.correct).length;
+          return (
+            <li key={i}>
+              <div className="review-heading">
+                <strong>
+                  {t.question} {i + 1}
+                </strong>
+                {answers.length > 0 && (
+                  <span className={`pill ${wrong ? 'bad' : 'good'}`}>
+                    {wrong}/{answers.length} {t.wrong.toLowerCase()}
+                  </span>
+                )}
+              </div>
+              <h3>{q.prompt}</h3>
+              {q.image && (
+                <img
+                  className="question-image"
+                  src={q.image}
+                  alt={t.questionImage}
+                />
+              )}
+              <ul className="set-viewer-options">
+                {q.options.map((o, j) => (
+                  <li key={j} className={j === q.correctIndex ? 'right' : ''}>
+                    <span className="option-letter">{'ABCDEF'[j]}</span>
+                    {q.optionImages?.[j] && (
+                      <img
+                        className="option-image"
+                        src={q.optionImages[j]!}
+                        alt=""
+                      />
+                    )}
+                    <span>{o}</span>
+                    {j === q.correctIndex && (
+                      <Check size={18} aria-label={t.rightAnswer} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {q.explanation && <p className="explanation">{q.explanation}</p>}
+            </li>
+          );
+        })}
+      </ol>
+    </>
+  );
+}
+// Every finished practice of one set, newest first, each opening to its
+// answers, with filters over all of their answers.
+function SetResults({
+  set,
+  attempts,
+  lang,
+}: {
+  set: StudySet | PublicSet;
+  attempts: Attempt[];
+  lang: Language;
+}) {
+  const t = words[lang];
+  const [filter, setFilter] = useState<ResultFilter>('all');
+  return (
+    <>
+      <ResultFilters
+        answers={attempts.flatMap((a) => a.answers)}
+        lang={lang}
+        filter={filter}
+        onFilter={setFilter}
+        name="previous-result-filter"
+      />
+      {attempts.map((a) => (
+        <details className="attempt" key={a.id}>
+          <summary>
+            <span className="attempt-icon">
+              <BookOpen size={20} />
+            </span>
+            <span>
+              <strong>
+                {new Date(a.createdAt).toLocaleString(lang, {
+                  timeZone: 'Europe/Amsterdam',
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </strong>
+            </span>
+            <span className="attempt-score">
+              {a.correct}/{a.total}
+            </span>
+          </summary>
+          <Review
+            attempt={a}
+            lang={lang}
+            questions={set.questions}
+            show={resultFilters[filter]}
+          />
+        </details>
+      ))}
+    </>
   );
 }
 type Words = (typeof words)[Language];
