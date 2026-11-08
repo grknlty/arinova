@@ -32,7 +32,7 @@ Every question, in both styles, follows all of these:
 
 1. **Exactly 4 options**, all different. No "all of the above", "none of the above" or "both A and B".
 2. **Exactly 1 defensible answer.** The other three are clearly wrong for someone who knows the material; no option is "partly right". If a teacher could argue for a second option, rewrite it. Words like "kan", "waarschijnlijk", "volgens de zoekkaart" help keep the correct one strictly true.
-3. **Plausible wrong options** built on real pupil mistakes: a nearby number, a neighbouring country or group, a word that looks similar, judging by habitat, colour or size, taking one feature for proof, mixing up observation and opinion. No joke options.
+3. **Every option is on topic and believable.** All 4 options come from the same category as the answer and from the lesson itself, so a pupil who has not learned the lesson cannot rule any of them out. Wrong options are built on real pupil mistakes: a nearby number, a neighbouring country or group, a related term from the same lesson, a word that looks similar, judging by habitat, colour or size, taking one feature for proof, mixing up observation and opinion. No silly, joke or off-topic options, and none that can be eliminated with common sense alone. See **Wrong options** below.
 4. **Options alike** in length and form, so the correct one is not the longest or the only careful one. If the correct answer is a full sentence, so are the others.
 5. **Never give the answer away.** The correct option must not repeat a fact the prompt already states, and must not be the only option using words from the prompt. Check especially "what information is still needed" questions.
 6. **The prompt stands alone.** Tables, quotes and descriptions go in the prompt text; the pupil sees one question at a time. Never refer to "the text above" or another question.
@@ -41,6 +41,27 @@ Every question, in both styles, follows all of these:
 9. **Answer spread** – the correct answer about equally often at A, B, C and D (for 30 questions 7 or 8 each), no run of more than 2 at the same letter and no pattern.
 10. **Names and settings vary** – different names (Mila, Sam, Noor, Daan, Isa, Ahmed …) and scenes, not the same one twice in a row.
 11. **Rekenen** – work out every answer yourself first; wrong options are results of typical calculation mistakes; the explanation shows the steps.
+
+### Wrong options
+
+This is where most sets fail. A pupil who does not know the answer must still have to think about all 4 options; if they can find the answer by striking out options that obviously do not belong, the question tests nothing.
+
+How to build them:
+
+1. Name the **category** of the correct answer: a part of a cell, an animal group, a province, a year, a traffic sign, a calculation result.
+2. Pick the 3 wrong options from that **same category**, preferably terms the **same lesson** also teaches, so each one sounds right to someone who half-knows the lesson.
+3. Make each wrong option wrong for a **reason the lesson explains** (another part with another job, a group with a different kenmerk, a step in the wrong order), and use that reason in the explanation.
+4. Test each wrong option: *could a pupil who never saw this lesson rule it out with common sense?* If yes, replace it.
+
+Examples (Thema 7.1, a lesson about cells):
+
+| Question | Bad options (easy to strike out) | Good options (all from the lesson) |
+| --- | --- | --- |
+| Wat geeft een plantencel stevigheid? | een celwand · een vin · een oog · een poot | de celwand · het celmembraan · de celkern · de vacuole |
+| Wat zit er in de celkern? | erfelijk materiaal · zand · zonlicht · water uit de zee | erfelijk materiaal · bladgroen · celvocht · zetmeel |
+| Wat is de kleinste bouwsteen van een organisme? | een cel · een blad · een wortel · een bot | een cel · een celkern · een weefsel · een orgaan |
+
+In the bad rows the pupil only has to see which option is about cells; in the good rows they must know what each part does. The same goes for every subject: a Topografie question offers 4 real places in the same region, a Geschiedenis question 4 events or years from the same period, a Rekenen question 4 results of plausible calculations, a Taal question 4 real words of the same kind.
 
 ### Knowledge style (`knowledge`)
 
@@ -53,7 +74,7 @@ A knowledge question checks one thing the lesson teaches, asked directly. Cover 
 - **Volgorde** – the steps or order the lesson gives: "Welke vraag staat als eerste op de zoekkaart?"
 - **Simple application** – one short case with one step: "Een dier heeft veren. Bij welke groep hoort het?"
 
-Keep prompts short, in the words the lesson uses. Wrong options come from the same lesson (other groups, other terms, mixed-up features).
+Keep prompts short, in the words the lesson uses. Short questions make weak wrong options easy to spot, so here especially all 4 options must be terms from the same lesson and the same category (see **Wrong options**).
 
 ### Cito style (`cito`)
 
@@ -167,6 +188,7 @@ If you can run code, save the JSON and run `python3 scripts/check_set.py <file>`
 
 - [ ] 4 different, non-empty options; `correctIndex` points to the option that is really correct (count again from 0)
 - [ ] Only that option is correct; the prompt does not already state it
+- [ ] All 4 options are from the same category and on the lesson's topic; no wrong option can be struck out with common sense alone, without knowing the lesson
 - [ ] `cito`: it asks the pupil to reason with a lesson rule (at most a fifth recall). `knowledge`: it checks one key concept, and together the questions cover all of them
 - [ ] The correct option is not clearly the longest
 - [ ] Explanation gives the reason, in the language of the question
