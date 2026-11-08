@@ -158,7 +158,7 @@ try {
   await page
     .getByRole('heading', { name: 'Hi Arin, ready to discover?' })
     .waitFor();
-  assert.equal((await page.request.get(url + '/api/progress')).status(), 403);
+  assert.equal((await page.request.get(url + '/api/progress')).status(), 200);
   const sets = await (await page.request.get(url + '/api/sets')).json();
   assert.equal('correctIndex' in sets[0].questions[0], false);
   // Practice cards live on each subject's planet page.

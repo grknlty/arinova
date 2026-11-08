@@ -2,7 +2,8 @@ import { role } from '@/lib/auth';
 import { list } from '@/lib/store';
 import { unavailable } from '@/lib/http';
 export async function GET() {
-  if ((await role()) !== 'parent') return new Response(null, { status: 403 });
+  // Both roles may look back at results; the family shares one record.
+  if (!(await role())) return new Response(null, { status: 401 });
   try {
     return Response.json(await list('attempts'));
   } catch {

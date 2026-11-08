@@ -33,6 +33,7 @@ import {
   Trash2,
   RotateCcw,
   X,
+  History,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -205,6 +206,8 @@ export default function Home() {
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
   // The set opened from the history, shown in a window with its answers.
   const [viewing, setViewing] = useState<StudySet | null>(null);
+  // The set whose earlier results are shown in a window.
+  const [resultsOf, setResultsOf] = useState<StudySet | PublicSet | null>(null);
   // Where the material in the box came from, kept with the saved sets.
   const [origin, setOrigin] = useState<{
     source: 'word' | 'json';
@@ -227,7 +230,7 @@ export default function Home() {
     setLoading(true);
     try {
       setSets(await api('/api/sets'));
-      if (session?.role === 'parent') setAttempts(await api('/api/progress'));
+      setAttempts(await api('/api/progress'));
       // Faces are a nice extra: the drawings stay if they cannot be loaded.
       setFaces(await api('/api/faces').catch(() => ({})));
     } catch {
@@ -822,6 +825,15 @@ export default function Home() {
                             {t.study}
                           </button>
                         )}
+                        {attempts.some((a) => a.setId === s.id) && (
+                          <button
+                            className="button secondary"
+                            onClick={() => setResultsOf(s)}
+                          >
+                            <History size={16} aria-hidden="true" />
+                            {t.previousResults}
+                          </button>
+                        )}
                         {progress && (
                           <button
                             className="button secondary"
@@ -874,6 +886,15 @@ export default function Home() {
                   <Printer size={16} />
                   {t.print}
                 </button>
+                {attempts.some((a) => a.setId === selected.id) && (
+                  <button
+                    className="button secondary"
+                    onClick={() => setResultsOf(selected)}
+                  >
+                    <History size={16} aria-hidden="true" />
+                    {t.previousResults}
+                  </button>
+                )}
                 <button
                   className="button primary"
                   onClick={() => start(selected)}
@@ -1455,6 +1476,14 @@ export default function Home() {
           </>
         )}
       </main>
+      {resultsOf && (
+        <ResultsViewer
+          set={resultsOf}
+          attempts={attempts.filter((a) => a.setId === resultsOf.id)}
+          lang={lang}
+          onClose={() => setResultsOf(null)}
+        />
+      )}
       <footer hidden={view === 'library'}>
         <div className="brand small">
           <Sparkle size={20} fill="currentColor" aria-hidden="true" /> arinova.
@@ -1563,6 +1592,77 @@ function SetViewer({
             );
           })}
         </ol>
+      </div>
+    </dialog>
+  );
+}
+// Every finished practice of one set, newest first, each opening to its
+// answers. Esc or the backdrop closes it.
+function ResultsViewer({
+  set,
+  attempts,
+  lang,
+  onClose,
+}: {
+  set: StudySet | PublicSet;
+  attempts: Attempt[];
+  lang: Language;
+  onClose: () => void;
+}) {
+  const t = words[lang];
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    dialog.current?.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={dialog}
+      className="set-viewer"
+      aria-labelledby="results-viewer-title"
+      onClose={onClose}
+      onClick={(e) => e.target === dialog.current && dialog.current.close()}
+    >
+      <div className="set-viewer-inner">
+        <header>
+          <div>
+            <span className="eyebrow">{t.previousResults}</span>
+            <h2 id="results-viewer-title">{set.title}</h2>
+          </div>
+          <button
+            type="button"
+            className="close-button"
+            aria-label={t.close}
+            onClick={() => dialog.current?.close()}
+          >
+            <X size={22} aria-hidden="true" />
+          </button>
+        </header>
+        {attempts.map((a) => (
+          <details className="attempt" key={a.id}>
+            <summary>
+              <span className="attempt-icon">
+                <BookOpen size={20} />
+              </span>
+              <span>
+                <strong>
+                  {new Date(a.createdAt).toLocaleString(lang, {
+                    timeZone: 'Europe/Amsterdam',
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  })}
+                </strong>
+              </span>
+              <span className="attempt-score">
+                {a.correct}/{a.total}
+              </span>
+            </summary>
+            <Review
+              attempt={a}
+              lang={lang}
+              images={a.answers.map((_, i) => set.questions[i]?.image)}
+            />
+          </details>
+        ))}
       </div>
     </dialog>
   );
