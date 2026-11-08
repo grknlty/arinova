@@ -11,7 +11,6 @@ import {
   LogOut,
   Upload,
   Sun,
-  Sparkles,
   Printer,
   Eye,
   EyeOff,
@@ -805,34 +804,14 @@ export default function Home() {
             </div>
             <div className="cards">
               {visibleSets.map((s) => {
-                const known = findSubject(s.subject);
-                const Icon = known ? subjectIcons[known.id] : BookOpen;
                 const progress = savedProgress(s);
-                const mark =
-                  known?.id === 'rekenen'
-                    ? '123'
-                    : !known || known.id === 'taal'
-                      ? { nl: 'Aa', tr: 'Çç', en: 'Ab' }[s.language]
-                      : null;
                 return (
                   <article className="study-card" key={s.id}>
-                    <div className={`card-art art-${known?.id ?? 'other'}`}>
-                      <span className="subject-label">
-                        {subjectLabel(s.subject, lang)}
-                      </span>
-                      <span className="planet" aria-hidden="true">
-                        <Icon size={40} strokeWidth={1.75} />
-                      </span>
-                      {mark && (
-                        <span className="card-art-letter" aria-hidden="true">
-                          {mark}
-                        </span>
-                      )}
-                      <Sparkles className="art-spark" aria-hidden="true" />
-                    </div>
                     <div className="card-body">
                       <div className="card-meta">
-                        <span>{t[s.language]}</span>
+                        <span>
+                          {subjectLabel(s.subject, lang)} · {t[s.language]}
+                        </span>
                       </div>
                       <h3>{s.title}</h3>
                       {s.description && (

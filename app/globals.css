@@ -872,25 +872,6 @@ svg {
   }
 }
 /* Each subject is its own little planet in a patch of night sky. */
-.card-art {
-  --planet: var(--violet);
-  --planet-light: #c4b5fd;
-  --planet-dark: #6d28d9;
-  --planet-ink: #fff;
-  height: 160px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 22px;
-  background-color: var(--space);
-  background-image:
-    var(--stars),
-    radial-gradient(circle at 30% 120%, var(--planet), transparent 55%),
-    linear-gradient(160deg, var(--space), var(--space-2));
-  background-size: var(--stars-size), auto, auto;
-}
 .art-taal {
   --planet: var(--pink);
   --planet-light: #ffb3d4;
@@ -983,33 +964,6 @@ svg {
   border-top-color: transparent;
   border-radius: 50%;
   transform: rotate(-16deg);
-}
-.subject-label {
-  position: absolute;
-  left: 16px;
-  top: 14px;
-  font-size: 13px;
-  font-weight: 800;
-  background: #fff;
-  color: var(--ink);
-  padding: 5px 12px;
-  border-radius: 999px;
-}
-.card-art-letter {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 46px;
-  font-weight: 700;
-  color: #fff;
-  transform: rotate(-6deg);
-  text-shadow: 0 0 18px color-mix(in srgb, var(--planet) 80%, transparent);
-}
-.art-spark {
-  position: absolute;
-  right: 22px;
-  top: 18px;
-  width: 26px;
-  height: 26px;
-  color: var(--yellow);
 }
 .card-body {
   padding: 22px 24px 24px;
@@ -2605,9 +2559,6 @@ textarea {
   }
   .cards {
     grid-template-columns: 1fr;
-  }
-  .card-art {
-    height: 140px;
   }
   .card-body p {
     min-height: 0;
