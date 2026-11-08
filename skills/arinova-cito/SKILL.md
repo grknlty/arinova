@@ -86,15 +86,18 @@ Reply with one JSON object in one ```json block, nothing else in it:
   "addedDate": "2026-11-08",
   "questionCount": 30,
   "material": "",
+  "materialDoc": null,
   "questions": [
     {
       "prompt": "Een bioloog ontdekt een klein dier. Het heeft geen ruggengraat, maar wel een hard skelet aan de buitenkant en poten met gewrichten. Welke conclusie past het best bij deze gegevens?",
+      "image": null,
       "options": [
         "Het is een geleedpotige.",
         "Het is een zoogdier.",
         "Het is een weekdier.",
         "Het is een amfibie."
       ],
+      "optionImages": [null, null, null, null],
       "correctIndex": 0,
       "explanation": "Een geleedpotige heeft geen ruggengraat, maar wel een uitwendig skelet en gelede poten."
     }
@@ -119,7 +122,10 @@ Field rules:
 | `addedDate` | Today, `YYYY-MM-DD` |
 | `questionCount` | Must equal the number of questions, or Arinova refuses the set |
 | `material` | Optional "Learn first" text: a short summary of the lesson's key rules (e.g. the zoekkaart as steps), `\n` for new lines; `""` if not wanted |
+| `materialDoc` | The lesson document (PDF or Word) the pupil can open, or `null`; see **Pictures and documents** |
+| `questions[].image` | A picture for the question, or `null` |
 | `questions[].options` | Exactly 4 strings, without "A." in front |
+| `questions[].optionImages` | One picture or `null` per option, in the same order: always 4 entries |
 | `questions[].correctIndex` | Counting from 0: 0 = A, 1 = B, 2 = C, 3 = D |
 | `questions[].explanation` | Required; why the correct answer is right |
 
@@ -131,7 +137,29 @@ When you save the set as a file, or tell the user what to save it as, name it fr
 
 For example `Natuur en Techniek – Thema 7.1 Puur natuur – Les 4 Nieuwe diersoorten – 30 vragen – Cito – 2026-11-08.json`. Write the lesson without the colon (`Les 4 Nieuwe diersoorten`), the test style as `Cito` or `Kennis`, and "vragen" in the language of the set (`soru` for `tr`, `questions` for `en`). Leave out characters that are not allowed in file names (`/ \ : * ? " < > |`).
 
-Leave out `image` and `optionImages` unless the user supplied pictures (then: data URLs, PNG/JPEG/WebP/GIF, no SVG, about 1 MB each). Arinova also accepts `"image": null` and `"optionImages": [null, null, null, null]` as an export writes them. Do not add `source`, `fileName` or other fields.
+### Pictures and documents
+
+Write `materialDoc`, `image` and `optionImages` in every set, as Arinova's own export does: `null` (and `[null, null, null, null]`) when there is nothing, real data when there is.
+
+**Pictures** (`image`, `optionImages`):
+
+- A base64 data URL: `data:image/png;base64,…`, also `image/jpeg`, `image/webp` or `image/gif`. No SVG and no links to websites.
+- At most about 1 MB per picture (1,500,000 characters of data URL).
+- Use them when the user gives pictures, or when the material has a picture a question needs: a map for Topografie, a verkeerssituatie, a diagram, a photo of an animal to classify. Crop to the part that matters.
+- With option pictures, the option texts are still required: give each a short label (`Kaart 1`, `Kever`) so the question works when pictures are small.
+- Write the prompt so it points at the picture ("Welk dier op de foto is een geleedpotige?") and still makes sense on a phone.
+- Only put in a picture when you have the real image file and encode it (e.g. `base64 -i foto.png`). Never invent or shorten base64 text; if you cannot encode files, keep `null` and tell the user which questions need a picture.
+
+**Lesson document** (`materialDoc`): the lesson page or book chapter, which the pupil can open next to the practice. One of:
+
+- `null` – no document.
+- An https link: `"materialDoc": "https://…/les-4.pdf"`.
+- A file with its name: `"materialDoc": { "fileName": "Les 4 Nieuwe diersoorten.pdf", "mimeType": "application/pdf", "data": "<base64>" }`. Types: PDF (`application/pdf`), Word `.docx` (`application/vnd.openxmlformats-officedocument.wordprocessingml.document`) or `.doc` (`application/msword`). The data must be the real file; Arinova checks its first bytes.
+- At most about 3 MB of file (4,000,000 characters of base64).
+
+When the user gives the lesson as a PDF or Word file, put that file in `materialDoc` if you can encode it; otherwise leave `null` and mention they can add it in Arinova. Keep the whole JSON file under about 4 MB, or upload fails: with many pictures, make them smaller or use fewer.
+
+Do not add `source`, `fileName` (at the top level) or other fields.
 
 ## Check before you answer
 
@@ -143,6 +171,7 @@ If you can run code, save the JSON and run `python3 scripts/check_set.py <file>`
 - [ ] The correct option is not clearly the longest
 - [ ] Explanation gives the deciding rule, in the language of the question
 - [ ] Across the set: answers spread evenly over A–D, no run longer than 2; at least 7 question types; no two prompts nearly the same
+- [ ] Every question has `image` and 4 `optionImages` entries, each `null` or a real PNG/JPEG/WebP/GIF data URL; `materialDoc` is `null`, an https link or a real PDF/Word file
 - [ ] `questionCount` matches; `testStyle` is `knowledge` or `cito` and the title ends in `Kennis` or `Cito` to match; the JSON is valid (double quotes, no trailing commas)
 
 After the code block, give the file name (see **File name**) and one line: number of questions, the count at A/B/C/D, and the question types used. If you can write files, also save the JSON under that name.
