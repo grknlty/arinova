@@ -126,15 +126,7 @@ export const words = {
     demo: 'Lokale demo · geen echte schoolgegevens',
     error: 'Dat lukte niet. Probeer het opnieuw.',
     reload: 'Opnieuw laden',
-    friends: 'Ruimtevrienden',
-    friendsText:
-      'Kies voor Nova, Neco, Mia en Piso een foto en zet het gezicht in de cirkel. De foto’s blijven privé: alleen wie is ingelogd ziet ze. Zonder foto blijft de tekening staan.',
-    choosePhoto: 'Kies een foto',
-    useDrawing: 'Tekening gebruiken',
-    dragHint: 'Sleep de foto zodat het gezicht in de cirkel past.',
-    zoom: 'Inzoomen',
     cancel: 'Annuleren',
-    saveFace: 'Opslaan',
     noAttempts: 'De eerste stap begint met een oefening.',
     noAttemptsText:
       'Zodra Nova een oefening afrondt, zie je hier de resultaten en hoe zeker ze zich voelde.',
@@ -325,15 +317,7 @@ export const words = {
     demo: 'Local demo · no real school records',
     error: 'That didn’t work. Please try again.',
     reload: 'Reload',
-    friends: 'Space friends',
-    friendsText:
-      'Choose a photo for Nova, Neco, Mia and Piso and fit the face in the circle. Photos stay private: only signed-in family members see them. Without a photo, the drawing stays.',
-    choosePhoto: 'Choose a photo',
-    useDrawing: 'Use the drawing',
-    dragHint: 'Drag the photo so the face fits in the circle.',
-    zoom: 'Zoom',
     cancel: 'Cancel',
-    saveFace: 'Save',
     noAttempts: 'The first step starts with practice.',
     noAttemptsText:
       'When Nova finishes a practice, her results and confidence will appear here.',
@@ -523,15 +507,7 @@ export const words = {
     demo: 'Yerel demo · gerçek okul verisi yok',
     error: 'İşlem tamamlanamadı. Tekrar dene.',
     reload: 'Yeniden yükle',
-    friends: 'Uzay arkadaşları',
-    friendsText:
-      'Nova, Neco, Mia ve Piso için bir fotoğraf seç ve yüzü daireye yerleştir. Fotoğraflar gizli kalır: yalnızca giriş yapanlar görür. Fotoğraf yoksa çizim kalır.',
-    choosePhoto: 'Fotoğraf seç',
-    useDrawing: 'Çizimi kullan',
-    dragHint: 'Yüz daireye sığacak şekilde fotoğrafı sürükle.',
-    zoom: 'Yakınlaştır',
     cancel: 'İptal',
-    saveFace: 'Kaydet',
     noAttempts: 'İlk adım bir alıştırmayla başlar.',
     noAttemptsText:
       'Nova bir alıştırmayı bitirdiğinde sonuçlarını ve kendine ne kadar güvendiğini burada görebilirsin.',

@@ -53,9 +53,7 @@ import type {
 } from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
-import { FaceEditor } from './face-editor';
 import { CatalogEditor } from './catalog-editor';
-import type { Faces } from '@/lib/faces';
 import type { Catalog } from '@/lib/records';
 type Progress = {
   answers: Answer[];
@@ -169,7 +167,6 @@ export default function Home() {
   const [view, setView] = useState<View>('library');
   const [sets, setSets] = useState<(StudySet | PublicSet)[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
-  const [faces, setFaces] = useState<Faces>({});
   const [catalog, setCatalog] = useState<Catalog>({ groups: [], subjects: [] });
   const [selected, setSelected] = useState<StudySet | PublicSet | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -213,8 +210,6 @@ export default function Home() {
     try {
       setSets(await api('/api/sets'));
       setAttempts(await api('/api/progress'));
-      // Faces are a nice extra: the drawings stay if they cannot be loaded.
-      setFaces(await api('/api/faces').catch(() => ({})));
       setCatalog(
         await api('/api/catalog').catch(() => ({ groups: [], subjects: [] })),
       );
@@ -659,7 +654,7 @@ export default function Home() {
         </nav>
         <div className="header-right">
           {languagePicker}
-          <span className="avatar">A</span>
+          <span className="avatar">N</span>
           {!session.demo && (
             <button
               className="icon-button"
@@ -675,7 +670,6 @@ export default function Home() {
                 setLoginRole('learner');
                 setShowPassword(false);
                 setAttempts([]);
-                setFaces({});
                 setSets([]);
                 navigate('library');
               }}
@@ -1465,24 +1459,6 @@ export default function Home() {
                 onClose={() => setViewing(null)}
               />
             )}
-            <FaceEditor
-              faces={faces}
-              t={t}
-              onSave={async (name, image) => {
-                setError('');
-                try {
-                  await api('/api/faces', { name, image });
-                  setFaces((f) => {
-                    const next = { ...f };
-                    if (image) next[name] = image;
-                    else delete next[name];
-                    return next;
-                  });
-                } catch {
-                  setError(t.error);
-                }
-              }}
-            />
           </>
         )}
       </main>

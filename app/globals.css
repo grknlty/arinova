@@ -1656,7 +1656,6 @@ textarea {
   flex-shrink: 0;
 }
 
-/* Space friends: real faces for the home sky */
 /* Add group, subject and question */
 .catalog {
   display: grid;
@@ -1755,119 +1754,6 @@ textarea {
   font-size: 15px;
   font-weight: 700;
 }
-.friends {
-  max-width: none;
-  margin-top: 24px;
-}
-.friends h2 {
-  margin-top: 0;
-}
-.friend-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-.friend {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 12px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  text-align: center;
-}
-.friend .button {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
-}
-.friend-face {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background-color: var(--space);
-  background-image: var(--stars);
-  background-size: var(--stars-size);
-  box-shadow:
-    0 0 0 4px var(--soft),
-    0 8px 16px -8px rgba(0, 0, 0, 0.5);
-}
-.friend-face img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.empty-face {
-  color: var(--on-space-muted);
-}
-.cropper-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-  padding: 20px;
-  border-radius: var(--radius);
-  background: var(--soft);
-}
-.cropper {
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-  background: var(--space);
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
-.cropper:active {
-  cursor: grabbing;
-}
-.cropper img {
-  position: absolute;
-  left: 0;
-  top: 0;
-  max-width: none;
-  pointer-events: none;
-}
-/* Darken everything outside the face circle. */
-.crop-mask {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 2px #fff,
-    0 0 0 200px rgba(12, 20, 69, 0.6);
-  pointer-events: none;
-}
-.cropper-panel .small {
-  margin: 0;
-  font-size: 14px;
-  color: var(--muted);
-}
-.zoom {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-}
-.zoom input {
-  width: 180px;
-  accent-color: var(--primary);
-}
-.cropper-actions {
-  display: flex;
-  gap: 12px;
-}
-@media (max-width: 700px) {
-  .friend-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 /* Login: the whole page is night sky */
 .login-page {
   display: grid;

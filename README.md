@@ -53,7 +53,7 @@ With PostgreSQL, content and answers are stored relationally:
 | `arinova_attempts`              | `id`, `user_id`, `test_id`, `correct`, `total`, `created_at`                                                                                                                                      |
 | `arinova_user_question_answers` | `id`, `attempt_id`, `user_id`, `question_id`, `options_id` (null when skipped), `is_correct`, `confidence`, `answered_at`                                                                         |
 
-A test is one toets; an attempt is one practice session through it. The parent and learner sign-in roles each have a user row, seeded on first use; set `LEARNER_NAME` and `LEARNER_GROUP` to change the defaults (`Nova`, `Groep 7–8`). Sets and attempts saved by earlier versions in `arinova_records` are copied into these tables once and kept there with kind `sets_migrated`/`attempts_migrated`. `arinova_records` still holds the space-friend photos.
+A test is one toets; an attempt is one practice session through it. The parent and learner sign-in roles each have a user row, seeded on first use; set `LEARNER_NAME` and `LEARNER_GROUP` to change the defaults (`Nova`, `Groep 7–8`). Sets and attempts saved by earlier versions in `arinova_records` are copied into these tables once and kept there with kind `sets_migrated`/`attempts_migrated`.
 
 Example: questions answered wrong most often.
 
