@@ -797,6 +797,11 @@ export default function Home() {
               sets={visibleSets}
               grouping={activeGrouping}
               t={t}
+              subjectLabel={
+                subject === 'all'
+                  ? (name) => subjectLabel(name, lang)
+                  : undefined
+              }
               onChange={(g) => setGrouping({ ...g, subject })}
             />
             <div className="cards">

@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import type { words } from '@/lib/i18n';
+import { canonicalSubject } from '@/lib/subjects';
+import { Dropdown } from './dropdown';
 import {
   testStyles,
   type PublicSet,
@@ -12,9 +14,18 @@ import {
 
 type Words = (typeof words)['nl'];
 type AnySet = StudySet | PublicSet;
-// The optional groupings inside a subject that the learner can filter by.
-export type Grouping = { theme?: string; lesson?: string; testStyle?: string };
-const keys = ['theme', 'lesson', 'testStyle'] as const;
+// The optional groupings inside a subject that the learner can filter by,
+// and on the page with all subjects, the subject itself.
+export type Grouping = {
+  subjectName?: string;
+  theme?: string;
+  lesson?: string;
+  testStyle?: string;
+};
+const keys = ['subjectName', 'theme', 'lesson', 'testStyle'] as const;
+type Key = (typeof keys)[number];
+const valueOf = (set: AnySet, key: Key) =>
+  key === 'subjectName' ? canonicalSubject(set.subject) : set[key];
 
 export const styleLabels: Record<TestStyle, (t: Words) => string> = {
   knowledge: (t) => t.styleKnowledge,
@@ -25,70 +36,88 @@ export const styleLabels: Record<TestStyle, (t: Words) => string> = {
 const byName = (a: string, b: string) =>
   a.localeCompare(b, undefined, { numeric: true });
 
-function values(sets: AnySet[], key: (typeof keys)[number]) {
+function values(sets: AnySet[], key: Key) {
   if (key === 'testStyle')
     return testStyles.filter((s) => sets.some((x) => x.testStyle === s));
   return [
-    ...new Set(sets.map((s) => s[key]).filter((v): v is string => !!v)),
+    ...new Set(
+      sets.map((s) => valueOf(s, key)).filter((v): v is string => !!v),
+    ),
   ].sort(byName);
 }
 
 export function matchesGrouping(set: AnySet, grouping: Grouping) {
-  return keys.every((k) => !grouping[k] || set[k] === grouping[k]);
+  return keys.every((k) => !grouping[k] || valueOf(set, k) === grouping[k]);
 }
 
 // A dropdown for each grouping that at least one set in the subject has, all
-// on one line; a subject without any shows nothing.
+// on one line; a subject without any shows nothing. With subjectLabel (on
+// the page with all subjects) the subject comes first.
 export function GroupingFilters({
   sets,
   grouping,
   t,
+  subjectLabel,
   onChange,
 }: {
   sets: AnySet[];
   grouping: Grouping;
   t: Words;
+  subjectLabel?: (name: string) => string;
   onChange: (grouping: Grouping) => void;
 }) {
   const label = {
+    subjectName: t.factSubject,
     theme: t.factTheme,
     lesson: t.factLesson,
     testStyle: t.factStyle,
   };
+  // Themes, lessons and styles are those of the chosen subject.
+  const inSubject = sets.filter((s) =>
+    matchesGrouping(s, { subjectName: grouping.subjectName }),
+  );
   const groups = keys
-    .map((key) => ({ key, options: values(sets, key) }))
+    .filter((key) => key !== 'subjectName' || subjectLabel)
+    .map((key) => ({
+      key,
+      options: values(key === 'subjectName' ? sets : inSubject, key),
+    }))
     .filter((g) => g.options.length);
   if (!groups.length) return null;
   return (
     <div className="grouping-filters" aria-label={t.filtersLabel} role="group">
       {groups.map(({ key, options }) => (
-        <label className="field" key={key}>
-          {label[key]}
-          <select
-            value={grouping[key] ?? ''}
-            onChange={(e) =>
-              onChange({ ...grouping, [key]: e.target.value || undefined })
-            }
-          >
-            {['', ...options].map((value) => (
-              <option key={value} value={value}>
-                {`${
-                  !value
-                    ? t.filterAll
-                    : key === 'testStyle'
-                      ? styleLabels[value as TestStyle](t)
-                      : value
-                } (${
-                  sets.filter(
-                    (s) =>
-                      (!value || s[key] === value) &&
-                      matchesGrouping(s, { ...grouping, [key]: undefined }),
-                  ).length
-                })`}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Dropdown
+          key={key}
+          label={label[key]}
+          value={grouping[key] ?? ''}
+          // Another subject starts again from all of its sets.
+          onChange={(value) =>
+            onChange(
+              key === 'subjectName'
+                ? { subjectName: value || undefined }
+                : { ...grouping, [key]: value || undefined },
+            )
+          }
+          options={['', ...options].map((value) => ({
+            value,
+            label: `${
+              !value
+                ? t.filterAll
+                : key === 'testStyle'
+                  ? styleLabels[value as TestStyle](t)
+                  : key === 'subjectName'
+                    ? subjectLabel!(value)
+                    : value
+            } (${
+              sets.filter(
+                (s) =>
+                  (!value || valueOf(s, key) === value) &&
+                  matchesGrouping(s, { ...grouping, [key]: undefined }),
+              ).length
+            })`,
+          }))}
+        />
       ))}
     </div>
   );
