@@ -78,6 +78,18 @@ export function GET(req: Request) {
               maxLength: 100,
               description: 'e.g. Les 4',
             },
+            theme: {
+              type: 'string',
+              maxLength: 100,
+              description:
+                'Optional theme within the subject, e.g. Het menselijk lichaam; the learner can filter by it.',
+            },
+            testStyle: {
+              type: 'string',
+              enum: ['knowledge', 'cito'],
+              description:
+                'Optional. knowledge: a test on what a lesson taught; cito: practice in the style of the Cito tests.',
+            },
             group: {
               type: 'string',
               maxLength: 60,

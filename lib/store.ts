@@ -2,7 +2,7 @@ import type { Pool, PoolClient } from 'pg';
 import { database } from './database';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { StudySet, Attempt } from './model';
+import type { StudySet, Attempt, SetDetails } from './model';
 import type { Role } from './auth';
 import { canonicalSubject } from './subjects';
 import {
@@ -15,6 +15,7 @@ import {
   readCatalog,
   renameRecord,
   markDeleted,
+  updateDetails,
   readImage,
   readSets,
   type Catalog,
@@ -248,4 +249,22 @@ export async function renameEntry(
     }
   });
   return result;
+}
+// Renames a set or changes its grouping; false if it does not exist.
+export async function setDetails(setId: string, details: SetDetails) {
+  const db = await database();
+  if (db) return updateDetails(db, setId, details);
+  let found = false;
+  await writeLocal((data) => {
+    const set = data.sets.find((s) => s.id === setId);
+    if (!set) return;
+    found = true;
+    for (const [key, value] of Object.entries(details) as [
+      keyof SetDetails,
+      string | null,
+    ][])
+      if (value === null) delete set[key];
+      else Object.assign(set, { [key]: value });
+  });
+  return found;
 }

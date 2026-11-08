@@ -21,6 +21,10 @@ export const testTypes = [
   'type-answer',
 ] as const;
 export const difficulties = ['easy', 'medium', 'hard'] as const;
+// What a test is for: checking knowledge of a lesson, or practising in the
+// style of the Cito tests.
+export const testStyles = ['knowledge', 'cito'] as const;
+export type TestStyle = (typeof testStyles)[number];
 export type TestType = (typeof testTypes)[number];
 export type Difficulty = (typeof difficulties)[number];
 export const questionSchema = z
@@ -53,6 +57,9 @@ export const setSchema = z
     // School context shown on the card, e.g. "Les 3 tot en met 5", "Groep 7–8".
     lesson: z.string().trim().min(1).max(100).optional(),
     group: z.string().trim().min(1).max(60).optional(),
+    // Optional grouping inside a subject; the learner can filter by it.
+    theme: z.string().trim().min(1).max(100).optional(),
+    testStyle: z.enum(testStyles).optional(),
     testType: z.enum(testTypes).optional(),
     difficulty: z.enum(difficulties).optional(),
     // The day the author made the test; createdAt is when it was imported.
@@ -88,6 +95,18 @@ export const setSchema = z
       });
   })
   .transform(({ questionCount: _, ...set }) => set);
+// What the parent can change on a saved set. null clears an optional field.
+export const setDetailsSchema = z
+  .object({
+    title: z.string().trim().min(1).max(150),
+    description: z.string().trim().max(1000),
+    theme: z.string().trim().min(1).max(100).nullable(),
+    lesson: z.string().trim().min(1).max(100).nullable(),
+    testStyle: z.enum(testStyles).nullable(),
+  })
+  .partial()
+  .refine((d) => Object.keys(d).length > 0, 'nothing to change');
+export type SetDetails = z.infer<typeof setDetailsSchema>;
 export type StudySet = z.infer<typeof setSchema> & {
   id: string;
   createdAt: string;

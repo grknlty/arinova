@@ -11,6 +11,7 @@ import {
   list,
   renameEntry,
   setDeleted,
+  setDetails,
 } from '../lib/store';
 import { mergeSubjects, tables } from '../lib/records';
 import { allowLogin } from '../lib/rate-limit';
@@ -135,6 +136,21 @@ test(
           assert.equal(await setDeleted(set.id, false), true);
           assert.equal('deletedAt' in (await find()), false);
           assert.equal(await setDeleted(crypto.randomUUID(), true), false);
+          assert.equal(
+            await setDetails(set.id, {
+              title: 'Planten groeien',
+              theme: 'Planten',
+              testStyle: 'cito',
+            }),
+            true,
+          );
+          assert.equal((await find()).title, 'Planten groeien');
+          assert.equal((await find()).theme, 'Planten');
+          assert.equal((await find()).testStyle, 'cito');
+          await setDetails(set.id, { theme: null, lesson: null });
+          assert.equal('theme' in (await find()), false);
+          assert.equal('lesson' in (await find()), false);
+          assert.equal((await find()).testStyle, 'cito');
         },
       );
       await t.test('stores pictures and lists them as URLs', async () => {

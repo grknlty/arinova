@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
-import type { Attempt, StudySet } from './model';
+import type { Attempt, SetDetails, StudySet } from './model';
 import type { Role } from './auth';
 import { canonicalSubject } from './subjects';
 
@@ -85,6 +85,8 @@ export const schema = `
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_type text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS difficulty text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS added_date date;
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS theme text;
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_style text;
   ALTER TABLE public.arinova_tests
     ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES public.arinova_groups(id);
   CREATE INDEX IF NOT EXISTS arinova_answers_question
@@ -170,8 +172,10 @@ export async function insertSet(client: Client, set: StudySet) {
   const test = await client.query(
     `INSERT INTO public.arinova_tests
        (id, subject_id, title, description, material, language, is_sample, created_at,
-        source, file_name, lesson, group_id, test_type, difficulty, added_date)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        source, file_name, lesson, group_id, test_type, difficulty, added_date,
+        theme, test_style)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+       $16, $17)
      ON CONFLICT (id) DO NOTHING`,
     [
       set.id,
@@ -189,6 +193,8 @@ export async function insertSet(client: Client, set: StudySet) {
       set.testType ?? null,
       set.difficulty ?? null,
       set.addedDate ?? null,
+      set.theme ?? null,
+      set.testStyle ?? null,
     ],
   );
   if (!test.rowCount) return;
@@ -283,7 +289,8 @@ export async function readSets(client: Client): Promise<StudySet[]> {
   const result = await client.query(`
     SELECT t.id, t.title, s.subject_name AS subject, t.language, t.description,
       t.material, t.is_sample, t.created_at, t.source, t.file_name, t.deleted_at,
-      t.lesson, g.name AS group_name, t.test_type, t.difficulty,
+      t.lesson, g.name AS group_name, t.test_type, t.difficulty, t.theme,
+      t.test_style,
       to_char(t.added_date, 'YYYY-MM-DD') AS added_date,
       COALESCE((
         -- Pictures are listed as the URLs that serve them, not their data.
@@ -324,12 +331,37 @@ export async function readSets(client: Client): Promise<StudySet[]> {
     ...(r.source ? { source: r.source } : {}),
     ...(r.file_name ? { fileName: r.file_name } : {}),
     ...(r.lesson ? { lesson: r.lesson } : {}),
+    ...(r.theme ? { theme: r.theme } : {}),
+    ...(r.test_style ? { testStyle: r.test_style } : {}),
     ...(r.group_name ? { group: r.group_name } : {}),
     ...(r.test_type ? { testType: r.test_type } : {}),
     ...(r.difficulty ? { difficulty: r.difficulty } : {}),
     ...(r.added_date ? { addedDate: r.added_date } : {}),
     ...(r.deleted_at ? { deletedAt: r.deleted_at.toISOString() } : {}),
   }));
+}
+
+// Changes a set's name, description or grouping; false if it does not exist.
+export async function updateDetails(
+  client: Client,
+  setId: string,
+  details: SetDetails,
+) {
+  const columns = {
+    title: 'title',
+    description: 'description',
+    theme: 'theme',
+    lesson: 'lesson',
+    testStyle: 'test_style',
+  } as const;
+  const keys = Object.keys(details) as (keyof SetDetails)[];
+  const result = await client.query(
+    `UPDATE public.arinova_tests
+     SET ${keys.map((k, i) => `${columns[k]} = $${i + 2}`).join(', ')}
+     WHERE id = $1`,
+    [setId, ...keys.map((k) => details[k])],
+  );
+  return !!result.rowCount;
 }
 
 // Soft delete: the set and its answers stay, but it leaves the library.

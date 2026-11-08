@@ -55,6 +55,13 @@ import type {
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
 import { CatalogEditor } from './catalog-editor';
+import {
+  DetailsEditor,
+  GroupingFilters,
+  matchesGrouping,
+  styleLabels,
+  type Grouping,
+} from './set-grouping';
 import type { Catalog } from '@/lib/records';
 type Progress = {
   answers: Answer[];
@@ -181,6 +188,8 @@ export default function Home() {
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState<Attempt | null>(null);
   const [subject, setSubject] = useState('all');
+  // Filters inside a subject; they apply only to the subject they were set in.
+  const [grouping, setGrouping] = useState<Grouping & { subject?: string }>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [password, setPassword] = useState('');
@@ -532,6 +541,10 @@ export default function Home() {
       !s.deletedAt &&
       (subject === 'all' || canonicalSubject(s.subject) === subject),
   );
+  const activeGrouping = grouping.subject === subject ? grouping : {};
+  const shownSets = visibleSets.filter((s) =>
+    matchesGrouping(s, activeGrouping),
+  );
   // Subjects that have results, each with its share of correct answers.
   // Fixed subjects come in their usual order, any others after them.
   const order = (name: string) =>
@@ -778,10 +791,16 @@ export default function Home() {
                 <SubjectIcon size={30} strokeWidth={2} />
               </span>
               <h1>{subject === 'all' ? t.all : subjectLabel(subject, lang)}</h1>
-              <span className="count">{visibleSets.length}</span>
+              <span className="count">{shownSets.length}</span>
             </div>
+            <GroupingFilters
+              sets={visibleSets}
+              grouping={activeGrouping}
+              t={t}
+              onChange={(g) => setGrouping({ ...g, subject })}
+            />
             <div className="cards">
-              {visibleSets.map((s) => {
+              {shownSets.map((s) => {
                 const progress = savedProgress(s);
                 return (
                   <article className="study-card" key={s.id}>
@@ -844,6 +863,17 @@ export default function Home() {
               })}
               {!loading && !visibleSets.length && (
                 <p className="empty">{t.empty}</p>
+              )}
+              {visibleSets.length > 0 && !shownSets.length && (
+                <p className="empty">
+                  {t.noFilterMatch}{' '}
+                  <button
+                    className="text-button"
+                    onClick={() => setGrouping({})}
+                  >
+                    {t.clearFilters}
+                  </button>
+                </p>
               )}
             </div>
             <p className="content-note">{t.contentNote}</p>
@@ -1320,6 +1350,13 @@ export default function Home() {
                           {subjectLabel(chosen.name, lang)}
                         </button>
                         <h2>{material.title}</h2>
+                        <DetailsEditor
+                          key={material.id}
+                          set={material}
+                          sets={materials}
+                          t={t}
+                          onSaved={load}
+                        />
                         <div className="tabs" role="tablist">
                           {(
                             [
@@ -1988,10 +2025,14 @@ function SetFacts({
     [t.factQuestions, set.questions.length],
     [t.factOptions, low === high ? low : `${low}–${high}`],
     [t.factSubject, subjectLabel(set.subject, lang)],
+    ...(set.theme ? [[t.factTheme, set.theme] as [string, string]] : []),
     [t.factLesson, set.lesson ?? lessonIn(text) ?? '—'],
     [t.factGroup, set.group ?? groupIn(text) ?? '—'],
     // Sets from before test types existed all have one correct answer.
     [t.factType, typeLabels[set.testType ?? 'single-choice'](t)],
+    ...(set.testStyle
+      ? [[t.factStyle, styleLabels[set.testStyle](t)] as [string, string]]
+      : []),
     [
       t.factDifficulty,
       set.difficulty ? difficultyLabels[set.difficulty](t) : '—',

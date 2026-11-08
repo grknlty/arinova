@@ -49,6 +49,8 @@ Reply with one JSON object in a single ```json code block, nothing else in the b
 | `testType` | no | The kind of test, from the list below. For this standard: `single-choice` |
 | `difficulty` | no | `easy`, `medium` or `hard` |
 | `lesson` | no | e.g. `Les 4`, up to 100 characters |
+| `theme` | no | A theme within the subject, e.g. `Het menselijk lichaam`, up to 100 characters |
+| `testStyle` | no | `knowledge` for a test on what a lesson taught, `cito` for practice in the style of the Cito tests |
 | `group` | no | School group, written `Groep 6`, `Groep 7`, `Groep 8` or a range like `Groep 7–8`; up to 60 characters |
 | `addedDate` | no | The day you made the test, as `YYYY-MM-DD` |
 | `material` | no | The "Learn first" section: a short study text the pupil reads before the questions; plain text, `\n` for new lines |
@@ -58,7 +60,7 @@ Reply with one JSON object in a single ```json code block, nothing else in the b
 | `questions[].correctIndex` | yes | Position of the correct option, **counting from 0**: 0 = A, 1 = B, 2 = C, 3 = D |
 | `questions[].explanation` | yes (for this standard) | Why the correct answer is right |
 
-The general fields (`questionCount`, `testType`, `difficulty`, `lesson`, `group`, `addedDate`, `material`) are optional: fill in what you know and leave out the rest. Do not add other fields.
+The general fields (`questionCount`, `testType`, `difficulty`, `lesson`, `theme`, `testStyle`, `group`, `addedDate`, `material`) are optional: fill in what you know and leave out the rest. Do not add other fields.
 
 Test types (`testType`):
 

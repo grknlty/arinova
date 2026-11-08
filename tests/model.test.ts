@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { grade, publicSet, setSchema, attemptSchema } from '../lib/model';
+import {
+  grade,
+  publicSet,
+  setSchema,
+  setDetailsSchema,
+  attemptSchema,
+} from '../lib/model';
 import { sample } from '../lib/sample';
 test('grading separates correctness, confidence, guesses and skipped questions', () => {
   const a = grade(sample, [
@@ -95,4 +101,24 @@ test('import maps subject shorthands to the fixed school subjects', () => {
   assert.equal(subjectOf('Natuur & Techniek'), 'Natuur en Techniek');
   assert.equal(subjectOf('science'), 'Natuur en Techniek');
   assert.equal(subjectOf('Muziek'), 'Muziek');
+});
+
+test('sets carry an optional theme and test style; details can clear them', () => {
+  const set = setSchema.parse({
+    ...sample,
+    theme: 'Het menselijk lichaam',
+    testStyle: 'cito',
+  });
+  assert.equal(set.theme, 'Het menselijk lichaam');
+  assert.equal(set.testStyle, 'cito');
+  assert.equal(
+    setSchema.safeParse({ ...sample, testStyle: 'exam' }).success,
+    false,
+  );
+  assert.deepEqual(
+    setDetailsSchema.parse({ title: ' Les 4 ', theme: null, testStyle: null }),
+    { title: 'Les 4', theme: null, testStyle: null },
+  );
+  assert.equal(setDetailsSchema.safeParse({}).success, false);
+  assert.equal(setDetailsSchema.safeParse({ title: ' ' }).success, false);
 });
