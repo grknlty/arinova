@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-With no login or database configuration, this is an explicitly labelled **local demo**, with the parent interface enabled and data retained in ignored `.data/store.json`. It is a single-process development store, not shared/cloud storage. The included Dutch language practice is sample content, not imported schoolwork. No external AI API is called, and there are no analytics or trackers.
+With no login or database configuration, this is an explicitly labelled **local demo**, with the parent interface enabled and data retained in ignored `.data/store.json`. It is a single-process development store, not shared/cloud storage. It starts empty; import a set to practise. No external AI API is called, and there are no analytics or trackers.
 
 ```sh
 npm test
@@ -34,7 +34,7 @@ For production-mode local testing, supply the same variables as Vercel and a Pos
    - `LEARNER_PASSWORD`: a separate learner password.
    - `SESSION_SECRET`: at least 32 random characters (`openssl rand -hex 32`).
    - `IMPORT_API_TOKEN`: a different random token of at least 32 characters; needed only for API imports.
-4. Deploy. Sign in as Arin to finish the sample practice, then as Parent to verify that the result and confidence appear. This verifies database persistence as well as deployment.
+4. Deploy. Import a set as Parent, sign in as Arin to finish it, then as Parent again to verify that the result and confidence appear. This verifies database persistence as well as deployment.
 
 Passwords and keys go in Vercel settings, never Git, browser code, or chat. Parent login can import material and see all attempts; learner login can study and submit attempts. Signed, HttpOnly, SameSite cookies expire after one day. Answer keys are removed from learner set responses and grading happens on the server. This version supports **one family and one learner**. Login attempts are rate-limited in PostgreSQL. Rotate SESSION_SECRET to invalidate existing sessions. The import token authorizes creating sets only.
 

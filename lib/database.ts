@@ -1,6 +1,5 @@
 import { Pool, type PoolConfig } from 'pg';
 import { supabaseRootCa } from './supabase-ca';
-import { sample } from './sample';
 import type { Attempt, StudySet } from './model';
 import { insertAttempt, insertSet, schema, seedUsers, tables } from './records';
 
@@ -66,7 +65,12 @@ async function initialize(pool: Pool) {
         `ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`,
       );
     await seedUsers(client);
-    await insertSet(client, sample);
+    // The built-in Taal sample was development data; hide it where it was
+    // seeded. Attempts on it are kept, as with any deleted set.
+    await client.query(
+      `UPDATE public.arinova_tests SET deleted_at = now()
+       WHERE is_sample AND deleted_at IS NULL`,
+    );
     // Earlier versions kept sets and attempts as JSON documents; copy them
     // once into the relational tables and keep the originals, marked as
     // migrated. Inserts skip ids that already exist.

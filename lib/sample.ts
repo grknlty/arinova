@@ -1,4 +1,6 @@
 import type { StudySet } from './model';
+// An example set: the downloadable import format and a test fixture. It is
+// not shown in the app.
 export const sample: StudySet = {
   id: 'a4266814-4f8b-4b57-b582-ea5f50f27f20',
   title: 'Op ontdekking met taal',

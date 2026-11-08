@@ -81,7 +81,7 @@ test(
             ],
           );
           assert.equal(rows.rows[2].option_text, null);
-          assert.ok((await list('sets')).some((s) => s.id === sample.id));
+          assert.ok(!(await list('sets')).some((s) => s.id === sample.id));
         },
       );
       await t.test(

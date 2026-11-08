@@ -4,7 +4,6 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { StudySet, Attempt } from './model';
 import type { Role } from './auth';
-import { sample } from './sample';
 import {
   insertAttempt,
   insertSet,
@@ -16,8 +15,6 @@ import {
 type Data = {
   sets: StudySet[];
   attempts: Attempt[];
-  // The sample lives in code; when it is deleted locally this holds the time.
-  sampleDeletedAt?: string;
 };
 const globalStore = globalThis as unknown as {
   arinovaQueue?: Promise<unknown>;
@@ -39,20 +36,11 @@ export async function list<T extends 'sets' | 'attempts'>(
   kind: T,
 ): Promise<Data[T]> {
   const db = await database();
-  // In PostgreSQL the sample is seeded as a row so attempts can refer to it.
   if (db)
     return (
       kind === 'sets' ? await readSets(db) : await readAttempts(db)
     ) as Data[T];
-  const data = await local();
-  const values = data[kind];
-  if (kind !== 'sets') return values as Data[T];
-  return [
-    ...values,
-    data.sampleDeletedAt
-      ? { ...sample, deletedAt: data.sampleDeletedAt }
-      : sample,
-  ] as Data[T];
+  return (await local())[kind];
 }
 async function transaction(
   db: Pool,
@@ -113,11 +101,6 @@ export async function setDeleted(setId: string, deleted: boolean) {
   let found = false;
   await writeLocal((data) => {
     const at = deleted ? new Date().toISOString() : undefined;
-    if (setId === sample.id) {
-      found = true;
-      data.sampleDeletedAt = at;
-      return;
-    }
     const set = data.sets.find((s) => s.id === setId);
     if (!set) return;
     found = true;
