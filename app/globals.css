@@ -2008,15 +2008,36 @@ textarea {
   font-weight: 700;
   text-decoration: none;
 }
-a.material-action:hover {
-  border-color: var(--primary);
-  background: var(--soft);
-  color: var(--primary);
+/* Export in colour; Delete in red, and Restore (in the deleted list) green. */
+.material-list a.material-action {
+  border-color: transparent;
+  background: linear-gradient(135deg, #0e7490, #2563eb 55%, #7c3aed);
+  color: #fff;
+  transition:
+    filter 0.15s,
+    transform 0.15s var(--spring);
+}
+.material-list a.material-action:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+.material-list .material-delete {
+  border-color: #f4c3c8;
+  color: var(--bad);
 }
 .material-list .material-delete:hover:not(:disabled) {
   border-color: var(--bad);
   background: var(--bad-bg);
   color: var(--bad);
+}
+.deleted-materials .material-list .material-delete {
+  border-color: #bfe8cf;
+  color: var(--good);
+}
+.deleted-materials .material-list .material-delete:hover:not(:disabled) {
+  border-color: var(--good);
+  background: var(--good-bg);
+  color: var(--good);
 }
 .material-pane .details-editor {
   margin: 18px 0 0;
