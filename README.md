@@ -81,7 +81,7 @@ Files in the generated “toets” layout are read as well: `{ subject, title, t
 
 ### JSON
 
-A set contains a study text and 1–100 questions. Every question has 2–6 options, a zero-based correctIndex, an optional explanation, and optionally an `image` (data URL) and `optionImages` (one data URL or null per option). The interface accepts up to 4 MB per upload.
+A set contains a study text and 1–100 questions. Every question has 2–6 options, a zero-based correctIndex, an optional explanation, and optionally an `image` (data URL) and `optionImages` (one data URL or null per option, shown small beside the option). `null` means no picture. An exported set lists `image` and `optionImages` for every question, with `null` where there is no picture, so a picture can be dropped into place and the file imported again. The interface accepts up to 4 MB per upload.
 
 General information about the set is optional: `questionCount` (checked against the questions, not stored), `testType` (`single-choice`, or `true-false` with 2 options per question; `multiple-choice` and `type-answer` are refused for now), `difficulty` (`easy`, `medium`, `hard`), `lesson`, `group` (for example `Groep 7`) and `addedDate` (`YYYY-MM-DD`, the day the test was made). The practice card shows the test type, difficulty and this date; without `addedDate` it shows the import date. `skills/arinova-questions` is a skill for ChatGPT or Claude that writes tests in this format.
 

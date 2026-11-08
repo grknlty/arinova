@@ -137,9 +137,15 @@ export function GET(req: Request) {
               description: 'Why the correct answer is right.',
             },
             image: {
-              type: 'string',
+              type: ['string', 'null'],
               description:
-                'Optional picture as a data URL: data:image/png;base64,… (PNG, JPEG, WebP or GIF).',
+                'Optional picture as a data URL: data:image/png;base64,… (PNG, JPEG, WebP or GIF). null for none.',
+            },
+            optionImages: {
+              type: ['array', 'null'],
+              items: { type: ['string', 'null'] },
+              description:
+                'Optional small picture per option, in the same order as options: a data URL, or null for an option without one.',
             },
           },
         },

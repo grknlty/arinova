@@ -121,7 +121,9 @@ export async function image(setId: string, question: number, option?: number) {
 }
 // One set as the JSON the import takes back: all its details, questions and
 // options, with its pictures as data. Its id and dates of saving and deleting
-// are left out. Null if there is no such set.
+// are left out. Every question names its picture and one per option, null
+// where there is none, so the file shows where pictures can go. Null if
+// there is no such set.
 export async function exportSet(setId: string) {
   const set = (await list('sets')).find((s) => s.id === setId);
   if (!set) return null;
@@ -129,15 +131,16 @@ export async function exportSet(setId: string) {
   void [id, createdAt, deletedAt, sample];
   const questions = await Promise.all(
     set.questions.map(async (q, i) => ({
-      ...q,
-      ...(q.image ? { image: await image(setId, i) } : {}),
-      ...(q.optionImages
-        ? {
-            optionImages: await Promise.all(
-              q.optionImages.map((o, j) => (o ? image(setId, i, j) : null)),
-            ),
-          }
-        : {}),
+      prompt: q.prompt,
+      image: q.image ? await image(setId, i) : null,
+      options: q.options,
+      optionImages: await Promise.all(
+        q.options.map((_, j) =>
+          q.optionImages?.[j] ? image(setId, i, j) : null,
+        ),
+      ),
+      correctIndex: q.correctIndex,
+      explanation: q.explanation,
     })),
   );
   return { ...details, questions };

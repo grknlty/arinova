@@ -861,6 +861,20 @@ footer[hidden] {
   border-radius: 10px;
   background: #fff;
 }
+.set-viewer-options .option-image {
+  width: 56px;
+  height: 42px;
+  border-radius: 8px;
+}
+@media (max-width: 580px) {
+  .options button:has(.option-image) {
+    gap: 10px;
+  }
+  .options .option-image {
+    width: 64px;
+    height: 48px;
+  }
+}
 .options button svg {
   margin-left: auto;
   color: var(--primary);

@@ -188,6 +188,11 @@ test('an exported set has everything the import needs, pictures included', async
           image: png,
           optionImages: [null, png],
         },
+        {
+          prompt: 'Wat is dood?',
+          options: ['Blad', 'Steen', 'Mos'],
+          correctIndex: 1,
+        },
       ],
     });
     const id = '11111111-2222-4333-8444-555555555555';
@@ -210,6 +215,10 @@ test('an exported set has everything the import needs, pictures included', async
     assert.ok(exported);
     assert.equal('id' in exported, false);
     assert.equal('deletedAt' in exported, false);
+    // Without pictures, the places for them are written as null.
+    assert.equal(exported.questions[1].image, null);
+    assert.deepEqual(exported.questions[1].optionImages, [null, null, null]);
+    assert.equal(exported.questions[0].image, png);
     // Imported again, it is the same set.
     assert.deepEqual(setSchema.parse(exported), set);
     assert.equal(

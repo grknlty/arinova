@@ -33,8 +33,9 @@ export const questionSchema = z
     options: z.array(z.string().trim().min(1).max(1000)).min(2).max(6),
     correctIndex: z.number().int().min(0),
     explanation: z.string().max(5000).default(''),
-    image: imageData.optional(),
-    optionImages: z.array(imageData.nullable()).optional(),
+    // null means no picture, as an export writes it; it is not stored.
+    image: imageData.nullish(),
+    optionImages: z.array(imageData.nullable()).nullish(),
   })
   .refine(
     (q) => q.correctIndex < q.options.length,
@@ -43,7 +44,12 @@ export const questionSchema = z
   .refine(
     (q) => !q.optionImages || q.optionImages.length === q.options.length,
     'optionImages needs one entry (or null) per option',
-  );
+  )
+  .transform(({ image, optionImages, ...q }) => ({
+    ...q,
+    ...(image ? { image } : {}),
+    ...(optionImages?.some(Boolean) ? { optionImages } : {}),
+  }));
 export const setSchema = z
   .object({
     title: z.string().trim().min(1).max(150),

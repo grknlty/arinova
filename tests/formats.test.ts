@@ -58,6 +58,33 @@ test('leaves the app format alone and rejects unclear answers', () => {
   );
 });
 
+test('reads null pictures as no picture', () => {
+  const set = setSchema.parse({
+    title: 'Planten',
+    subject: 'Natuur',
+    language: 'nl',
+    questions: [
+      {
+        prompt: 'Welke groep?',
+        image: null,
+        options: ['Wieren', 'Mossen'],
+        optionImages: [null, null],
+        correctIndex: 0,
+      },
+      {
+        prompt: 'Welke plant?',
+        options: ['Varen', 'Mos'],
+        optionImages: null,
+        correctIndex: 1,
+      },
+    ],
+  });
+  for (const q of set.questions) {
+    assert.equal('image' in q, false);
+    assert.equal('optionImages' in q, false);
+  }
+});
+
 test('rejects pictures that are not plain image data', () => {
   for (const image of [
     'data:image/svg+xml;base64,PHN2Zz4=',
