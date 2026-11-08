@@ -15,9 +15,28 @@ Wrong options are the groups one step away on the zoekkaart. Other subjects: a m
 
 Wrong options: an opinion, an assumption, a prediction. Variant: "Waarom is Sams uitspraak bruikbaarder voor een onderzoeksverslag?"
 
-## 3. Gegevens lezen – table or list in the prompt
+## 3. Gegevens lezen – data in the prompt
 
-> Tabel: A: ruggengraat ja, veren ja. B: ruggengraat nee, uitwendig skelet ja. C: ruggengraat ja, veren nee, eieren nee. Welke combinatie past bij A, B en C?
+Write the data one item per block of lines, never as a `|` table (Arinova shows plain text; see "How it looks in Arinova" in SKILL.md):
+
+```text
+Drie onbekende dieren worden onderzocht.
+
+Dier A
+Ruggengraat: ja
+Veren: ja
+
+Dier B
+Ruggengraat: nee
+Uitwendig skelet: ja
+
+Dier C
+Ruggengraat: ja
+Veren: nee
+Eieren: nee
+
+Welke combinatie past bij A, B en C?
+```
 
 Each wrong combination gets one or two items right, so the pupil must check all three.
 

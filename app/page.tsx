@@ -1142,7 +1142,7 @@ export default function Home() {
               <span className="eyebrow">
                 {subjectLabel(selected.subject, lang)}
               </span>
-              <h1>{selected.questions[index].prompt}</h1>
+              <h1 className="prompt">{selected.questions[index].prompt}</h1>
               {selected.questions[index].image && (
                 <img
                   className="question-image"
@@ -1389,7 +1389,7 @@ export default function Home() {
                             </span>
                             <span className="confidence-label">{m.title}</span>
                           </div>
-                          <h3>{m.prompt}</h3>
+                          <h3 className="prompt">{m.prompt}</h3>
                           <QuestionDetail
                             question={m.question}
                             prompt={m.prompt}
@@ -2237,7 +2237,7 @@ function SetQuestions({
                   </span>
                 )}
               </div>
-              <h3>{q.prompt}</h3>
+              <h3 className="prompt">{q.prompt}</h3>
               {q.image && (
                 <img
                   className="question-image"
@@ -2849,7 +2849,7 @@ function Review({
                 <span className="confidence-label">{t[a.confidence]}</span>
               )}
             </div>
-            <h3>
+            <h3 className="prompt">
               {i + 1}. {a.prompt}
             </h3>
             <QuestionDetail

@@ -122,6 +122,16 @@ def main(path):
             continue
         if not str(q.get('explanation', '')).strip():
             errors.append(f'{where}: no explanation')
+        # Arinova shows plain text: Markdown tables and markup run together.
+        for name, text in [('prompt', str(q.get('prompt', '')))] + \
+                [(f'option {LETTERS[i]}', str(o)) for i, o in enumerate(options[:4])] + \
+                [('explanation', str(q.get('explanation', '')))]:
+            if any(line.count('|') >= 2 for line in text.split('\n')) or '|' in text and name != 'prompt':
+                errors.append(f'{where}: {name} has a | table; write one item per block of lines')
+            if re.search(r'\*\*|__|^#+\s|^\s*[-*]\s', text, re.M):
+                errors.append(f'{where}: {name} has Markdown, which Arinova shows as loose symbols')
+        if any('\n' in str(o) for o in options):
+            errors.append(f'{where}: an option has a line break')
         problem = image_problem(q.get('image'))
         if problem:
             errors.append(f'{where}: image {problem}')

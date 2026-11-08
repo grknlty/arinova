@@ -35,7 +35,7 @@ Every question, in both styles, follows all of these:
 3. **Every option is on topic and believable.** All 4 options come from the same category as the answer and from the lesson itself, so a pupil who has not learned the lesson cannot rule any of them out. Wrong options are built on real pupil mistakes: a nearby number, a neighbouring country or group, a related term from the same lesson, a word that looks similar, judging by habitat, colour or size, taking one feature for proof, mixing up observation and opinion. No silly, joke or off-topic options, and none that can be eliminated with common sense alone. See **Wrong options** below.
 4. **Options alike** in length and form, so the correct one is not the longest or the only careful one. If the correct answer is a full sentence, so are the others.
 5. **Never give the answer away.** The correct option must not repeat a fact the prompt already states, and must not be the only option using words from the prompt. Check especially "what information is still needed" questions.
-6. **The prompt stands alone.** Tables, quotes and descriptions go in the prompt text; the pupil sees one question at a time. Never refer to "the text above" or another question.
+6. **The prompt stands alone.** Data, quotes and descriptions go in the prompt text; the pupil sees one question at a time. Never refer to "the text above" or another question. Write data as plain lines, never as a table (see **How it looks in Arinova**).
 7. **Clear language** at the pupil's level, one idea per question. Avoid double negatives; key words in capitals: `NIET`, `ZEKER`, `BESTE`, `EERST`, `ALLEEN`, `MEEST` (Turkish `DEĞİL` etc.).
 8. **Explanation** – 1–2 sentences in the same language that say *why* the correct answer is right (name the deciding rule), and where useful why a tempting wrong option fails. Not just "The answer is B".
 9. **Answer spread** – the correct answer about equally often at A, B, C and D (for 30 questions 7 or 8 each), no run of more than 2 at the same letter and no pattern.
@@ -82,7 +82,7 @@ A Cito question gives the pupil a small situation and asks them to apply what th
 
 - **Toepassen** – a new case (an unknown animal, a map, a situation) to classify or solve with the lesson's rule.
 - **Waarneming of mening** – which statement is an observation, opinion, assumption or hypothesis.
-- **Gegevens lezen** – a small table or list in the prompt (`Tabel: A: …, B: …`) that the pupil combines.
+- **Gegevens lezen** – a few items with their data in the prompt, one item per block of lines (see **How it looks in Arinova**), that the pupil combines.
 - **Conclusie trekken** – which conclusion is best supported, or what you can say for **ZEKER**.
 - **Redenering beoordelen** – a pupil says something wrong; which argument shows best why.
 - **Volgorde / eerste stap** – what you check **EERST**, or what information is still needed.
@@ -152,6 +152,35 @@ Reply with one JSON object in one ```json block, nothing else in it:
 
 Do not add `source`, a top-level `fileName` or other fields. Arinova also knows the test types `true-false` (2 options), `multiple-choice` and `type-answer`, but this skill writes only `single-choice`.
 
+### How it looks in Arinova
+
+Arinova shows `prompt`, `options` and `explanation` as **plain text**, often on a tablet or phone. It keeps line breaks (`\n`) in a prompt, but it does not render Markdown. So:
+
+- **No Markdown** anywhere: no tables with `|`, no `**bold**` or `_italic_`, no `#` headings, no `-` or `*` list markers, no code blocks. They show up as loose symbols and the rows run together. Key words are emphasised with CAPITALS only.
+- **Data per item, one item per block.** When a question compares things (samples, animals, places, years), write the intro, then each item as its name on one line and one `kenmerk: waarde` per line under it, with an empty line between items, and the question last:
+
+  ```text
+  Een klas vergelijkt vier celmonsters. Ja betekent dat het onderdeel aanwezig is.
+
+  Monster P
+  Celkern: ja
+  Celwand: nee
+  Bladgroenkorrels: nee
+
+  Monster Q
+  Celkern: ja
+  Celwand: ja
+  Bladgroenkorrels: ja
+
+  Welk monster past het best bij een groene bladcel?
+  ```
+
+  In the JSON that is `"Een klas vergelijkt vier celmonsters. Ja betekent dat het onderdeel aanwezig is.\n\nMonster P\nCelkern: ja\nCelwand: nee\nBladgroenkorrels: nee\n\nMonster Q\n…\n\nWelk monster past het best bij een groene bladcel?"`.
+- **A short line of results** may be one line per item: `Bak A: 20 aangeboden, 15 gevangen`.
+- **Quotes** get their own line between quotation marks, with the question on the line after.
+- **Keep it short for a tablet:** at most about 4 items with 3–4 kenmerken each; if a comparison needs more, split it over two questions or use a picture.
+- **Options are one short line each**, without line breaks.
+
 ### File name
 
 When you save the set as a file, or tell the user what to save it as, name it from its fields, joined by ` – ` (space, en dash, space):
@@ -193,6 +222,7 @@ If you can run code, save the JSON and run `python3 scripts/check_set.py <file>`
 - [ ] The correct option is not clearly the longest
 - [ ] Explanation gives the reason, in the language of the question
 - [ ] Across the set: answers spread evenly over A–D, no run longer than 2; no two prompts nearly the same
+- [ ] It reads well as plain text on a tablet: no `|` tables or other Markdown, data written one item per block with `\n`, options on one line
 - [ ] Every question has `image` and 4 `optionImages` entries, each `null` or a real PNG/JPEG/WebP/GIF data URL; `materialDoc` is `null`, an https link or a real PDF/Word file
 - [ ] `subject` is one of the eight names; `language` matches the text; `questionCount` matches; `testStyle` matches the title; the JSON is valid (double quotes, no trailing commas, no comments)
 

@@ -716,6 +716,10 @@ footer[hidden] {
 .paper h1 {
   font-size: 34px;
 }
+/* Keeps the line breaks a question uses for its data, one item per line. */
+.prompt {
+  white-space: pre-line;
+}
 .material {
   white-space: pre-wrap;
   line-height: 1.85;
