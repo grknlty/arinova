@@ -128,7 +128,14 @@ try {
   await page
     .getByRole('heading', { name: 'Hi Nova, ready to discover?' })
     .waitFor();
+  // Material is filed under a group and subject from the catalog, which
+  // starts with the learner's group.
+  await page.getByRole('button', { name: 'Materials', exact: true }).click();
   await page.getByRole('button', { name: 'Add material', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Group', exact: true }).click();
+  await page.getByRole('option', { name: 'Groep 7–8', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Subject', exact: true }).click();
+  await page.getByRole('option', { name: 'Language', exact: true }).click();
   await page.getByLabel('JSON', { exact: true }).fill(
     JSON.stringify({
       title: 'Browser workflow test',
@@ -237,6 +244,15 @@ try {
   assert.equal(attempts[0].correct, 1);
   assert.equal(attempts[0].answers[0].confidence, 'unsure');
   assert.equal(attempts[0].answers[1].selected, null);
+  // The subject list beside the numbers narrows them to one subject.
+  const bySubject = page.getByRole('navigation', { name: 'By subject' });
+  await bySubject.getByRole('button', { name: /^Language/ }).click();
+  assert.equal(
+    await bySubject
+      .getByRole('button', { name: /^Language/ })
+      .getAttribute('aria-current'),
+    'true',
+  );
   const session = page
     .locator('details.attempt')
     .filter({ hasText: 'Browser workflow test' });
@@ -247,6 +263,7 @@ try {
   assert.equal(await session.locator('.review-card').count(), 1);
   await session.getByRole('radio', { name: /^All/ }).check();
   // The parent can open a set from the history to see its answers.
+  await page.getByRole('button', { name: 'Materials', exact: true }).click();
   await page.getByRole('button', { name: 'Add material', exact: true }).click();
   await page.getByRole('button', { name: /Browser workflow test/ }).click();
   const viewer = page.getByRole('dialog', { name: 'Browser workflow test' });
