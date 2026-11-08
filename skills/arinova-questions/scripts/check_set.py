@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check an Arinova Cito set: format, answer spread and common flaws.
+"""Check an Arinova practice set: format, answer spread and common flaws.
 
 Usage: python3 check_set.py set.json
 Exits 1 when there are errors; warnings are worth a look but may be fine.
@@ -87,9 +87,11 @@ def main(path):
         errors.append('language must be nl, tr or en')
     if len(data.get('title', '')) > 150:
         errors.append('title is longer than 150 characters')
-    if data.get('testStyle') not in ('knowledge', 'cito'):
+    if 'testStyle' not in data:
+        warnings.append('no testStyle ("knowledge" or "cito")')
+    elif data['testStyle'] not in ('knowledge', 'cito'):
         errors.append('testStyle must be "knowledge" or "cito"')
-    for field in ('theme', 'lesson', 'group'):
+    for field in ('lesson', 'group'):
         if not data.get(field):
             warnings.append(f'no {field}')
 
