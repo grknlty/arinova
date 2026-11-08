@@ -4,7 +4,7 @@ import { Check, Pencil, Plus, X } from 'lucide-react';
 import type { words } from '@/lib/i18n';
 import type { Catalog } from '@/lib/records';
 import { subjects as fixedSubjects } from '@/lib/subjects';
-import { Dropdown } from './dropdown';
+import { Dropdown, SuggestInput } from './dropdown';
 
 type Words = (typeof words)['nl'];
 type Status = { message: string; ok: boolean };
@@ -252,22 +252,19 @@ export function CatalogEditor({
             }))}
             onChange={setSubjectGroup}
           />
-          <input
-            aria-label={t.subjectName}
+          <SuggestInput
+            className="add-name"
+            label={t.subjectName}
+            hideLabel
             placeholder={t.newSubject}
             value={subjectName}
             maxLength={80}
-            list="known-subjects"
-            onChange={(e) => {
-              setSubjectName(e.target.value);
+            suggestions={fixedSubjects.map((s) => s.name)}
+            onChange={(name) => {
+              setSubjectName(name);
               setSubjectStatus(quiet);
             }}
           />
-          <datalist id="known-subjects">
-            {fixedSubjects.map((s) => (
-              <option key={s.id} value={s.name} />
-            ))}
-          </datalist>
           <button
             className="button primary"
             disabled={busy || !subjectGroup || !subjectName.trim()}

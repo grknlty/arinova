@@ -1775,7 +1775,8 @@ footer[hidden] {
   text-align: left;
 }
 .dropdown > button:hover,
-.dropdown > button[aria-expanded='true'] {
+.dropdown > button[aria-expanded='true'],
+.dropdown > input[aria-expanded='true'] {
   border-color: var(--primary);
 }
 .dropdown > button > span {
@@ -2424,6 +2425,10 @@ textarea {
 .add-row .dropdown {
   flex: 0 1 190px;
   min-width: 0;
+}
+/* The new subject's name takes the rest of the row, as its field did. */
+.add-row .dropdown.add-name {
+  flex: 1 1 160px;
 }
 .catalog .success,
 .catalog .form-error {

@@ -5,7 +5,7 @@ import type { words } from '@/lib/i18n';
 import { canonicalSubject } from '@/lib/subjects';
 import { groupIn, lessonIn } from '@/lib/school';
 import { factKeys, type FactKey } from '@/lib/facts';
-import { Dropdown } from './dropdown';
+import { Dropdown, SuggestInput } from './dropdown';
 import {
   testStyles,
   type PublicSet,
@@ -198,6 +198,13 @@ export function DetailsEditor({
       setStatus({ ok: true, message: '' });
     },
   });
+  const suggest = (key: 'group' | 'theme' | 'lesson') => ({
+    value: form[key],
+    onChange: (value: string) => {
+      setForm((f) => ({ ...f, [key]: value }));
+      setStatus({ ok: true, message: '' });
+    },
+  });
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title.trim()) return;
@@ -236,48 +243,27 @@ export function DetailsEditor({
         <textarea rows={3} maxLength={1000} {...field('description')} />
       </label>
       <div className="catalog-row">
-        <label className="field">
-          {t.factGroup}
-          <input
-            maxLength={60}
-            list={`groups-${set.id}`}
-            placeholder={t.detailNone}
-            {...field('group')}
-          />
-          <datalist id={`groups-${set.id}`}>
-            {[...new Set([...groups, ...values(sets, 'group')])].map((v) => (
-              <option key={v} value={v} />
-            ))}
-          </datalist>
-        </label>
-        <label className="field">
-          {t.factTheme}
-          <input
-            maxLength={100}
-            list={`themes-${set.id}`}
-            placeholder={t.detailNone}
-            {...field('theme')}
-          />
-          <datalist id={`themes-${set.id}`}>
-            {values(sets, 'theme').map((v) => (
-              <option key={v} value={v} />
-            ))}
-          </datalist>
-        </label>
-        <label className="field">
-          {t.factLesson}
-          <input
-            maxLength={100}
-            list={`lessons-${set.id}`}
-            placeholder={t.detailNone}
-            {...field('lesson')}
-          />
-          <datalist id={`lessons-${set.id}`}>
-            {values(sets, 'lesson').map((v) => (
-              <option key={v} value={v} />
-            ))}
-          </datalist>
-        </label>
+        <SuggestInput
+          label={t.factGroup}
+          maxLength={60}
+          placeholder={t.detailNone}
+          suggestions={[...new Set([...groups, ...values(sets, 'group')])]}
+          {...suggest('group')}
+        />
+        <SuggestInput
+          label={t.factTheme}
+          maxLength={100}
+          placeholder={t.detailNone}
+          suggestions={values(sets, 'theme')}
+          {...suggest('theme')}
+        />
+        <SuggestInput
+          label={t.factLesson}
+          maxLength={100}
+          placeholder={t.detailNone}
+          suggestions={values(sets, 'lesson')}
+          {...suggest('lesson')}
+        />
         <Dropdown
           label={t.factStyle}
           value={form.testStyle}

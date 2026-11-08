@@ -130,3 +130,126 @@ export function Dropdown({
     </div>
   );
 }
+
+// A text field that suggests known values in the same list as Dropdown, so
+// a new value can still be typed. Typing narrows the list; arrow keys and
+// Enter pick a suggestion, Escape closes it.
+export function SuggestInput({
+  label,
+  hideLabel = false,
+  value,
+  suggestions,
+  placeholder,
+  maxLength,
+  className = '',
+  onChange,
+}: {
+  label: string;
+  hideLabel?: boolean;
+  value: string;
+  suggestions: string[];
+  placeholder?: string;
+  maxLength?: number;
+  className?: string;
+  onChange: (value: string) => void;
+}) {
+  const id = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [up, setUp] = useState(false);
+  const [active, setActive] = useState(-1);
+  // A value that is already a suggestion shows them all, to switch to another.
+  const typed = value.trim().toLocaleLowerCase();
+  const shown = suggestions.some((s) => s.toLocaleLowerCase() === typed)
+    ? suggestions
+    : suggestions.filter((s) => s.toLocaleLowerCase().includes(typed));
+  const listed = open && shown.length > 0;
+
+  function show() {
+    const r = input.current!.getBoundingClientRect();
+    const below = window.innerHeight - r.bottom;
+    const needed = Math.min(shown.length * 40 + 16, 300);
+    setUp(below < needed && r.top > below);
+    setOpen(true);
+  }
+  function pick(s: string) {
+    onChange(s);
+    setOpen(false);
+    setActive(-1);
+  }
+
+  return (
+    <div className={`field dropdown ${className}`}>
+      <label
+        htmlFor={`${id}-input`}
+        className={hideLabel ? 'sr-only' : undefined}
+      >
+        {label}
+      </label>
+      <input
+        ref={input}
+        id={`${id}-input`}
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={listed}
+        aria-controls={`${id}-list`}
+        aria-activedescendant={
+          listed && active >= 0 ? `${id}-${active}` : undefined
+        }
+        autoComplete="off"
+        value={value}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        onFocus={show}
+        onClick={show}
+        onBlur={() => setOpen(false)}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setActive(-1);
+          show();
+        }}
+        onKeyDown={(e) => {
+          const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+          if (step) {
+            e.preventDefault();
+            if (!listed) return show();
+            setActive((i) => Math.min(shown.length - 1, Math.max(0, i + step)));
+          } else if (e.key === 'Enter' && listed && active >= 0) {
+            e.preventDefault();
+            pick(shown[active]);
+          } else if (e.key === 'Escape' && listed) {
+            e.preventDefault();
+            setOpen(false);
+          }
+        }}
+      />
+      {listed && (
+        <ul
+          id={`${id}-list`}
+          role="listbox"
+          aria-label={label}
+          className={`dropdown-list${up ? ' up' : ''}`}
+        >
+          {shown.map((s, i) => (
+            <li
+              key={s}
+              id={`${id}-${i}`}
+              role="option"
+              aria-selected={s === value}
+              className={i === active ? 'active' : ''}
+              // Keeps focus in the field, so it does not blur and close.
+              onPointerDown={(e) => e.preventDefault()}
+              onPointerEnter={() => setActive(i)}
+              onClick={() => pick(s)}
+            >
+              <span className="dropdown-check">
+                {s === value && <Check size={16} aria-hidden="true" />}
+              </span>
+              {s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
