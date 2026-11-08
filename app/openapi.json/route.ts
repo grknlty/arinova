@@ -29,7 +29,7 @@ export function GET(req: Request) {
     paths: {
       '/api/sets': {
         post: {
-          operationId: 'addStudySet',
+          operationId: 'addQuestionSet',
           summary: 'Add one practice test (study set) with its questions.',
           security: [{ importKey: [] }],
           requestBody: { required: true, content: json('StudySet') },
@@ -48,7 +48,7 @@ export function GET(req: Request) {
       },
       '/api/format': {
         get: {
-          operationId: 'getStudySetFormat',
+          operationId: 'getQuestionSetFormat',
           summary:
             'Get the study set format: JSON Schema, a valid example and the writing rules. Call it before writing a test.',
           responses: {
@@ -56,7 +56,7 @@ export function GET(req: Request) {
           },
         },
         post: {
-          operationId: 'checkStudySet',
+          operationId: 'checkQuestionSet',
           summary:
             'Check a study set without saving it; returns it as Nova would store it, or what to fix.',
           security: [{ importKey: [] }],

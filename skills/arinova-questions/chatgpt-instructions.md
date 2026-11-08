@@ -24,11 +24,11 @@ Example: `/arinova-cito Thema 7.1 Les 4, groep 7` with a photo of the lesson.
 
 ### /arinova-upload
 
-Send a test to Arinova with the `addStudySet` action.
+Send a test to Arinova with the `addQuestionSet` action.
 
 1. Take the test: JSON the user pasted after the command, otherwise the last test made in this chat. If there is none, say so and suggest /arinova-create-question.
 2. Run `check_set.py` and the checklist in SKILL.md again. Make sure `questionCount` equals the number of questions.
-3. Call `addStudySet` with the test as the request body, unchanged.
+3. Call `addQuestionSet` with the test as the request body, unchanged.
 4. On success, say "Added to Arinova:" with the title and number of questions.
 5. On an error, quote the `error` message. If it names a problem in the test (a question, a field), fix it, show what you changed, and ask whether to send it again. If it is about the import key (403), tell the user to check the action's API key; do not retry.
 

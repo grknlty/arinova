@@ -119,6 +119,6 @@ test('the OpenAPI description points at the public address', async () => {
     }),
   ).json();
   assert.deepEqual(doc.servers, [{ url: 'https://arinova.example' }]);
-  assert.equal(doc.paths['/api/sets'].post.operationId, 'addStudySet');
+  assert.equal(doc.paths['/api/sets'].post.operationId, 'addQuestionSet');
   assert.equal(doc.components.securitySchemes.importKey.scheme, 'bearer');
 });

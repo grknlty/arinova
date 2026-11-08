@@ -114,7 +114,7 @@ ChatGPT cannot reach the site from an ordinary chat: pasting the key into a chat
 1. In ChatGPT, **Explore GPTs → Create → Configure → Create new action**.
 2. **Import from URL**: `https://arinova.vercel.app/openapi.json` (use the production address; preview addresses are behind Vercel’s login).
 3. **Authentication → API Key → Bearer**, and paste the value of `IMPORT_API_TOKEN`. Keep the key only there and in Vercel, never in a chat.
-4. Ask the GPT to add a test; it calls `addStudySet` and the test appears in the learning space. A refused call returns an `error` that says whether the key is missing, has the wrong type, is wrong, or imports are switched off on the server.
+4. Ask the GPT to add a test; it calls `addQuestionSet` and the test appears in the learning space. A refused call returns an `error` that says whether the key is missing, has the wrong type, is wrong, or imports are switched off on the server.
 
 ### API
 

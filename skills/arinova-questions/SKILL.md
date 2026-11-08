@@ -5,7 +5,7 @@ description: Write multiple-choice practice sets for Arinova in its JSON format 
 
 # Arinova questions
 
-Turn study material into one Arinova practice set: 4 options per question, 1 correct answer, 1 explanation. The output is a JSON study set that Arinova imports directly (upload or paste it under **Add material**, or send it with the `addStudySet` action).
+Turn study material into one Arinova practice set: 4 options per question, 1 correct answer, 1 explanation. The output is a JSON study set that Arinova imports directly (upload or paste it under **Add material**, or send it with the `addQuestionSet` action).
 
 A set has one of two test styles (`testStyle`):
 
