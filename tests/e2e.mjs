@@ -222,20 +222,27 @@ try {
   await page.getByRole('button', { name: 'Stop, continue later' }).click();
   await card.getByRole('button', { name: /^Continue · 2\// }).click();
   await page.getByText('Question 2 of', { exact: false }).waitFor();
+  // Every question needs an answer, even when she doesn't understand it.
   await page.getByLabel('I don’t understand the question').check();
+  assert.equal(
+    await page.getByRole('button', { name: 'See my results' }).isDisabled(),
+    true,
+  );
+  await page
+    .getByRole('button', { name: 'A Names a colour', exact: true })
+    .click();
   await page.getByRole('button', { name: 'See my results' }).click();
   await page.getByRole('heading', { name: 'Well practised!' }).waitFor();
   await page.getByText('Correct, but still unsure', { exact: true }).waitFor();
   const review = page.locator('.review');
-  await review.getByText('Not answered', { exact: true }).waitFor();
   // The result filters narrow the answer list; the chart sums the score.
   await page.getByRole('img', { name: /Correct: 1/ }).waitFor();
   await page.getByRole('radio', { name: /Not sure/ }).check();
   assert.equal(await review.locator('.review-card').count(), 1);
   await page.getByRole('radio', { name: /Didn’t understand/ }).check();
-  await review.getByText('Not answered', { exact: true }).waitFor();
+  assert.equal(await review.locator('.review-card').count(), 1);
   await page.getByRole('radio', { name: /^Incorrect/ }).check();
-  await review.getByText('No questions in this group.').waitFor();
+  assert.equal(await review.locator('.review-card').count(), 1);
   await page.getByRole('radio', { name: /^All/ }).check();
   // Previous results have the same filters, across every practice.
   await page.getByRole('button', { name: 'Language', exact: true }).click();
@@ -245,7 +252,7 @@ try {
   await past.getByRole('radio', { name: /Not sure/ }).check();
   assert.equal(await past.locator('.review-card').count(), 1);
   await past.getByRole('radio', { name: /^Incorrect/ }).check();
-  await past.getByText('No questions in this group.').waitFor();
+  assert.equal(await past.locator('.review-card').count(), 1);
   await page.keyboard.press('Escape');
   await past.waitFor({ state: 'detached' });
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
@@ -260,7 +267,7 @@ try {
   assert.equal(attempts.length, 1);
   assert.equal(attempts[0].correct, 1);
   assert.equal(attempts[0].answers[0].confidence, 'unsure');
-  assert.equal(attempts[0].answers[1].selected, null);
+  assert.equal(attempts[0].answers[1].selected, 'Names a colour');
   // The subject list beside the numbers narrows them to one subject.
   const bySubject = page.getByRole('navigation', { name: 'By subject' });
   await bySubject.getByRole('button', { name: /^Language/ }).click();

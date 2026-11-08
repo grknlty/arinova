@@ -10,7 +10,6 @@ import {
   Plus,
   LogOut,
   Upload,
-  Sun,
   Printer,
   Eye,
   EyeOff,
@@ -109,8 +108,9 @@ type Place = {
   result?: Attempt;
   scrollY: number;
 };
-const feelings = ['sure', 'unsure', 'best_guess', 'not_understood'] as const;
-const feelingIcons = [Sun, CloudSun, Shuffle, CircleHelp];
+// The doubts shown on the progress page; "no doubts" is left out.
+const feelings = ['unsure', 'not_understood', 'best_guess'] as const;
+const feelingIcons = [CloudSun, CircleHelp, Shuffle];
 const subjectIcons = {
   taal: BookOpen,
   rekenen: Calculator,
@@ -580,12 +580,19 @@ export default function Home() {
     return !set || !!set.deletedAt;
   };
   const countedAttempts = attempts.filter((a) => !fromDeleted(a));
+  // A test practised more than once counts with its latest attempt only.
+  const newest = new Map<string, Attempt>();
+  for (const a of countedAttempts) {
+    const seen = newest.get(a.setId);
+    if (!seen || a.createdAt > seen.createdAt) newest.set(a.setId, a);
+  }
+  const latestAttempts = [...newest.values()];
   const resultSubjects = [
     ...new Set(attempts.map((a) => canonicalSubject(a.subject))),
   ]
     .sort((a, b) => order(a) - order(b))
     .map((name) => {
-      const answers = countedAttempts
+      const answers = latestAttempts
         .filter((a) => canonicalSubject(a.subject) === name)
         .flatMap((a) => a.answers);
       return {
@@ -599,7 +606,12 @@ export default function Home() {
       ? attempts
       : attempts.filter((a) => canonicalSubject(a.subject) === progressSubject);
   const shownCounted = shownAttempts.filter((a) => !fromDeleted(a));
-  const allAnswers = shownCounted.flatMap((a) => a.answers);
+  const shownLatest = latestAttempts.filter(
+    (a) =>
+      progressSubject === 'all' ||
+      canonicalSubject(a.subject) === progressSubject,
+  );
+  const allAnswers = shownLatest.flatMap((a) => a.answers);
   // Questions answered wrong at least once, most often wrong first.
   const questionOf = (setId: string, question: number) =>
     sets.find((s) => s.id === setId)?.questions[question];
@@ -669,9 +681,6 @@ export default function Home() {
   const correct = allAnswers.filter((a) => a.correct).length;
   const wrong = allAnswers.filter(
     (a) => !a.correct && a.option !== null,
-  ).length;
-  const uncertain = allAnswers.filter(
-    (a) => a.confidence !== 'sure' || !a.correct,
   ).length;
   return (
     <div className="app">
@@ -1113,11 +1122,8 @@ export default function Home() {
                 </button>
                 <button
                   className="button primary"
-                  disabled={
-                    busy ||
-                    (answers[index].option === null &&
-                      answers[index].confidence !== 'not_understood')
-                  }
+                  // Every question needs an answer before moving on.
+                  disabled={busy || answers[index].option === null}
                   onClick={() =>
                     index < selected.questions.length - 1
                       ? setIndex((i) => i + 1)
@@ -1215,39 +1221,34 @@ export default function Home() {
                 <div className="stat-grid">
                   <div>
                     <span>{t.attempts}</span>
-                    <strong>{shownCounted.length}</strong>
+                    <strong>{shownLatest.length}</strong>
+                    <small>
+                      {total} {t.questions}
+                    </small>
                     <BookOpen />
                   </div>
-                  <div>
+                  <div className="good">
                     <span>{t.accuracy}</span>
                     <strong>
                       {total ? Math.round((correct / total) * 100) : 0}
                       <small>%</small>
                     </strong>
+                    <small>
+                      {correct} {t.questions}
+                    </small>
                     <Check />
                   </div>
-                  <div>
+                  <div className="bad">
                     <span>{t.answeredWrong}</span>
                     <strong>
                       {total ? Math.round((wrong / total) * 100) : 0}
                       <small>%</small>
                     </strong>
+                    <small>
+                      {wrong} {t.questions}
+                    </small>
                     <X />
                   </div>
-                  <div>
-                    <span>{t.help}</span>
-                    <strong>{uncertain}</strong>
-                    <CircleHelp />
-                  </div>
-                </div>
-                {total > 0 && (
-                  <section className="paper progress-chart">
-                    <ScoreChart answers={allAnswers} lang={lang} />
-                  </section>
-                )}
-                <p className="content-note">{t.progressNote}</p>
-                <h2>{t.confidence}</h2>
-                <div className="confidence-grid">
                   {feelings.map((feeling, i) => {
                     const Icon = feelingIcons[i];
                     const group = allAnswers.filter(
@@ -1256,20 +1257,24 @@ export default function Home() {
                     // No longer offered in practice; shown only for older answers.
                     if (feeling === 'best_guess' && !group.length) return null;
                     return (
-                      <div key={feeling}>
-                        <span className={`feeling-icon ${feeling}`}>
-                          <Icon size={22} aria-hidden="true" />
-                        </span>
+                      <div className={feeling} key={feeling}>
                         <span>{t[feeling]}</span>
                         <strong>{group.length}</strong>
                         <small>
                           {group.filter((a) => a.correct).length}{' '}
                           {t.correct.toLowerCase()}
                         </small>
+                        <Icon />
                       </div>
                     );
                   })}
                 </div>
+                {total > 0 && (
+                  <section className="paper progress-chart">
+                    <ScoreChart answers={allAnswers} lang={lang} />
+                  </section>
+                )}
+                <p className="content-note">{t.progressNote}</p>
                 <details className="missed-section">
                   <summary>
                     <h2>{t.missed}</h2>
