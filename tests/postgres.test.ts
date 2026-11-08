@@ -12,6 +12,7 @@ import {
   renameEntry,
   setDeleted,
   setDetails,
+  setFactOrder,
 } from '../lib/store';
 import { mergeSubjects, tables } from '../lib/records';
 import { allowLogin } from '../lib/rate-limit';
@@ -151,6 +152,29 @@ test(
           assert.equal('theme' in (await find()), false);
           assert.equal('lesson' in (await find()), false);
           assert.equal((await find()).testStyle, 'cito');
+          await setDetails(set.id, { group: 'Groep 8' });
+          assert.equal((await find()).group, 'Groep 8');
+          await setDetails(set.id, { group: null });
+          assert.equal('group' in (await find()), false);
+          const subject = (await catalog()).subjects.find(
+            (s) => s.name === set.subject,
+          )!;
+          assert.equal(
+            await setFactOrder(subject.id, ['questions', 'lesson']),
+            true,
+          );
+          assert.deepEqual(
+            (await catalog()).subjects
+              .find((s) => s.id === subject.id)!
+              .factOrder!.slice(0, 3),
+            ['questions', 'lesson', 'group'],
+          );
+          await setFactOrder(subject.id, []);
+          assert.equal(
+            'factOrder' in
+              (await catalog()).subjects.find((s) => s.id === subject.id)!,
+            false,
+          );
         },
       );
       await t.test('stores pictures and lists them as URLs', async () => {

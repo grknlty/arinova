@@ -1,7 +1,14 @@
 import { z } from 'zod';
 import { role, sameOrigin } from '@/lib/auth';
 import { canonicalSubject } from '@/lib/subjects';
-import { addGroup, addSubject, catalog, renameEntry } from '@/lib/store';
+import {
+  addGroup,
+  addSubject,
+  catalog,
+  renameEntry,
+  setFactOrder,
+} from '@/lib/store';
+import { factKeys } from '@/lib/facts';
 import { body, unavailable } from '@/lib/http';
 
 const groupName = z.string().trim().min(1).max(60);
@@ -31,6 +38,12 @@ const renamed = z.discriminatedUnion('kind', [
     name: subjectName,
   }),
 ]);
+
+const ordered = z.object({
+  kind: z.literal('subject'),
+  id: z.string().uuid(),
+  factOrder: z.array(z.enum(factKeys)).max(factKeys.length),
+});
 
 const parent = async (req: Request) =>
   sameOrigin(req) && (await role()) === 'parent';
@@ -74,16 +87,23 @@ export async function POST(req: Request) {
 }
 
 // Parent only: renames a group or subject; its id, and everything that
-// points at it, stays the same.
+// points at it, stays the same. With factOrder instead of a name, sets the
+// order of the details on the subject's material cards ([] for the default).
 export async function PATCH(req: Request) {
   if (!(await parent(req))) return new Response(null, { status: 403 });
   let data;
   try {
-    data = renamed.parse(await body(req));
+    data = z.union([ordered, renamed]).parse(await body(req));
   } catch {
-    return invalid('Send { "kind": "group" or "subject", "id", "name" }');
+    return invalid(
+      'Send { "kind": "group" or "subject", "id", "name" }, or { "kind": "subject", "id", "factOrder" }',
+    );
   }
   try {
+    if ('factOrder' in data)
+      return (await setFactOrder(data.id, [...new Set(data.factOrder)]))
+        ? Response.json({ factOrder: data.factOrder })
+        : Response.json({ code: 'NOT_FOUND' }, { status: 404 });
     const result = await renameEntry(data.kind, data.id, data.name);
     return result === 'renamed'
       ? Response.json({ name: data.name })

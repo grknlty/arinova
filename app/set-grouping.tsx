@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import type { words } from '@/lib/i18n';
 import { canonicalSubject } from '@/lib/subjects';
+import { groupIn, lessonIn } from '@/lib/school';
+import { factKeys, type FactKey } from '@/lib/facts';
 import { Dropdown } from './dropdown';
 import {
   testStyles,
@@ -18,14 +20,22 @@ type AnySet = StudySet | PublicSet;
 // and on the page with all subjects, the subject itself.
 export type Grouping = {
   subjectName?: string;
+  group?: string;
   theme?: string;
   lesson?: string;
   testStyle?: string;
 };
-const keys = ['subjectName', 'theme', 'lesson', 'testStyle'] as const;
+const keys = ['subjectName', 'group', 'theme', 'lesson', 'testStyle'] as const;
 type Key = (typeof keys)[number];
-const valueOf = (set: AnySet, key: Key) =>
-  key === 'subjectName' ? canonicalSubject(set.subject) : set[key];
+// Older sets have no group or lesson fields; like their cards, these are
+// then read from the title and description.
+const valueOf = (set: AnySet, key: Key) => {
+  const text = `${set.title} ${set.description}`;
+  if (key === 'subjectName') return canonicalSubject(set.subject);
+  if (key === 'group') return set.group ?? groupIn(text);
+  if (key === 'lesson') return set.lesson ?? lessonIn(text);
+  return set[key];
+};
 
 export const styleLabels: Record<TestStyle, (t: Words) => string> = {
   knowledge: (t) => t.styleKnowledge,
@@ -51,23 +61,27 @@ export function matchesGrouping(set: AnySet, grouping: Grouping) {
 }
 
 // A dropdown for each grouping that at least one set in the subject has, all
-// on one line; a subject without any shows nothing. With subjectLabel (on
-// the page with all subjects) the subject comes first.
+// on one line, in the order of the subject's card details; a subject without
+// any shows nothing. With subjectLabel (on the page with all subjects) the
+// subject comes first.
 export function GroupingFilters({
   sets,
   grouping,
   t,
   subjectLabel,
+  order = [...factKeys],
   onChange,
 }: {
   sets: AnySet[];
   grouping: Grouping;
   t: Words;
   subjectLabel?: (name: string) => string;
+  order?: FactKey[];
   onChange: (grouping: Grouping) => void;
 }) {
   const label = {
     subjectName: t.factSubject,
+    group: t.factGroup,
     theme: t.factTheme,
     lesson: t.factLesson,
     testStyle: t.factStyle,
@@ -76,7 +90,10 @@ export function GroupingFilters({
   const inSubject = sets.filter((s) =>
     matchesGrouping(s, { subjectName: grouping.subjectName }),
   );
-  const groups = keys
+  const position = (key: Key) =>
+    key === 'subjectName' ? -1 : order.indexOf(key);
+  const groups = [...keys]
+    .sort((a, b) => position(a) - position(b))
     .filter((key) => key !== 'subjectName' || subjectLabel)
     .map((key) => ({
       key,
@@ -124,22 +141,26 @@ export function GroupingFilters({
 }
 
 // The parent's form for a saved set's name, description and grouping. An
-// empty theme or lesson, or no test style, clears it.
+// empty group, theme or lesson, or no test style, clears it.
 export function DetailsEditor({
   set,
   sets,
+  groups,
   t,
   onSaved,
 }: {
   set: StudySet;
   // The other sets in the subject, whose themes and lessons are suggested.
   sets: AnySet[];
+  // The school groups to suggest.
+  groups: string[];
   t: Words;
   onSaved: () => Promise<void> | void;
 }) {
   const [form, setForm] = useState({
     title: set.title,
     description: set.description,
+    group: set.group ?? '',
     theme: set.theme ?? '',
     lesson: set.lesson ?? '',
     testStyle: set.testStyle ?? '',
@@ -166,6 +187,7 @@ export function DetailsEditor({
     const details: SetDetails = {
       title: form.title.trim(),
       description: form.description.trim(),
+      group: form.group.trim() || null,
       theme: form.theme.trim() || null,
       lesson: form.lesson.trim() || null,
       testStyle: (form.testStyle || null) as TestStyle | null,
@@ -199,6 +221,20 @@ export function DetailsEditor({
           <textarea rows={3} maxLength={1000} {...field('description')} />
         </label>
         <div className="catalog-row">
+          <label className="field">
+            {t.factGroup}
+            <input
+              maxLength={60}
+              list={`groups-${set.id}`}
+              placeholder={t.detailNone}
+              {...field('group')}
+            />
+            <datalist id={`groups-${set.id}`}>
+              {[...new Set([...groups, ...values(sets, 'group')])].map((v) => (
+                <option key={v} value={v} />
+              ))}
+            </datalist>
+          </label>
           <label className="field">
             {t.factTheme}
             <input

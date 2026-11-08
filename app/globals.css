@@ -1707,6 +1707,36 @@ footer[hidden] {
 .details-actions p {
   margin: 0;
 }
+.fact-order-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+.fact-order-body > p {
+  margin: 0;
+  font-size: 14px;
+}
+.fact-order ol {
+  display: grid;
+  gap: 4px;
+  max-width: 420px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fact-order li {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 12px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.fact-order li span {
+  flex: 1;
+  font-weight: 700;
+}
 @media (max-width: 580px) {
   .set-viewer-inner {
     padding: 0 16px 16px;

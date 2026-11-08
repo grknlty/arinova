@@ -1,5 +1,6 @@
 import type { Pool, PoolClient } from 'pg';
 import type { Attempt, SetDetails, StudySet } from './model';
+import { factOrder, type FactKey } from './facts';
 import type { Role } from './auth';
 import { canonicalSubject } from './subjects';
 
@@ -87,6 +88,7 @@ export const schema = `
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS added_date date;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS theme text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_style text;
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_order text[];
   ALTER TABLE public.arinova_tests
     ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES public.arinova_groups(id);
   CREATE INDEX IF NOT EXISTS arinova_answers_question
@@ -114,7 +116,13 @@ export const learnerGroup = () => process.env.LEARNER_GROUP || 'Groep 7–8';
 // their id when renamed; a subject names its group.
 export type Catalog = {
   groups: { id: string; name: string }[];
-  subjects: { id: string; name: string; group: string | null }[];
+  subjects: {
+    id: string;
+    name: string;
+    group: string | null;
+    // The order of the details on its material cards, when set.
+    factOrder?: FactKey[];
+  }[];
 };
 
 // One family with one learner: both sign-in roles get a user row. The
@@ -348,6 +356,7 @@ export async function updateDetails(
   details: SetDetails,
 ) {
   const columns = {
+    group: 'group_id',
     title: 'title',
     description: 'description',
     theme: 'theme',
@@ -355,11 +364,30 @@ export async function updateDetails(
     testStyle: 'test_style',
   } as const;
   const keys = Object.keys(details) as (keyof SetDetails)[];
+  // A group is stored by id; a new name becomes a new group.
+  const value = async (key: keyof SetDetails) => {
+    if (key !== 'group' || !details.group) return details[key];
+    const found = await client.query(
+      'SELECT id FROM public.arinova_groups WHERE lower(name) = lower($1)',
+      [details.group],
+    );
+    return (
+      found.rows[0] ??
+      (
+        await client.query(
+          'INSERT INTO public.arinova_groups (name) VALUES ($1) RETURNING id',
+          [details.group],
+        )
+      ).rows[0]
+    ).id;
+  };
+  const values = [];
+  for (const k of keys) values.push(await value(k));
   const result = await client.query(
     `UPDATE public.arinova_tests
      SET ${keys.map((k, i) => `${columns[k]} = $${i + 2}`).join(', ')}
      WHERE id = $1`,
-    [setId, ...keys.map((k) => details[k])],
+    [setId, ...values],
   );
   return !!result.rowCount;
 }
@@ -443,7 +471,7 @@ export async function readCatalog(client: Client): Promise<Catalog> {
     'SELECT id, name FROM public.arinova_groups ORDER BY name',
   );
   const subjects = await client.query(
-    `SELECT s.id, s.subject_name, g.name AS group_name
+    `SELECT s.id, s.subject_name, g.name AS group_name, s.fact_order
      FROM public.arinova_subjects s
      LEFT JOIN public.arinova_groups g ON g.id = s.group_id
      ORDER BY s.subject_name`,
@@ -454,8 +482,22 @@ export async function readCatalog(client: Client): Promise<Catalog> {
       id: r.id,
       name: r.subject_name,
       group: r.group_name,
+      ...(r.fact_order?.length ? { factOrder: factOrder(r.fact_order) } : {}),
     })),
   };
+}
+
+// An empty order goes back to the default; false if the subject is missing.
+export async function updateFactOrder(
+  client: Client,
+  id: string,
+  order: FactKey[],
+) {
+  const result = await client.query(
+    'UPDATE public.arinova_subjects SET fact_order = $2 WHERE id = $1',
+    [id, order.length ? order : null],
+  );
+  return !!result.rowCount;
 }
 
 // False when a group with this name already exists, in any case.

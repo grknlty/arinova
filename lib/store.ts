@@ -5,6 +5,7 @@ import path from 'node:path';
 import type { StudySet, Attempt, SetDetails } from './model';
 import type { Role } from './auth';
 import { canonicalSubject } from './subjects';
+import type { FactKey } from './facts';
 import {
   insertAttempt,
   insertGroup,
@@ -14,6 +15,7 @@ import {
   readAttempts,
   readCatalog,
   renameRecord,
+  updateFactOrder,
   markDeleted,
   updateDetails,
   readImage,
@@ -27,7 +29,12 @@ type Data = {
   // Groups and subjects with ids, so they can be renamed; older files have
   // neither, and files from before ids have groups as plain names.
   groups?: { id: string; name: string }[];
-  subjects?: { id?: string; name: string; group: string }[];
+  subjects?: {
+    id?: string;
+    name: string;
+    group: string;
+    factOrder?: FactKey[];
+  }[];
 };
 const globalStore = globalThis as unknown as {
   arinovaQueue?: Promise<unknown>;
@@ -149,7 +156,12 @@ function withIds(data: Data) {
     if (set.group && !has(set.group))
       groups.push({ id: crypto.randomUUID(), name: set.group });
   const key = (name: string) => canonicalSubject(name).toLocaleLowerCase();
-  const subjects: { id: string; name: string; group: string }[] = [];
+  const subjects: {
+    id: string;
+    name: string;
+    group: string;
+    factOrder?: FactKey[];
+  }[] = [];
   for (const s of data.subjects ?? [])
     if (!subjects.some((x) => key(x.name) === key(s.name)))
       subjects.push({ ...s, id: s.id ?? crypto.randomUUID() });
@@ -174,7 +186,12 @@ async function localCatalog() {
   withIds(data);
   return data as Data & {
     groups: { id: string; name: string }[];
-    subjects: { id: string; name: string; group: string }[];
+    subjects: {
+      id: string;
+      name: string;
+      group: string;
+      factOrder?: FactKey[];
+    }[];
   };
 }
 export async function catalog(): Promise<Catalog> {
@@ -265,6 +282,22 @@ export async function setDetails(setId: string, details: SetDetails) {
     ][])
       if (value === null) delete set[key];
       else Object.assign(set, { [key]: value });
+  });
+  return found;
+}
+// The order of the details on a subject's cards; empty goes back to the
+// default. False if the subject does not exist.
+export async function setFactOrder(id: string, order: FactKey[]) {
+  const db = await database();
+  if (db) return updateFactOrder(db, id, order);
+  let found = false;
+  await writeLocal((data) => {
+    withIds(data);
+    const subject = data.subjects!.find((s) => s.id === id);
+    if (!subject) return;
+    found = true;
+    if (order.length) subject.factOrder = order;
+    else delete subject.factOrder;
   });
   return found;
 }

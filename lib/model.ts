@@ -100,6 +100,7 @@ export const setDetailsSchema = z
   .object({
     title: z.string().trim().min(1).max(150),
     description: z.string().trim().max(1000),
+    group: z.string().trim().min(1).max(60).nullable(),
     theme: z.string().trim().min(1).max(100).nullable(),
     lesson: z.string().trim().min(1).max(100).nullable(),
     testStyle: z.enum(testStyles).nullable(),

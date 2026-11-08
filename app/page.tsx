@@ -55,6 +55,8 @@ import type {
 } from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
+import { factOrder, type FactKey } from '@/lib/facts';
+import { FactOrderEditor, factLabels } from './fact-order';
 import { CatalogEditor } from './catalog-editor';
 import {
   DetailsEditor,
@@ -539,6 +541,13 @@ export default function Home() {
     </button>
   );
   const subjectInfo = findSubject(subject);
+  // The order of the details on a subject's cards, as the parent set it.
+  const orderOf = (name: string) =>
+    factOrder(
+      catalog.subjects.find(
+        (s) => canonicalSubject(s.name) === canonicalSubject(name),
+      )?.factOrder,
+    );
   const SubjectIcon = subjectInfo ? subjectIcons[subjectInfo.id] : Sparkle;
   const visibleSets = sets.filter(
     (s) =>
@@ -808,6 +817,7 @@ export default function Home() {
                   ? (name) => subjectLabel(name, lang)
                   : undefined
               }
+              order={orderOf(activeGrouping.subjectName ?? subject)}
               onChange={(g) => setGrouping({ ...g, subject })}
             />
             <div className="cards">
@@ -825,7 +835,11 @@ export default function Home() {
                       {s.description && (
                         <CardDescription text={s.description} lang={lang} />
                       )}
-                      <SetFacts set={s} lang={lang} />
+                      <SetFacts
+                        set={s}
+                        lang={lang}
+                        order={orderOf(s.subject)}
+                      />
                       {s.sample && (
                         <span className="sample-label">{t.sample}</span>
                       )}
@@ -1367,6 +1381,13 @@ export default function Home() {
                     ) : !material ? (
                       <>
                         <h2>{subjectLabel(chosen.name, lang)}</h2>
+                        <FactOrderEditor
+                          key={chosen.id}
+                          subjectId={chosen.id}
+                          saved={chosen.factOrder}
+                          t={t}
+                          onSaved={load}
+                        />
                         {!active.length && (
                           <p className="muted">{t.noMaterials}</p>
                         )}
@@ -1399,6 +1420,7 @@ export default function Home() {
                           key={material.id}
                           set={material}
                           sets={materials}
+                          groups={catalog.groups.map((g) => g.name)}
                           t={t}
                           onSaved={load}
                         />
@@ -1429,6 +1451,7 @@ export default function Home() {
                             set={material}
                             attempts={results}
                             lang={lang}
+                            order={orderOf(material.subject)}
                           />
                         ) : results.length ? (
                           <SetResults
@@ -1916,16 +1939,18 @@ function SetQuestions({
   set,
   attempts,
   lang,
+  order,
 }: {
   set: StudySet;
   attempts: Attempt[];
   lang: Language;
+  order?: FactKey[];
 }) {
   const t = words[lang];
   return (
     <>
       {set.description && <p>{set.description}</p>}
-      <SetFacts set={set} lang={lang} />
+      <SetFacts set={set} lang={lang} order={order} />
       {set.material.trim() && (
         <details className="set-viewer-material">
           <summary>{t.material}</summary>
@@ -2118,49 +2143,48 @@ function CardDescription({ text, lang }: { text: string; lang: Language }) {
     </div>
   );
 }
-// Facts about a set for its card. Older sets have no lesson or group
-// fields, so those are looked for in the title and description.
+// Facts about a set for its card, in the subject's order. Older sets have no
+// lesson or group fields, so those are looked for in the title and
+// description. A theme or test style shows only when the set has one.
 function SetFacts({
   set,
   lang,
+  order = factOrder(),
 }: {
   set: StudySet | PublicSet;
   lang: Language;
+  order?: FactKey[];
 }) {
   const t = words[lang];
+  const labels = factLabels(t);
   const counts = set.questions.map((q) => q.options.length);
   const [low, high] = [Math.min(...counts), Math.max(...counts)];
   const text = `${set.title} ${set.description}`;
-  const facts: [string, string | number][] = [
-    [t.factQuestions, set.questions.length],
-    [t.factOptions, low === high ? low : `${low}–${high}`],
-    [t.factSubject, subjectLabel(set.subject, lang)],
-    ...(set.theme ? [[t.factTheme, set.theme] as [string, string]] : []),
-    [t.factLesson, set.lesson ?? lessonIn(text) ?? '—'],
-    [t.factGroup, set.group ?? groupIn(text) ?? '—'],
+  const values: Record<FactKey, string | number | null> = {
+    group: set.group ?? groupIn(text) ?? '—',
+    theme: set.theme ?? null,
+    lesson: set.lesson ?? lessonIn(text) ?? '—',
+    testStyle: set.testStyle ? styleLabels[set.testStyle](t) : null,
+    questions: set.questions.length,
+    options: low === high ? low : `${low}–${high}`,
+    subject: subjectLabel(set.subject, lang),
     // Sets from before test types existed all have one correct answer.
-    [t.factType, typeLabels[set.testType ?? 'single-choice'](t)],
-    ...(set.testStyle
-      ? [[t.factStyle, styleLabels[set.testStyle](t)] as [string, string]]
-      : []),
-    [
-      t.factDifficulty,
-      set.difficulty ? difficultyLabels[set.difficulty](t) : '—',
-    ],
-    [
-      t.factAdded,
-      // The author's date is a calendar day; the import time is a moment.
-      set.addedDate
-        ? new Date(`${set.addedDate}T12:00:00Z`).toLocaleDateString(lang, {
-            timeZone: 'UTC',
-            dateStyle: 'medium',
-          })
-        : new Date(set.createdAt).toLocaleDateString(lang, {
-            timeZone: 'Europe/Amsterdam',
-            dateStyle: 'medium',
-          }),
-    ],
-  ];
+    testType: typeLabels[set.testType ?? 'single-choice'](t),
+    difficulty: set.difficulty ? difficultyLabels[set.difficulty](t) : '—',
+    // The author's date is a calendar day; the import time is a moment.
+    added: set.addedDate
+      ? new Date(`${set.addedDate}T12:00:00Z`).toLocaleDateString(lang, {
+          timeZone: 'UTC',
+          dateStyle: 'medium',
+        })
+      : new Date(set.createdAt).toLocaleDateString(lang, {
+          timeZone: 'Europe/Amsterdam',
+          dateStyle: 'medium',
+        }),
+  };
+  const facts = order
+    .filter((key) => values[key] !== null)
+    .map((key) => [labels[key], values[key]] as const);
   return (
     <dl className="set-facts">
       {facts.map(([label, value]) => (
