@@ -4,6 +4,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { StudySet, Attempt } from './model';
 import type { Role } from './auth';
+import { canonicalSubject } from './subjects';
 import {
   insertAttempt,
   insertGroup,
@@ -123,8 +124,17 @@ export async function setDeleted(setId: string, deleted: boolean) {
 // Gives every group and subject in a local file an id, as the database
 // does: groups and subjects of imported sets are added, and the first group
 // (the learner's) is made when there is none. True when anything changed.
+// One subject under different spellings is kept as one, and sets and
+// results use its name.
 function withIds(data: Data) {
-  const before = JSON.stringify([data.groups, data.subjects]);
+  const snapshot = () =>
+    JSON.stringify([
+      data.groups,
+      data.subjects,
+      data.sets.map((s) => s.subject),
+      data.attempts.map((a) => a.subject),
+    ]);
+  const before = snapshot();
   const groups = (
     (data.groups ?? []) as ({ id: string; name: string } | string)[]
   ).map((g) =>
@@ -137,20 +147,24 @@ function withIds(data: Data) {
   for (const set of data.sets)
     if (set.group && !has(set.group))
       groups.push({ id: crypto.randomUUID(), name: set.group });
-  const subjects = (data.subjects ?? []).map((s) => ({
-    ...s,
-    id: s.id ?? crypto.randomUUID(),
-  }));
-  for (const set of data.sets)
-    if (!subjects.some((s) => s.name === set.subject))
-      subjects.push({
-        id: crypto.randomUUID(),
-        name: set.subject,
-        group: groups[0].name,
-      });
+  const key = (name: string) => canonicalSubject(name).toLocaleLowerCase();
+  const subjects: { id: string; name: string; group: string }[] = [];
+  for (const s of data.subjects ?? [])
+    if (!subjects.some((x) => key(x.name) === key(s.name)))
+      subjects.push({ ...s, id: s.id ?? crypto.randomUUID() });
+  const subjectOf = (name: string) => {
+    let subject = subjects.find((s) => key(s.name) === key(name));
+    if (!subject) {
+      subject = { id: crypto.randomUUID(), name, group: groups[0].name };
+      subjects.push(subject);
+    }
+    return subject.name;
+  };
+  for (const set of data.sets) set.subject = subjectOf(set.subject);
+  for (const a of data.attempts) a.subject = subjectOf(a.subject);
   data.groups = groups;
   data.subjects = subjects;
-  return JSON.stringify([data.groups, data.subjects]) !== before;
+  return snapshot() !== before;
 }
 async function localCatalog() {
   // Ids are saved first and read back, so callers see the stored ones.

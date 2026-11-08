@@ -1,7 +1,14 @@
 import { Pool, type PoolConfig } from 'pg';
 import { supabaseRootCa } from './supabase-ca';
 import type { Attempt, StudySet } from './model';
-import { insertAttempt, insertSet, schema, seedUsers, tables } from './records';
+import {
+  insertAttempt,
+  insertSet,
+  mergeSubjects,
+  schema,
+  seedUsers,
+  tables,
+} from './records';
 
 const runtime = globalThis as unknown as {
   arinovaDatabase?: Pool;
@@ -65,6 +72,7 @@ async function initialize(pool: Pool) {
         `ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY`,
       );
     await seedUsers(client);
+    await mergeSubjects(client);
     // The built-in Taal sample was development data; hide it where it was
     // seeded. Attempts on it are kept, as with any deleted set.
     await client.query(

@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from 'pg';
 import type { Attempt, StudySet } from './model';
 import type { Role } from './auth';
+import { canonicalSubject } from './subjects';
 
 type Client = Pool | PoolClient;
 
@@ -140,11 +141,20 @@ export async function seedUsers(client: Client) {
 }
 
 export async function insertSet(client: Client, set: StudySet) {
+  // An existing subject is used whatever its case; a new one is filed under
+  // the learner's group.
   const subject = await client.query(
-    `INSERT INTO public.arinova_subjects (subject_name, group_id)
-     VALUES ($1, (SELECT group_id FROM public.arinova_users WHERE role = 'learner'))
-     ON CONFLICT (subject_name) DO UPDATE SET subject_name = EXCLUDED.subject_name
-     RETURNING id`,
+    `WITH found AS (
+       SELECT id FROM public.arinova_subjects
+       WHERE lower(subject_name) = lower($1) ORDER BY created_at LIMIT 1
+     ), added AS (
+       INSERT INTO public.arinova_subjects (subject_name, group_id)
+       SELECT $1, (SELECT group_id FROM public.arinova_users WHERE role = 'learner')
+       WHERE NOT EXISTS (SELECT 1 FROM found)
+       ON CONFLICT (subject_name) DO UPDATE SET subject_name = EXCLUDED.subject_name
+       RETURNING id
+     )
+     SELECT id FROM found UNION ALL SELECT id FROM added`,
     [set.subject],
   );
   const subjectId = subject.rows[0].id;
@@ -455,6 +465,47 @@ export async function insertSubject(
         [name, groupId],
       );
   return done.rowCount ? { created: true } : { created: false, group: null };
+}
+
+// Earlier imports kept one subject apart under different spellings, such as
+// "Natuur & Techniek" next to "Natuur en Techniek", or "engels" next to
+// "Engels". Those are merged: the one with the standard name, or else the
+// oldest, keeps its id and gets the others' tests and questions.
+export async function mergeSubjects(client: Client) {
+  const rows = (
+    await client.query(
+      `SELECT id, subject_name, group_id FROM public.arinova_subjects
+       ORDER BY created_at, id`,
+    )
+  ).rows as { id: string; subject_name: string; group_id: string | null }[];
+  const bySubject = new Map<string, typeof rows>();
+  for (const row of rows) {
+    const key = canonicalSubject(row.subject_name).toLocaleLowerCase();
+    bySubject.set(key, [...(bySubject.get(key) ?? []), row]);
+  }
+  for (const same of bySubject.values()) {
+    if (same.length < 2) continue;
+    const keep =
+      same.find((r) => r.subject_name === canonicalSubject(r.subject_name)) ??
+      same[0];
+    const others = same.filter((r) => r !== keep).map((r) => r.id);
+    for (const table of ['arinova_tests', 'arinova_questions'])
+      await client.query(
+        `UPDATE public.${table} SET subject_id = $1
+         WHERE subject_id = ANY($2::uuid[])`,
+        [keep.id, others],
+      );
+    const group = keep.group_id ?? same.find((r) => r.group_id)?.group_id;
+    await client.query(
+      'DELETE FROM public.arinova_subjects WHERE id = ANY($1::uuid[])',
+      [others],
+    );
+    if (group !== keep.group_id)
+      await client.query(
+        'UPDATE public.arinova_subjects SET group_id = $2 WHERE id = $1',
+        [keep.id, group],
+      );
+  }
 }
 
 export type Renamed = 'renamed' | 'exists' | 'missing';

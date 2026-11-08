@@ -12,7 +12,7 @@ import {
   renameEntry,
   setDeleted,
 } from '../lib/store';
-import { tables } from '../lib/records';
+import { mergeSubjects, tables } from '../lib/records';
 import { allowLogin } from '../lib/rate-limit';
 import { grade } from '../lib/model';
 import { sample } from '../lib/sample';
@@ -222,6 +222,30 @@ test(
           assert.equal(stored?.group, renamedGroup);
         },
       );
+      await t.test('merges one subject kept under two spellings', async () => {
+        const old = `Vak ${crypto.randomUUID()}`;
+        await db.query(
+          'INSERT INTO public.arinova_subjects (subject_name) VALUES ($1), ($2)',
+          [old.toUpperCase(), old],
+        );
+        const set = {
+          ...sample,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+          subject: old,
+        };
+        delete (set as { sample?: boolean }).sample;
+        await addSets([set]);
+        await mergeSubjects(db);
+        const kept = (await catalog()).subjects.filter(
+          (s) => s.name.toLowerCase() === old.toLowerCase(),
+        );
+        assert.equal(kept.length, 1);
+        assert.equal(
+          (await list('sets')).find((s) => s.id === set.id)?.subject,
+          kept[0].name,
+        );
+      });
       await t.test(
         'login limiting persists and enforces its limit in PostgreSQL',
         async () => {

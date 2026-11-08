@@ -104,3 +104,47 @@ test('groups and subjects get ids, match names in any case and rename in place',
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('one subject under different spellings becomes one subject', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'arinova-catalog-'));
+  process.env.ARINOVA_DATA_DIR = dir;
+  try {
+    const set = (subject: string) => ({
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      title: subject,
+      subject,
+      language: 'nl',
+      description: '',
+      material: '',
+      questions: [
+        { prompt: '?', options: ['a', 'b'], correctIndex: 0, explanation: '' },
+      ],
+    });
+    await writeFile(
+      path.join(dir, 'store.json'),
+      JSON.stringify({
+        sets: [
+          set('Natuur en Techniek'),
+          set('Natuur & Techniek'),
+          set('engels'),
+          set('Engels'),
+        ],
+        attempts: [],
+      }),
+    );
+    // The store module keeps its data folder from the first import.
+    const store = await import(`../lib/store.ts?merge=${Date.now()}`);
+    const { subjects } = await store.catalog();
+    assert.deepEqual(
+      subjects.map((s: { name: string }) => s.name),
+      ['engels', 'Natuur en Techniek'],
+    );
+    assert.deepEqual(
+      (await store.list('sets')).map((s: { subject: string }) => s.subject),
+      ['Natuur en Techniek', 'Natuur en Techniek', 'engels', 'engels'],
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
