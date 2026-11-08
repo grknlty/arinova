@@ -40,7 +40,6 @@ export const questionSchema = z
     (q) => !q.optionImages || q.optionImages.length === q.options.length,
     'optionImages needs one entry (or null) per option',
   );
-export type Question = z.infer<typeof questionSchema>;
 export const setSchema = z
   .object({
     title: z.string().trim().min(1).max(150),

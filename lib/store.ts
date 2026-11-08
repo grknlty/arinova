@@ -2,12 +2,11 @@ import type { Pool, PoolClient } from 'pg';
 import { database } from './database';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { StudySet, Attempt, Question } from './model';
+import type { StudySet, Attempt } from './model';
 import type { Role } from './auth';
 import {
   insertAttempt,
   insertGroup,
-  insertQuestion,
   insertSet,
   insertSubject,
   learnerGroup,
@@ -162,23 +161,4 @@ export async function addSubject(name: string, group: string) {
     (data) => (data.subjects = [...(data.subjects ?? []), { name, group }]),
   );
   return { created: true as const };
-}
-// Appends a question to a set; false if the set does not exist.
-export async function addQuestion(setId: string, question: Question) {
-  const db = await database();
-  if (db) {
-    let found = false;
-    await transaction(db, async (client) => {
-      found = await insertQuestion(client, setId, question);
-    });
-    return found;
-  }
-  let found = false;
-  await writeLocal((data) => {
-    const set = data.sets.find((s) => s.id === setId);
-    if (!set) return;
-    found = true;
-    set.questions.push(question);
-  });
-  return found;
 }

@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
-import type { Attempt, Question, StudySet } from './model';
+import type { Attempt, StudySet } from './model';
 import type { Role } from './auth';
 
 type Client = Pool | PoolClient;
@@ -443,49 +443,4 @@ export async function insertSubject(
         [name, group],
       );
   return done.rowCount ? { created: true } : { created: false, group: null };
-}
-
-// Adds a question after the last one of a test; false if there is no such test.
-export async function insertQuestion(
-  client: Client,
-  setId: string,
-  question: Question,
-) {
-  // Locking the test keeps two questions added at once from sharing a position.
-  const test = await client.query(
-    'SELECT subject_id FROM public.arinova_tests WHERE id = $1 FOR UPDATE',
-    [setId],
-  );
-  if (!test.rowCount) return false;
-  const inserted = await client.query(
-    `INSERT INTO public.arinova_questions
-       (subject_id, test_id, position, question_text, explanation, answer_count, image)
-     SELECT $1, $2, COALESCE(max(position) + 1, 0), $3, $4, 1, $5
-     FROM public.arinova_questions WHERE test_id = $2
-     RETURNING id`,
-    [
-      test.rows[0].subject_id,
-      setId,
-      question.prompt,
-      question.explanation,
-      question.image ?? null,
-    ],
-  );
-  await client.query(
-    `INSERT INTO public.arinova_options (question_id, position, option_text, is_answer, image)
-     SELECT $1, o.position, o.text, o.is_answer, o.image
-     FROM jsonb_to_recordset($2) AS o(position integer, text text, is_answer boolean, image text)`,
-    [
-      inserted.rows[0].id,
-      JSON.stringify(
-        question.options.map((text, position) => ({
-          position,
-          text,
-          is_answer: position === question.correctIndex,
-          image: question.optionImages?.[position] ?? null,
-        })),
-      ),
-    ],
-  );
-  return true;
 }

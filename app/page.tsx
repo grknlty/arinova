@@ -180,6 +180,9 @@ export default function Home() {
   const [loginRole, setLoginRole] = useState('learner');
   const [json, setJson] = useState('');
   const [partSize, setPartSize] = useState(0);
+  // The group and subject that imported tests are added to.
+  const [importGroup, setImportGroup] = useState('');
+  const [importSubject, setImportSubject] = useState('');
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
   // The subject the progress page is narrowed to.
   const [progressSubject, setProgressSubject] = useState('all');
@@ -599,6 +602,7 @@ export default function Home() {
     }
   })();
   const preview = drafts.flatMap((d) => split(d, partSize));
+  const groupSubjects = catalog.subjects.filter((s) => s.group === importGroup);
   const longest = Math.max(0, ...drafts.map((d) => d.questions?.length ?? 0));
   const total = allAnswers.length;
   const correct = allAnswers.filter((a) => a.correct).length;
@@ -1196,192 +1200,246 @@ export default function Home() {
           <>
             <span className="eyebrow muted">{t.manage}</span>
             <h1>{t.importTitle}</h1>
-            <p className="page-intro">
-              {t.importText} {t.subjectsHint}{' '}
-              {subjects.map((s) => s.name).join(', ')}.
-            </p>
+            <p className="page-intro">{t.importText}</p>
+            <CatalogEditor catalog={catalog} t={t} onChanged={load} />
             <section className="paper import">
-              <div className="import-actions">
-                <label className="button secondary">
-                  <Upload size={18} />
-                  {t.upload}
-                  <input
-                    type="file"
-                    accept="application/json,.json,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    className="sr-only"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      e.target.value = '';
-                      if (!file) return;
+              <h2>{t.addTests}</h2>
+              <div className="catalog-row">
+                <label className="field">
+                  {t.factGroup}
+                  <select
+                    value={importGroup}
+                    onChange={(e) => {
+                      setImportGroup(e.target.value);
+                      setImportSubject('');
+                      setSaved(false);
+                    }}
+                  >
+                    <option value="" disabled>
+                      {t.chooseGroup}
+                    </option>
+                    {catalog.groups.map((g) => (
+                      <option key={g}>{g}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  {t.factSubject}
+                  <select
+                    value={importSubject}
+                    disabled={!groupSubjects.length}
+                    onChange={(e) => {
+                      setImportSubject(e.target.value);
+                      setSaved(false);
+                    }}
+                  >
+                    <option value="" disabled>
+                      {t.chooseSubject}
+                    </option>
+                    {groupSubjects.map((s) => (
+                      <option key={s.name} value={s.name}>
+                        {subjectLabel(s.name, lang)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {importGroup && !groupSubjects.length && (
+                <p className="form-error">{t.noSubjectsInGroup}</p>
+              )}
+              {!importSubject ? (
+                <p className="muted">{t.chooseGroupSubject}</p>
+              ) : (
+                <>
+                  <div className="import-actions">
+                    <label className="button secondary">
+                      <Upload size={18} />
+                      {t.upload}
+                      <input
+                        type="file"
+                        accept="application/json,.json,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        className="sr-only"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = '';
+                          if (!file) return;
+                          setError('');
+                          setSaved(false);
+                          if (!/\.docx$/i.test(file.name)) {
+                            if (file.size > 4000000) setError(t.importError);
+                            else {
+                              setJson(await file.text());
+                              setOrigin({
+                                source: 'json',
+                                fileName: file.name,
+                              });
+                            }
+                            return;
+                          }
+                          // Word files are read on the server into draft sets
+                          // that show up below for checking before saving.
+                          setBusy(true);
+                          try {
+                            const r = await fetch('/api/import', {
+                              method: 'POST',
+                              body: file,
+                            });
+                            const payload = await r.json().catch(() => null);
+                            if (!r.ok)
+                              setError(
+                                `${t.docxError} ${payload?.error ?? ''}`,
+                              );
+                            else {
+                              setJson(JSON.stringify(payload, null, 2));
+                              setOrigin({
+                                source: 'word',
+                                fileName: file.name,
+                              });
+                            }
+                          } catch {
+                            setError(t.docxError);
+                          } finally {
+                            setBusy(false);
+                          }
+                        }}
+                      />
+                    </label>
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        const { id, createdAt, sample: example, ...s } = sample;
+                        void id;
+                        void createdAt;
+                        void example;
+                        const url = URL.createObjectURL(
+                          new Blob([JSON.stringify(s, null, 2)], {
+                            type: 'application/json',
+                          }),
+                        );
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'nova-example.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                    >
+                      <Download size={16} aria-hidden="true" />
+                      {t.format}
+                    </button>
+                  </div>
+                  {preview.length > 0 && (
+                    <div className="import-preview">
+                      {longest > partSizes[0] && (
+                        <label className="split">
+                          {t.splitLabel}
+                          <select
+                            value={partSize}
+                            onChange={(e) =>
+                              setPartSize(Number(e.target.value))
+                            }
+                          >
+                            <option value={0}>{t.noSplit}</option>
+                            {partSizes
+                              .filter((n) => n < longest)
+                              .map((n) => (
+                                <option key={n} value={n}>
+                                  {n} {t.perPart}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                      )}
+                      <p>{t.checkImport}</p>
+                      <ul>
+                        {preview.map((p, i) => (
+                          <li key={i}>
+                            <strong>{p.title}</strong>
+                            <span>
+                              {subjectLabel(importSubject, lang)} ·{' '}
+                              {importGroup}
+                            </span>
+                            <span>
+                              {p.questions?.length ?? 0} {t.questions}
+                            </span>
+                            {pictures(p) > 0 && (
+                              <span>
+                                {pictures(p)} {t.pictures}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <label className="json-label">
+                    JSON
+                    <textarea
+                      spellCheck={false}
+                      value={json}
+                      onChange={(e) => {
+                        setJson(e.target.value);
+                        setSaved(false);
+                      }}
+                      placeholder={
+                        '{\n  "title": "…",\n  "subject": "Taal",\n  "language": "nl",\n  "material": "…",\n  "questions": […]\n}'
+                      }
+                    />
+                  </label>
+                  <button
+                    disabled={busy || !json.trim()}
+                    className="button primary"
+                    onClick={async () => {
+                      setBusy(true);
                       setError('');
                       setSaved(false);
-                      if (!/\.docx$/i.test(file.name)) {
-                        if (file.size > 4000000) setError(t.importError);
-                        else {
-                          setJson(await file.text());
-                          setOrigin({ source: 'json', fileName: file.name });
-                        }
-                        return;
-                      }
-                      // Word files are read on the server into draft sets
-                      // that show up below for checking before saving.
-                      setBusy(true);
+                      // The chosen group and subject replace any in the file.
+                      const upload = preview.map((p) => ({
+                        ...p,
+                        ...origin,
+                        subject: importSubject,
+                        group: importGroup,
+                      }));
                       try {
-                        const r = await fetch('/api/import', {
+                        const r = await fetch('/api/sets', {
                           method: 'POST',
-                          body: file,
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(
+                            upload.length === 1 ? upload[0] : upload,
+                          ),
                         });
+                        // The server names what is wrong, e.g. which question.
                         const payload = await r.json().catch(() => null);
-                        if (!r.ok)
-                          setError(`${t.docxError} ${payload?.error ?? ''}`);
-                        else {
-                          setJson(JSON.stringify(payload, null, 2));
-                          setOrigin({ source: 'word', fileName: file.name });
+                        if (!r.ok) {
+                          setError(
+                            [t.importError, payload?.error]
+                              .filter(Boolean)
+                              .join(' '),
+                          );
+                          return;
                         }
+                        setJson('');
+                        setOrigin({ source: 'json' });
+                        await load();
+                        setSaved(true);
                       } catch {
-                        setError(t.docxError);
+                        setError(t.importError);
                       } finally {
                         setBusy(false);
                       }
                     }}
-                  />
-                </label>
-                <button
-                  className="text-button"
-                  onClick={() => {
-                    const { id, createdAt, sample: example, ...s } = sample;
-                    void id;
-                    void createdAt;
-                    void example;
-                    const url = URL.createObjectURL(
-                      new Blob([JSON.stringify(s, null, 2)], {
-                        type: 'application/json',
-                      }),
-                    );
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'nova-example.json';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                >
-                  <Download size={16} aria-hidden="true" />
-                  {t.format}
-                </button>
-              </div>
-              {preview.length > 0 && (
-                <div className="import-preview">
-                  {longest > partSizes[0] && (
-                    <label className="split">
-                      {t.splitLabel}
-                      <select
-                        value={partSize}
-                        onChange={(e) => setPartSize(Number(e.target.value))}
-                      >
-                        <option value={0}>{t.noSplit}</option>
-                        {partSizes
-                          .filter((n) => n < longest)
-                          .map((n) => (
-                            <option key={n} value={n}>
-                              {n} {t.perPart}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
+                  >
+                    <Plus size={18} />
+                    {busy ? t.submitting : t.save}
+                  </button>
+                  {saved && (
+                    <p role="status" className="success">
+                      <Check size={18} />
+                      {t.saved}
+                    </p>
                   )}
-                  <p>{t.checkImport}</p>
-                  <ul>
-                    {preview.map((p, i) => (
-                      <li key={i}>
-                        <strong>{p.title}</strong>
-                        <span
-                          className={findSubject(p.subject ?? '') ? '' : 'bad'}
-                        >
-                          {findSubject(p.subject ?? '')
-                            ? subjectLabel(p.subject!, lang)
-                            : t.noSubject}
-                        </span>
-                        <span>
-                          {p.questions?.length ?? 0} {t.questions}
-                        </span>
-                        {pictures(p) > 0 && (
-                          <span>
-                            {pictures(p)} {t.pictures}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <label className="json-label">
-                JSON
-                <textarea
-                  spellCheck={false}
-                  value={json}
-                  onChange={(e) => {
-                    setJson(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder={
-                    '{\n  "title": "…",\n  "subject": "Taal",\n  "language": "nl",\n  "material": "…",\n  "questions": […]\n}'
-                  }
-                />
-              </label>
-              <button
-                disabled={busy || !json.trim()}
-                className="button primary"
-                onClick={async () => {
-                  setBusy(true);
-                  setError('');
-                  setSaved(false);
-                  const upload = preview.map((p) => ({ ...p, ...origin }));
-                  try {
-                    const r = await fetch('/api/sets', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(
-                        upload.length === 1 ? upload[0] : upload,
-                      ),
-                    });
-                    // The server names what is wrong, e.g. which question.
-                    const payload = await r.json().catch(() => null);
-                    if (!r.ok) {
-                      setError(
-                        [t.importError, payload?.error]
-                          .filter(Boolean)
-                          .join(' '),
-                      );
-                      return;
-                    }
-                    setJson('');
-                    setOrigin({ source: 'json' });
-                    await load();
-                    setSaved(true);
-                  } catch {
-                    setError(t.importError);
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                <Plus size={18} />
-                {busy ? t.submitting : t.save}
-              </button>
-              {saved && (
-                <p role="status" className="success">
-                  <Check size={18} />
-                  {t.saved}
-                </p>
+                </>
               )}
             </section>
-            <CatalogEditor
-              catalog={catalog}
-              sets={sets}
-              t={t}
-              lang={lang}
-              onChanged={load}
-            />
             <section className="paper history">
               <h2>{t.history}</h2>
               <p>{t.historyText}</p>

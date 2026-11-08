@@ -1324,6 +1324,19 @@ footer[hidden] {
 /* Add material */
 .import {
   max-width: none;
+  margin-top: 24px;
+  display: grid;
+  gap: 16px;
+}
+.import h2 {
+  margin: 0;
+}
+.import .muted,
+.import .json-label {
+  margin: 0;
+}
+.import > .button {
+  justify-self: start;
 }
 .import-actions {
   display: flex;
@@ -1656,10 +1669,8 @@ textarea {
   flex-shrink: 0;
 }
 
-/* Add group, subject and question */
+/* Add group and subject */
 .catalog {
-  display: grid;
-  gap: 24px;
   margin-top: 24px;
 }
 .catalog-row {
@@ -1678,14 +1689,10 @@ textarea {
 .catalog-form h2 {
   margin: 0;
 }
-.catalog-form .page-intro {
-  margin: 0;
-}
 .catalog-form > .button {
   justify-self: start;
 }
-.field,
-.option-list legend {
+.field {
   display: grid;
   gap: 6px;
   font-size: 15px;
@@ -1693,8 +1700,7 @@ textarea {
   color: var(--muted);
 }
 .field input,
-.field select,
-.option-row input:not([type='radio']) {
+.field select {
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
@@ -1706,47 +1712,6 @@ textarea {
 }
 .field select:disabled {
   opacity: 0.55;
-}
-.field textarea {
-  height: auto;
-  min-height: 0;
-  margin: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #fff;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 400;
-}
-.option-list {
-  border: 0;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-.option-list legend {
-  padding: 0;
-  margin-bottom: 6px;
-}
-.option-list .text-button {
-  justify-self: start;
-}
-.option-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.option-row .icon-button {
-  flex: none;
-  color: var(--muted);
-  background: none;
-}
-.option-row input[type='radio'] {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  accent-color: var(--good);
 }
 .form-error {
   margin: 0;

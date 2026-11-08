@@ -4,7 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-test('groups, subjects in a group, and questions added one by one', async () => {
+test('groups, and subjects in a group, match names in any case', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'arinova-catalog-'));
   process.env.ARINOVA_DATA_DIR = dir;
   delete process.env.DATABASE_URL;
@@ -26,34 +26,6 @@ test('groups, subjects in a group, and questions added one by one', async () => 
       created: false,
       group: 'Groep 5',
     });
-    const question = {
-      prompt: 'Dog?',
-      options: ['Hond', 'Kat'],
-      correctIndex: 0,
-      explanation: '',
-    };
-    const set = {
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      title: 'Dieren',
-      subject: 'Engels',
-      language: 'en' as const,
-      description: '',
-      material: '',
-      group: 'Groep 5',
-      questions: [question],
-    };
-    await store.addSets([set]);
-    assert.equal(
-      await store.addQuestion(set.id, { ...question, prompt: 'Cat?' }),
-      true,
-    );
-    assert.equal(await store.addQuestion(crypto.randomUUID(), question), false);
-    const stored = (await store.list('sets')).find((s) => s.id === set.id);
-    assert.deepEqual(
-      stored?.questions.map((q) => q.prompt),
-      ['Dog?', 'Cat?'],
-    );
     assert.deepEqual((await store.catalog()).subjects, [
       { name: 'Engels', group: 'Groep 5' },
     ]);
