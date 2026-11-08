@@ -562,12 +562,19 @@ export default function Home() {
   // Fixed subjects come in their usual order, any others after them.
   const order = (name: string) =>
     subjects.findIndex((s) => s.name === name) + 1 || 99;
+  // Results of deleted (or no longer existing) material stay in the history
+  // but no longer count. The parent's set list includes deleted sets.
+  const fromDeleted = (a: Attempt) => {
+    const set = sets.find((s) => s.id === a.setId);
+    return !set || !!set.deletedAt;
+  };
+  const countedAttempts = attempts.filter((a) => !fromDeleted(a));
   const resultSubjects = [
     ...new Set(attempts.map((a) => canonicalSubject(a.subject))),
   ]
     .sort((a, b) => order(a) - order(b))
     .map((name) => {
-      const answers = attempts
+      const answers = countedAttempts
         .filter((a) => canonicalSubject(a.subject) === name)
         .flatMap((a) => a.answers);
       return {
@@ -580,12 +587,13 @@ export default function Home() {
     progressSubject === 'all'
       ? attempts
       : attempts.filter((a) => canonicalSubject(a.subject) === progressSubject);
-  const allAnswers = shownAttempts.flatMap((a) => a.answers);
+  const shownCounted = shownAttempts.filter((a) => !fromDeleted(a));
+  const allAnswers = shownCounted.flatMap((a) => a.answers);
   // Questions answered wrong at least once, most often wrong first.
   const questionOf = (setId: string, question: number) =>
     sets.find((s) => s.id === setId)?.questions[question];
   const missed = Object.values(
-    [...shownAttempts]
+    [...shownCounted]
       .reverse()
       .flatMap((a) =>
         a.answers.map((x, i) => ({
@@ -1121,7 +1129,9 @@ export default function Home() {
                   ...resultSubjects.map((s) => ({
                     name: s.name,
                     label: subjectLabel(s.name, lang),
-                    score: Math.round((s.correct / s.total) * 100),
+                    score: s.total
+                      ? Math.round((s.correct / s.total) * 100)
+                      : null,
                   })),
                 ].map((s) => (
                   <label key={s.name}>
@@ -1143,7 +1153,7 @@ export default function Home() {
             <div className="stat-grid">
               <div>
                 <span>{t.attempts}</span>
-                <strong>{shownAttempts.length}</strong>
+                <strong>{shownCounted.length}</strong>
                 <BookOpen />
               </div>
               <div>
@@ -1234,7 +1244,10 @@ export default function Home() {
             <h2>{t.recent}</h2>
             {shownAttempts.length ? (
               shownAttempts.map((a) => (
-                <details className="attempt" key={a.id}>
+                <details
+                  className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
+                  key={a.id}
+                >
                   <summary>
                     <span className="attempt-icon">
                       <BookOpen size={20} />
@@ -1248,6 +1261,9 @@ export default function Home() {
                           timeStyle: 'short',
                         })}
                       </small>
+                      {fromDeleted(a) && (
+                        <span className="pill bad">{t.deletedResult}</span>
+                      )}
                     </span>
                     <span className="attempt-score">
                       {a.correct}/{a.total}

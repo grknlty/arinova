@@ -126,6 +126,7 @@ export const words = {
     delete: 'Verwijderen',
     restore: 'Terugzetten',
     deletedOn: 'Verwijderd op',
+    deletedResult: 'Materiaal verwijderd · telt niet mee',
     confirmDelete:
       '“{title}” verwijderen uit de leerplek? De resultaten van Nova blijven bewaard en je kunt de oefening later terugzetten.',
     questionImage: 'Afbeelding bij de vraag',
@@ -344,6 +345,7 @@ export const words = {
     delete: 'Delete',
     restore: 'Restore',
     deletedOn: 'Deleted on',
+    deletedResult: 'Material deleted · not counted',
     confirmDelete:
       'Delete “{title}” from the learning space? Nova’s results are kept and you can restore the practice later.',
     questionImage: 'Picture for the question',
@@ -560,6 +562,7 @@ export const words = {
     delete: 'Sil',
     restore: 'Geri al',
     deletedOn: 'Silinme tarihi',
+    deletedResult: 'Materyal silindi · sayılmaz',
     confirmDelete:
       '“{title}” öğrenme alanından silinsin mi? Nova’nın sonuçları kalır ve alıştırmayı sonra geri alabilirsin.',
     questionImage: 'Soruya ait resim',

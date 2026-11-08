@@ -1304,6 +1304,23 @@ footer[hidden] {
 .attempt .review {
   padding: 0 20px 20px;
 }
+/* Results of deleted material: listed, but left out of every count. */
+.attempt.deleted {
+  background: var(--soft);
+}
+.attempt.deleted summary strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.attempt.deleted .attempt-score {
+  color: var(--muted);
+}
+.attempt.deleted .pill {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
 .attempt > .result-filters {
   max-width: 850px;
   margin: 0 auto 16px;
