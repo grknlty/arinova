@@ -53,14 +53,6 @@ import type {
 } from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
-import {
-  ArinAstronaut,
-  GalaxyCanvas,
-  MiaShip,
-  NecoAstronaut,
-  PisoShip,
-  SkyEffects,
-} from './space-art';
 import { FaceEditor } from './face-editor';
 import type { Faces } from '@/lib/faces';
 type Progress = {
@@ -92,21 +84,6 @@ type Place = {
 };
 const feelings = ['sure', 'unsure', 'best_guess', 'not_understood'] as const;
 const feelingIcons = [Sun, CloudSun, Shuffle, CircleHelp];
-// Where each subject planet sits around the supernova: orbit radius (px)
-// and angle (degrees, clockwise from the right). All planets turn together,
-// so these gaps never change; the angles were chosen by sweeping a full turn
-// so no planet or label overlaps another at phone, tablet or desktop size.
-// Angles between 0 and 180 are nearer to us and drawn larger.
-const orbits = {
-  taal: [149, 316],
-  rekenen: [169, 4],
-  huiswerk: [85, 55],
-  topografie: [178, 101],
-  aardrijkskunde: [187, 149],
-  verkeer: [76, 191],
-  geschiedenis: [196, 216],
-  natuur: [160, 262],
-} as const;
 const subjectIcons = {
   taal: BookOpen,
   rekenen: Calculator,
@@ -703,7 +680,7 @@ export default function Home() {
         </div>
       </header>
       {session.demo && <div className="demo-banner">{t.demo}</div>}
-      <main className={view === 'library' ? 'main main-home' : 'main'}>
+      <main className="main">
         {error && (
           <div className="error" role="alert">
             {error}
@@ -721,71 +698,40 @@ export default function Home() {
         )}
         {view === 'library' && (
           <>
-            <section className="space-home">
-              <h1 className="sr-only">{t.welcome}</h1>
-              <GalaxyCanvas />
-              <SkyEffects />
-              <MiaShip photo={faces.mia} />
-              <ArinAstronaut photo={faces.arin} />
-              <NecoAstronaut photo={faces.neco} />
-              <PisoShip photo={faces.piso} />
-              <div className="system" role="group" aria-label={t.all}>
-                {Object.values(orbits).map(([r]) => (
-                  <span
-                    key={r}
-                    className="orbit"
-                    style={{ '--r': `${r}px` } as React.CSSProperties}
-                    aria-hidden="true"
-                  />
-                ))}
-                {[58, 66, 97, 109, 121, 133, 141, 205, 214].map((r) => (
-                  <span
-                    key={r}
-                    className="orbit fine"
-                    style={{ '--r': `${r}px` } as React.CSSProperties}
-                    aria-hidden="true"
-                  />
-                ))}
-                <span className="nova-ring" aria-hidden="true" />
+            <h1 className="home-title">{t.welcome}</h1>
+            <div className="subject-cards">
+              {[
+                { id: 'all', name: 'all', label: t.all, Icon: Sparkle },
+                ...subjects.map((s) => ({
+                  id: s.id,
+                  name: s.name as string,
+                  label: subjectLabel(s.name, lang),
+                  Icon: subjectIcons[s.id],
+                })),
+              ].map(({ id, name, label, Icon }) => (
                 <button
-                  className={`nova ${subject === 'all' ? 'selected' : ''}`}
-                  aria-pressed={subject === 'all'}
-                  aria-label={t.all}
-                  onClick={() => pickSubject('all')}
+                  key={id}
+                  className={`subject-card art-${id}`}
+                  aria-label={label}
+                  onClick={() => pickSubject(name)}
                 >
-                  <span className="nova-rays" aria-hidden="true" />
-                  <span className="nova-glow" aria-hidden="true" />
-                  <span className="nova-core" aria-hidden="true" />
+                  <span className="planet" aria-hidden="true">
+                    <Icon size={26} strokeWidth={2} />
+                  </span>
+                  <span className="subject-card-name">{label}</span>
+                  <span className="count" aria-hidden="true">
+                    {
+                      sets.filter(
+                        (x) =>
+                          !x.deletedAt &&
+                          (name === 'all' ||
+                            canonicalSubject(x.subject) === name),
+                      ).length
+                    }
+                  </span>
                 </button>
-                {subjects.map((s, i) => {
-                  const Icon = subjectIcons[s.id];
-                  const [r, a] = orbits[s.id];
-                  return (
-                    <button
-                      key={s.id}
-                      className={`orbit-planet art-${s.id} ${subject === s.name ? 'selected' : ''}`}
-                      style={
-                        {
-                          '--r': `${r}px`,
-                          '--a0': `${a}deg`,
-                          '--n': i,
-                        } as React.CSSProperties
-                      }
-                      aria-pressed={subject === s.name}
-                      aria-label={subjectLabel(s.name, lang)}
-                      onClick={() => pickSubject(s.name)}
-                    >
-                      <span className="planet" aria-hidden="true">
-                        <Icon size={22} strokeWidth={2} />
-                      </span>
-                      <span className="planet-name">
-                        {subjectLabel(s.name, lang)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+              ))}
+            </div>
           </>
         )}
         {view === 'subject' && (
@@ -1221,7 +1167,7 @@ export default function Home() {
                       {a.correct}/{a.total}
                     </span>
                   </summary>
-                  <Review
+                  <FilteredReview
                     attempt={a}
                     lang={lang}
                     questions={a.answers.map((_, i) => questionOf(a.setId, i))}
@@ -1524,7 +1470,7 @@ export default function Home() {
           onClose={() => setResultsOf(null)}
         />
       )}
-      <footer hidden={view === 'library'}>
+      <footer>
         <div className="brand small">
           <Sparkle size={20} fill="currentColor" aria-hidden="true" /> arinova.
         </div>
@@ -2038,6 +1984,35 @@ function QuestionDetail({
           )}
         </>
       )}
+    </>
+  );
+}
+// One practice's answers with its own filter buttons above them.
+function FilteredReview({
+  attempt,
+  lang,
+  questions,
+}: {
+  attempt: Attempt;
+  lang: Language;
+  questions?: (ShownQuestion | undefined)[];
+}) {
+  const [filter, setFilter] = useState<ResultFilter>('all');
+  return (
+    <>
+      <ResultFilters
+        answers={attempt.answers}
+        lang={lang}
+        filter={filter}
+        onFilter={setFilter}
+        name={`result-filter-${attempt.id}`}
+      />
+      <Review
+        attempt={attempt}
+        lang={lang}
+        questions={questions}
+        show={resultFilters[filter]}
+      />
     </>
   );
 }

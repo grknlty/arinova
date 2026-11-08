@@ -226,11 +226,15 @@ try {
   assert.equal(attempts[0].correct, 1);
   assert.equal(attempts[0].answers[0].confidence, 'unsure');
   assert.equal(attempts[0].answers[1].selected, null);
-  await page
-    .locator('summary')
-    .filter({ hasText: 'Browser workflow test' })
-    .click();
+  const session = page
+    .locator('details.attempt')
+    .filter({ hasText: 'Browser workflow test' });
+  await session.locator('summary').click();
   await page.getByText('Correct, but still unsure', { exact: true }).waitFor();
+  // Each practice session in the list has its own answer filters.
+  await session.getByRole('radio', { name: /Not sure/ }).check();
+  assert.equal(await session.locator('.review-card').count(), 1);
+  await session.getByRole('radio', { name: /^All/ }).check();
   // The parent can open a set from the history to see its answers.
   await page.getByRole('button', { name: 'Add material', exact: true }).click();
   await page.getByRole('button', { name: /Browser workflow test/ }).click();

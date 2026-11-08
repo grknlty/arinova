@@ -1,4 +1,4 @@
-/* Arinova: a friendly space theme. Night-sky header and home for fun,
+/* Arinova: a friendly space theme. Night-sky header for fun,
    bright white cards for reading. Text colours meet WCAG AA (4.5:1). */
 :root {
   --space: #0c1445;
@@ -272,38 +272,6 @@ svg {
   min-height: 75vh;
 }
 
-/* Home: the whole page below the header is night sky with the subject
-   planets orbiting a supernova. */
-.main.main-home {
-  max-width: none;
-  padding: 0;
-  min-height: 0;
-  flex: 1;
-  display: grid;
-}
-.space-home {
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  padding: 24px 16px 40px;
-  color: var(--on-space);
-  background-color: var(--space);
-  background-image:
-    var(--stars),
-    radial-gradient(
-      circle at 50% 50%,
-      rgba(255, 79, 154, 0.4),
-      transparent 45%
-    ),
-    radial-gradient(
-      circle at 15% 85%,
-      rgba(59, 130, 246, 0.35),
-      transparent 40%
-    ),
-    linear-gradient(160deg, var(--space) 20%, var(--space-2));
-  background-size: var(--stars-size), auto, auto, auto;
-}
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -315,488 +283,58 @@ svg {
   color: var(--primary);
   line-height: 1.5;
 }
-.system {
-  /* The orbit plane is tilted away from us: orbits are ellipses this much
-     wider and flatter than a circle. Matches TILT in space-art.tsx. */
-  --wide: 1.3;
-  --flat: 0.6;
-  /* Scales every orbit radius; wider screens spread the planets out. */
-  --spread: 1;
-  /* The subject planets are always in front: ships, astronauts and
-     meteorites pass behind them. */
-  position: relative;
-  z-index: 4;
-  width: calc(500px * var(--spread));
-  height: calc(340px * var(--spread));
-  flex-shrink: 0;
+/* Home: a card for every subject, plus one for all of them. */
+.home-title {
+  margin: 0 0 26px;
 }
-/* On narrow screens the orbits are taller than wide rather than tilted:
-   there is not enough width to keep eight tilted planets and their names
-   apart, but there is height. */
-@media (max-width: 759px) {
-  .system {
-    --wide: 1;
-    --flat: 1.55;
-    height: 700px;
-  }
+.subject-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
 }
-/* Grow the system to fill larger screens. */
-@media (min-width: 760px) {
-  .system {
-    --spread: 1.35;
-  }
-}
-@media (min-width: 960px) and (min-height: 760px) {
-  .system {
-    zoom: 1.3;
-  }
-}
-@media (min-width: 1180px) and (min-height: 940px) {
-  .system {
-    zoom: 1.6;
-  }
-}
-.system .orbit {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(var(--r) * var(--spread) * 2 * var(--wide));
-  height: calc(var(--r) * var(--spread) * 2 * var(--flat));
-  margin: calc(var(--r) * var(--spread) * -1 * var(--flat)) 0 0
-    calc(var(--r) * var(--spread) * -1 * var(--wide));
-  border-radius: 50%;
-  border: 1.5px solid;
-  /* Fine golden rings, brighter at the front (bottom) than at the back. */
-  border-color: rgba(255, 214, 150, 0.2) rgba(255, 214, 150, 0.42)
-    rgba(255, 214, 150, 0.7) rgba(255, 214, 150, 0.42);
-  pointer-events: none;
-}
-.system .orbit.fine {
-  border-width: 1px;
-  border-color: rgba(255, 214, 150, 0.08) rgba(255, 214, 150, 0.16)
-    rgba(255, 214, 150, 0.3) rgba(255, 214, 150, 0.16);
-}
-/* The glowing shock ring of the explosion, tilted like a planet ring. */
-.nova-ring {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 310px;
-  height: 86px;
-  margin: -43px 0 0 -155px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 150, 225, 0.6);
-  box-shadow:
-    0 0 20px rgba(255, 110, 210, 0.6),
-    inset 0 0 20px rgba(255, 110, 210, 0.45);
-  transform: rotate(-14deg);
-  z-index: 1;
-  pointer-events: none;
-  animation: ignite 1.2s 0.2s var(--spring) both;
-}
-.nova {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 150px;
-  height: 150px;
-  margin: -75px 0 0 -75px;
-  padding: 0;
-  z-index: 1;
-  border-radius: 50%;
-  background: none;
-  animation: ignite 1s var(--spring) both;
-}
-.nova > span:not(.sr-only) {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.nova-rays {
-  inset: -30px;
-  background:
-    repeating-conic-gradient(
-      from 4deg,
-      rgba(255, 255, 255, 0.9) 0deg 1.2deg,
-      transparent 1.2deg 9deg
-    ),
-    repeating-conic-gradient(
-      from 0deg,
-      rgba(255, 160, 220, 0.7) 0deg 2deg,
-      transparent 2deg 23deg
-    );
-  -webkit-mask-image: radial-gradient(circle, #000 14%, transparent 66%);
-  mask-image: radial-gradient(circle, #000 14%, transparent 66%);
-  animation: spin-in 1.6s var(--ease) both;
-}
-.nova-glow {
-  inset: 6%;
-  background: radial-gradient(
-    circle,
-    rgba(200, 220, 255, 0.95),
-    rgba(255, 79, 154, 0.5) 45%,
-    transparent 72%
-  );
-  filter: blur(4px);
-}
-.nova-core {
-  inset: 32%;
-  background: radial-gradient(circle, #fff 0 38%, #dceaff 60%, #9cbcff);
-  box-shadow:
-    0 0 26px 10px rgba(210, 228, 255, 0.85),
-    0 0 70px 24px rgba(255, 79, 154, 0.35);
-  transition: box-shadow 0.25s var(--ease);
-}
-.nova:focus-visible {
-  outline: 2px solid var(--neon);
-  outline-offset: -40px;
-}
-.nova.selected .nova-core {
-  box-shadow:
-    0 0 0 2px var(--neon),
-    0 0 30px 12px rgba(220, 240, 255, 0.9),
-    0 0 80px 28px rgba(255, 79, 154, 0.45);
-}
-/* A subject planet travelling its tilted orbit. Registering --a as an angle
-   lets the orbit animation move it; planets nearer to us (positive sine)
-   are drawn larger and brighter. */
-@property --a {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-.orbit-planet {
-  --a: var(--a0);
-  --depth: calc(1 + sin(var(--a)) * var(--depth-range, 0.16));
-  z-index: 2;
-  position: absolute;
-  left: calc(50% + cos(var(--a)) * var(--r) * var(--spread) * var(--wide));
-  top: calc(50% + sin(var(--a)) * var(--r) * var(--spread) * var(--flat));
-  width: 120px;
-  margin: -26px 0 0 -60px;
-  padding: 0;
+.subject-card {
+  --planet: var(--violet);
+  --planet-light: #c4b5fd;
+  --planet-dark: #6d28d9;
+  --planet-ink: #fff;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  background: none;
-  transform-origin: 60px 26px;
-  transform: scale(var(--depth));
-  filter: brightness(calc(0.94 + sin(var(--a)) * 0.1));
-  animation:
-    /* backwards, not both: once landed, the planet's own transform (its
-       depth scale) must keep updating as it orbits. */
-    fly-out 0.7s calc(0.35s + var(--n) * 90ms) var(--spring) backwards,
-    orbit 80s linear infinite;
+  gap: 16px;
+  padding: 20px;
+  text-align: left;
+  font: inherit;
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition:
+    transform 0.25s var(--spring),
+    border-color 0.25s var(--ease);
 }
-/* Hold still while a child is about to tap or is using the keyboard. */
-.system:hover .orbit-planet,
-.system:focus-within .orbit-planet {
-  animation-play-state: paused;
-}
-.orbit-planet:active:not(:disabled) {
-  transform: scale(calc(var(--depth) * 0.92));
-}
-.orbit-planet .planet {
+.subject-card .planet {
+  flex: none;
   width: 56px;
   height: 56px;
-  transition: box-shadow 0.2s var(--ease);
 }
-.orbit-planet .planet::after {
-  display: none;
+.subject-card-name {
+  flex: 1;
+  min-width: 0;
 }
-/* HUD tag under each planet: dark glass, thin neon edge, small caps. */
-.planet-name {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: #e6f9ff;
-  background: rgba(8, 12, 40, 0.7);
-  border: 1px solid rgba(94, 231, 255, 0.45);
-  padding: 4px 10px;
-  border-radius: 4px;
-  box-shadow: 0 0 10px rgba(94, 231, 255, 0.2);
-}
-/* The one long name goes on two lines so it fits between its neighbours. */
-.art-natuur .planet-name {
-  white-space: normal;
-  max-width: 10em;
-  text-align: center;
-}
-.orbit-planet.selected .planet {
-  box-shadow:
-    0 0 0 2px var(--neon),
-    0 0 26px color-mix(in srgb, var(--planet) 90%, transparent),
-    0 0 18px rgba(94, 231, 255, 0.6);
-}
-.orbit-planet.selected .planet-name {
-  color: #fff;
-  border-color: var(--neon);
-  box-shadow: 0 0 14px rgba(94, 231, 255, 0.55);
+.subject-card:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 3px;
 }
 @media (hover: hover) {
-  .orbit-planet:hover .planet,
-  .nova:hover .nova-core {
-    filter: brightness(1.12);
+  .subject-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--planet);
   }
 }
-/* Home sky decorations: drawn behind or around the planets and never
-   clickable. */
-.galaxy,
-.sky-effects {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.shooting-star {
-  --angle: -30deg;
-  --color: #fff;
-  position: absolute;
-  width: 170px;
-  height: 2px;
-  border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    #fff,
-    var(--color) 12%,
-    color-mix(in srgb, var(--color) 40%, transparent) 45%,
-    transparent
-  );
-  opacity: 0;
-  transform: rotate(var(--angle));
-  animation: shoot 14s linear infinite;
-}
-.shooting-star::before {
-  content: '';
-  position: absolute;
-  left: -2px;
-  top: -2px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 10px 3px var(--color);
-}
-/* A meteorite burning up: a dark rock, white-hot on its leading edge,
-   inside an orange halo, trailing a long tapering tail of fire. The whole
-   meteor is tilted to its flight angle and flies along its own x axis, so
-   the tail always points straight back. --s sets its size. */
-.meteor {
-  --s: 1;
-  --x0: -12vw;
-  --y0: 4vh;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translate(var(--x0), var(--y0)) rotate(20deg);
-  animation: meteor 30s linear infinite;
-}
-.meteor::before,
-.meteor::after {
-  content: '';
-  position: absolute;
-  right: 50%;
-  top: 50%;
-  border-radius: 50%;
-  pointer-events: none;
-}
-/* Bright core of the tail: white-yellow near the rock, fading to nothing. */
-.meteor::before {
-  width: calc(360px * var(--s));
-  height: calc(9px * var(--s));
-  margin-top: calc(-4.5px * var(--s));
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 150, 60, 0.35) 45%,
-    rgba(255, 210, 120, 0.85) 82%,
-    #fff6d0
-  );
-  clip-path: polygon(0 46%, 100% 0, 100% 100%, 0 54%);
-  filter: blur(0.6px);
-}
-/* Softer orange-red glow around the tail. */
-.meteor::after {
-  width: calc(240px * var(--s));
-  height: calc(30px * var(--s));
-  margin-top: calc(-15px * var(--s));
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 90, 30, 0.25) 55%,
-    rgba(255, 130, 50, 0.6)
-  );
-  clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%);
-  filter: blur(calc(6px * var(--s)));
-}
-.rock {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: calc(26px * var(--s));
-  height: calc(23px * var(--s));
-  border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%;
-  /* Lit from the front (right) where it meets the air. */
-  background: radial-gradient(
-    circle at 78% 46%,
-    #fffbe6 0 10%,
-    #ffd36b 22%,
-    #ff8a2a 36%,
-    #9a3412 54%,
-    #3b1d12 72%,
-    #140806
-  );
-  box-shadow:
-    0 0 calc(10px * var(--s)) calc(3px * var(--s)) rgba(255, 200, 100, 0.9),
-    0 0 calc(30px * var(--s)) calc(10px * var(--s)) rgba(255, 110, 30, 0.55);
-  animation: burn 0.35s ease-in-out infinite alternate;
-}
-/* A wide, faint heat halo around the fireball. */
-.rock::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: calc(110px * var(--s));
-  height: calc(110px * var(--s));
-  margin: calc(-55px * var(--s)) 0 0 calc(-55px * var(--s));
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 140, 50, 0.4),
-    rgba(255, 60, 30, 0.12) 45%,
-    transparent 70%
-  );
-}
-.meteor-small {
-  --s: 0.5;
-  --x0: -8vw;
-  --y0: 38vh;
-  animation-duration: 22s;
-  animation-delay: -14s;
-}
-
-/* Mia flies her spaceship around the top of the sky, left to right. */
-.mia-ship {
-  position: absolute;
-  top: 1%;
-  left: 0;
-  z-index: 2;
-  width: clamp(160px, 22vw, 300px);
-  pointer-events: none;
-  animation: mia-fly 26s linear -6s infinite;
-}
-.mia-ship svg {
-  display: block;
-  width: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 0 12px rgba(255, 95, 200, 0.4))
-    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
-  animation: bob 2.6s ease-in-out infinite alternate;
-}
-.mia-flame {
-  transform-origin: 66px 82px;
-  animation: flicker 0.18s ease-in-out infinite alternate;
-}
-.mia-speed {
-  stroke-dasharray: 14 10;
-  animation: speed 0.4s linear infinite;
-}
-@keyframes speed {
-  to {
-    stroke-dashoffset: 24;
-  }
-}
-/* Jetpack thrusters flicker up and down. */
-.jet-flame {
-  transform-box: fill-box;
-  transform-origin: center top;
-  animation: flicker-y 0.18s ease-in-out infinite alternate;
-}
-@keyframes flicker-y {
-  to {
-    transform: scaleY(0.7);
-    opacity: 0.85;
-  }
-}
-/* Arin floats in her astronaut suit, waving. */
-/* Soft neon glow around rim lights, like bloom in anime space scenes. */
-.rim-light {
-  filter: drop-shadow(0 0 2px currentColor);
-}
-.arin {
-  --w: clamp(92px, 12vw, 180px);
-  position: absolute;
-  left: max(3vw, 10px);
-  bottom: 5%;
-  z-index: 2;
-  width: var(--w);
-  pointer-events: none;
-  filter: drop-shadow(0 0 10px rgba(255, 95, 200, 0.45))
-    drop-shadow(0 16px 20px rgba(0, 0, 0, 0.45));
-  animation: drift 7s ease-in-out infinite alternate;
-}
-
-/* Neco floats on the other side, a little out of step with Arin. */
-.neco {
-  --w: clamp(88px, 11.5vw, 172px);
-  position: absolute;
-  right: max(3vw, 10px);
-  bottom: 9%;
-  z-index: 2;
-  width: var(--w);
-  pointer-events: none;
-  filter: drop-shadow(0 0 10px rgba(94, 231, 255, 0.45))
-    drop-shadow(0 16px 20px rgba(0, 0, 0, 0.45));
-  animation: drift 8s ease-in-out -3s infinite alternate-reverse;
-}
-/* Astronauts at the vertical centre of the sky on wider screens. On phones
-   the planets fill the middle, so they stay near the bottom there. Their
-   drawing is about 1.72 times as tall as it is wide. */
-@media (min-width: 700px) {
-  .arin,
-  .neco {
-    top: 50%;
-    bottom: auto;
-    margin-top: calc(var(--w) * -0.86);
-  }
-}
-/* Piso flies her alien saucer the opposite way to Mia, below the planets. */
-/* Flies at the rocket's height, the other way; one layer behind it, so
-   when they cross the saucer passes behind the rocket. */
-.piso-ship {
-  position: absolute;
-  top: 1%;
-  left: 0;
-  z-index: 1;
-  width: clamp(130px, 17vw, 230px);
-  pointer-events: none;
-  animation: piso-fly 32s linear infinite;
-}
-.piso-ship svg {
-  display: block;
-  width: 100%;
-  overflow: visible;
-  filter: drop-shadow(0 0 12px rgba(94, 231, 255, 0.4))
-    drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
-  animation: bob 3.1s ease-in-out -1s infinite alternate;
-}
-.piso-beam {
-  animation: beam 1.6s ease-in-out infinite alternate;
-}
-.piso-lights circle {
-  animation: blink 1.2s steps(2, jump-none) infinite;
-}
-.piso-lights circle:nth-child(even) {
-  animation-delay: -0.6s;
-}
-
 /* Subject page */
 .subject-heading {
   --planet: var(--violet);
@@ -815,7 +353,7 @@ svg {
   width: 64px;
   height: 64px;
 }
-.subject-heading.art-all .planet {
+.art-all .planet {
   color: var(--space);
   background: radial-gradient(circle, #fff 0 34%, #dceaff 60%, #9cbcff);
   box-shadow:
@@ -1749,6 +1287,12 @@ footer[hidden] {
 .attempt .review {
   padding: 0 20px 20px;
 }
+.attempt > .result-filters {
+  max-width: 850px;
+  margin: 0 auto 16px;
+  padding: 0 20px;
+  border-top: 0;
+}
 .empty {
   padding: 48px 24px;
   text-align: center;
@@ -2361,123 +1905,6 @@ textarea {
     transform: scale(0.4);
   }
 }
-@keyframes spin-in {
-  from {
-    opacity: 0;
-    transform: rotate(-40deg) scale(0.6);
-  }
-}
-@keyframes fly-out {
-  from {
-    opacity: 0;
-    transform: scale(0.2);
-  }
-}
-@keyframes orbit {
-  from {
-    --a: var(--a0);
-  }
-  to {
-    --a: calc(var(--a0) + 360deg);
-  }
-}
-@keyframes shoot {
-  0% {
-    opacity: 0;
-    transform: rotate(var(--angle)) translateX(0);
-  }
-  1% {
-    opacity: 1;
-  }
-  7% {
-    opacity: 0;
-    transform: rotate(var(--angle)) translateX(-560px);
-  }
-  100% {
-    opacity: 0;
-    transform: rotate(var(--angle)) translateX(-560px);
-  }
-}
-@keyframes meteor {
-  from {
-    transform: translate(var(--x0), var(--y0)) rotate(20deg) translateX(0);
-  }
-  to {
-    transform: translate(var(--x0), var(--y0)) rotate(20deg)
-      translateX(calc(100vw + 100vh + 400px));
-  }
-}
-@keyframes burn {
-  to {
-    filter: brightness(1.18);
-  }
-}
-/* The ships loop around the sky: as one fully leaves an edge (-100% is its
-   own width) it comes straight back in from the other. Start and end match,
-   so the loop is seamless. */
-@keyframes mia-fly {
-  0% {
-    transform: translate(-100%, 2vh) rotate(3deg);
-  }
-  25% {
-    transform: translate(calc(25vw - 75%), 0) rotate(-2deg);
-  }
-  50% {
-    transform: translate(calc(50vw - 50%), 3vh) rotate(3deg);
-  }
-  75% {
-    transform: translate(calc(75vw - 25%), 0.5vh) rotate(-2deg);
-  }
-  100% {
-    transform: translate(100vw, 2vh) rotate(3deg);
-  }
-}
-@keyframes piso-fly {
-  0% {
-    transform: translate(100vw, 3vh) rotate(-3deg);
-  }
-  25% {
-    transform: translate(calc(75vw - 25%), -2vh) rotate(2deg);
-  }
-  50% {
-    transform: translate(calc(50vw - 50%), 4vh) rotate(-3deg);
-  }
-  75% {
-    transform: translate(calc(25vw - 75%), -1vh) rotate(2deg);
-  }
-  100% {
-    transform: translate(-100%, 3vh) rotate(-3deg);
-  }
-}
-@keyframes beam {
-  to {
-    opacity: 0.35;
-  }
-}
-@keyframes blink {
-  to {
-    opacity: 0.35;
-  }
-}
-@keyframes bob {
-  to {
-    transform: translateY(10px) rotate(-3deg);
-  }
-}
-@keyframes flicker {
-  to {
-    transform: scaleX(0.75);
-    opacity: 0.8;
-  }
-}
-@keyframes drift {
-  from {
-    transform: translateY(0) rotate(-6deg);
-  }
-  to {
-    transform: translateY(-18px) rotate(5deg);
-  }
-}
 @keyframes pop-in {
   from {
     opacity: 0;
@@ -2560,31 +1987,6 @@ textarea {
   }
   .main {
     padding: 22px 16px 40px;
-  }
-  /* The whole system shrinks to fit; planets and names grow inside it so
-     they stay at least 44px and 12px on screen. */
-  .system {
-    --depth-range: 0.08;
-    zoom: 0.66;
-  }
-  /* Even the farthest planet stays at least 44px on screen. */
-  .orbit-planet {
-    margin-top: -40px;
-    transform-origin: 60px 40px;
-  }
-  .orbit-planet .planet {
-    width: 80px;
-    height: 80px;
-  }
-  .orbit-planet .planet svg {
-    width: 34px;
-    height: 34px;
-  }
-  /* Normal case on phones: narrower, so names stay on screen at 12px. */
-  .planet-name {
-    font-size: 18.5px;
-    letter-spacing: 0;
-    text-transform: none;
   }
   .cards {
     grid-template-columns: 1fr;
@@ -2682,16 +2084,8 @@ textarea {
   button:active:not(:disabled) {
     transform: none;
   }
-  .burst,
-  .shooting-star,
-  .meteor {
+  .burst {
     display: none;
-  }
-  .mia-ship {
-    transform: translate(62vw, 0);
-  }
-  .piso-ship {
-    transform: translate(12vw, 0);
   }
 }
 @media print {
