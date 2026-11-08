@@ -2061,16 +2061,17 @@ textarea {
 }
 /* Export in colour; Delete in red, and Restore (in the deleted list) green. */
 .material-list a.material-action {
-  border-color: transparent;
-  background: linear-gradient(135deg, #0e7490, #2563eb 55%, #7c3aed);
-  color: #fff;
-  transition:
-    filter 0.15s,
-    transform 0.15s var(--spring);
+  border-color: #c9d4fb;
+}
+.material-list a.material-action span {
+  background: linear-gradient(90deg, #0e7490, #2563eb 50%, #7c3aed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .material-list a.material-action:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  border-color: #6d7cf0;
+  background: linear-gradient(135deg, #e0f7fa, #e3e9ff 50%, #f1e8ff);
 }
 .material-list .material-delete {
   border-color: #f4c3c8;

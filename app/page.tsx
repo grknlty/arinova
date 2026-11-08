@@ -1510,8 +1510,27 @@ export default function Home() {
                     download
                     aria-label={`${t.exportJson}: ${s.title}`}
                   >
-                    <Download size={16} aria-hidden="true" />
-                    {t.exportJson}
+                    <Download
+                      size={16}
+                      aria-hidden="true"
+                      stroke={`url(#export-${s.id})`}
+                    >
+                      {/* The icon in the same colours as the text. */}
+                      <defs>
+                        <linearGradient
+                          id={`export-${s.id}`}
+                          gradientUnits="userSpaceOnUse"
+                          x1="0"
+                          y1="0"
+                          x2="24"
+                          y2="24"
+                        >
+                          <stop offset="0" stopColor="#0e7490" />
+                          <stop offset="1" stopColor="#2563eb" />
+                        </linearGradient>
+                      </defs>
+                    </Download>
+                    <span>{t.exportJson}</span>
                   </a>
                   {/* Deleting keeps Nova's results; it can be undone. */}
                   <button
