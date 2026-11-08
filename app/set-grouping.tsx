@@ -157,13 +157,15 @@ export function GroupingFilters({
 }
 
 // The parent's form for a saved set's name, description and grouping. An
-// empty group, theme or lesson, or no test style, clears it.
+// empty group, theme or lesson, or no test style, clears it. Inline, it
+// shows the form alone, without the fold that opens it.
 export function DetailsEditor({
   set,
   sets,
   groups,
   t,
   onSaved,
+  inline = false,
 }: {
   set: StudySet;
   // The other sets in the subject, whose themes and lessons are suggested.
@@ -172,6 +174,7 @@ export function DetailsEditor({
   groups: string[];
   t: Words;
   onSaved: () => Promise<void> | void;
+  inline?: boolean;
 }) {
   const [form, setForm] = useState({
     title: set.title,
@@ -222,97 +225,102 @@ export function DetailsEditor({
       setBusy(false);
     }
   }
-  return (
+  const body = (
+    <form onSubmit={save}>
+      <label className="field">
+        {t.detailTitle}
+        <input required maxLength={150} {...field('title')} />
+      </label>
+      <label className="field">
+        {t.detailDescription}
+        <textarea rows={3} maxLength={1000} {...field('description')} />
+      </label>
+      <div className="catalog-row">
+        <label className="field">
+          {t.factGroup}
+          <input
+            maxLength={60}
+            list={`groups-${set.id}`}
+            placeholder={t.detailNone}
+            {...field('group')}
+          />
+          <datalist id={`groups-${set.id}`}>
+            {[...new Set([...groups, ...values(sets, 'group')])].map((v) => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        </label>
+        <label className="field">
+          {t.factTheme}
+          <input
+            maxLength={100}
+            list={`themes-${set.id}`}
+            placeholder={t.detailNone}
+            {...field('theme')}
+          />
+          <datalist id={`themes-${set.id}`}>
+            {values(sets, 'theme').map((v) => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        </label>
+        <label className="field">
+          {t.factLesson}
+          <input
+            maxLength={100}
+            list={`lessons-${set.id}`}
+            placeholder={t.detailNone}
+            {...field('lesson')}
+          />
+          <datalist id={`lessons-${set.id}`}>
+            {values(sets, 'lesson').map((v) => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        </label>
+        <Dropdown
+          label={t.factStyle}
+          value={form.testStyle}
+          options={[
+            { value: '', label: t.detailNone },
+            ...testStyles.map((s) => ({
+              value: s,
+              label: styleLabels[s](t),
+            })),
+          ]}
+          onChange={(testStyle) => {
+            setForm({ ...form, testStyle });
+            setStatus({ ok: true, message: '' });
+          }}
+        />
+      </div>
+      <div className="details-actions">
+        <button
+          className="button primary"
+          disabled={busy || !form.title.trim()}
+        >
+          {t.saveDetails}
+        </button>
+        {status.message &&
+          (status.ok ? (
+            <p role="status" className="success">
+              <Check size={16} aria-hidden="true" />
+              {status.message}
+            </p>
+          ) : (
+            <p role="alert" className="form-error">
+              {status.message}
+            </p>
+          ))}
+      </div>
+    </form>
+  );
+  return inline ? (
+    body
+  ) : (
     <details className="details-editor">
       <summary>{t.editDetails}</summary>
-      <form onSubmit={save}>
-        <label className="field">
-          {t.detailTitle}
-          <input required maxLength={150} {...field('title')} />
-        </label>
-        <label className="field">
-          {t.detailDescription}
-          <textarea rows={3} maxLength={1000} {...field('description')} />
-        </label>
-        <div className="catalog-row">
-          <label className="field">
-            {t.factGroup}
-            <input
-              maxLength={60}
-              list={`groups-${set.id}`}
-              placeholder={t.detailNone}
-              {...field('group')}
-            />
-            <datalist id={`groups-${set.id}`}>
-              {[...new Set([...groups, ...values(sets, 'group')])].map((v) => (
-                <option key={v} value={v} />
-              ))}
-            </datalist>
-          </label>
-          <label className="field">
-            {t.factTheme}
-            <input
-              maxLength={100}
-              list={`themes-${set.id}`}
-              placeholder={t.detailNone}
-              {...field('theme')}
-            />
-            <datalist id={`themes-${set.id}`}>
-              {values(sets, 'theme').map((v) => (
-                <option key={v} value={v} />
-              ))}
-            </datalist>
-          </label>
-          <label className="field">
-            {t.factLesson}
-            <input
-              maxLength={100}
-              list={`lessons-${set.id}`}
-              placeholder={t.detailNone}
-              {...field('lesson')}
-            />
-            <datalist id={`lessons-${set.id}`}>
-              {values(sets, 'lesson').map((v) => (
-                <option key={v} value={v} />
-              ))}
-            </datalist>
-          </label>
-          <Dropdown
-            label={t.factStyle}
-            value={form.testStyle}
-            options={[
-              { value: '', label: t.detailNone },
-              ...testStyles.map((s) => ({
-                value: s,
-                label: styleLabels[s](t),
-              })),
-            ]}
-            onChange={(testStyle) => {
-              setForm({ ...form, testStyle });
-              setStatus({ ok: true, message: '' });
-            }}
-          />
-        </div>
-        <div className="details-actions">
-          <button
-            className="button primary"
-            disabled={busy || !form.title.trim()}
-          >
-            {t.saveDetails}
-          </button>
-          {status.message &&
-            (status.ok ? (
-              <p role="status" className="success">
-                <Check size={16} aria-hidden="true" />
-                {status.message}
-              </p>
-            ) : (
-              <p role="alert" className="form-error">
-                {status.message}
-              </p>
-            ))}
-        </div>
-      </form>
+      {body}
     </details>
   );
 }

@@ -516,10 +516,33 @@ svg {
 }
 .card-meta {
   display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
   color: var(--muted);
+}
+/* The parent's pencil, in the card's top corner. */
+.card-edit {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: -8px -8px -8px auto;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+}
+.card-edit:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.edit-details form {
+  display: grid;
+  gap: 12px;
 }
 .set-facts {
   display: grid;
@@ -1706,7 +1729,8 @@ footer[hidden] {
   gap: 12px;
   padding: 0 14px 14px;
 }
-.manage .details-editor textarea {
+.manage .details-editor textarea,
+.edit-details textarea {
   width: 100%;
   height: auto;
   margin: 0;

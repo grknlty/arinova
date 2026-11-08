@@ -168,6 +168,23 @@ try {
     ).status(),
     400,
   );
+  // The parent can change a card's details from the learning space.
+  await page
+    .getByRole('button', { name: 'My learning space', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Language', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Edit details: Browser workflow test' })
+    .click();
+  const editor = page.getByRole('dialog', { name: 'Browser workflow test' });
+  await editor.getByLabel('Group', { exact: true }).fill('Groep 8');
+  await editor.getByRole('button', { name: 'Save', exact: true }).click();
+  await editor.waitFor({ state: 'detached' });
+  await page
+    .getByRole('article')
+    .filter({ hasText: 'Browser workflow test' })
+    .getByText('Groep 8', { exact: true })
+    .waitFor();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await page
     .getByLabel('Password', { exact: true })

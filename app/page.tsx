@@ -36,6 +36,7 @@ import {
   ChevronDown,
   FolderOpen,
   Tags,
+  Pencil,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -225,6 +226,8 @@ export default function Home() {
   const [viewing, setViewing] = useState<StudySet | null>(null);
   // The set whose earlier results are shown in a window.
   const [resultsOf, setResultsOf] = useState<StudySet | PublicSet | null>(null);
+  // The card whose details the parent is changing from the learning space.
+  const [editing, setEditing] = useState<StudySet | null>(null);
   // Where the material in the box came from, kept with the saved sets.
   const [origin, setOrigin] = useState<{
     source: 'word' | 'json';
@@ -846,6 +849,18 @@ export default function Home() {
                         <span>
                           {subjectLabel(s.subject, lang)} · {t[s.language]}
                         </span>
+                        {session.role === 'parent' && (
+                          <button
+                            type="button"
+                            className="card-edit"
+                            aria-haspopup="dialog"
+                            aria-label={`${t.editDetails}: ${s.title}`}
+                            title={t.editDetails}
+                            onClick={() => setEditing(s as StudySet)}
+                          >
+                            <Pencil size={16} aria-hidden="true" />
+                          </button>
+                        )}
                       </div>
                       <h3>{s.title}</h3>
                       {s.description && (
@@ -1910,6 +1925,16 @@ export default function Home() {
           onClose={() => setResultsOf(null)}
         />
       )}
+      {editing && (
+        <DetailsDialog
+          set={editing}
+          sets={sets.filter((x) => x.subject === editing.subject)}
+          groups={catalog.groups.map((g) => g.name)}
+          lang={lang}
+          onSaved={load}
+          onClose={() => setEditing(null)}
+        />
+      )}
       <footer>
         <div className="brand small">
           <Sparkle size={20} fill="currentColor" aria-hidden="true" /> nova.
@@ -2160,6 +2185,65 @@ function SetResults({
         </details>
       ))}
     </>
+  );
+}
+// The parent's form for a card's details, opened from the card itself. It
+// closes once saved; Esc or the close button closes it unsaved.
+function DetailsDialog({
+  set,
+  sets,
+  groups,
+  lang,
+  onSaved,
+  onClose,
+}: {
+  set: StudySet;
+  sets: (StudySet | PublicSet)[];
+  groups: string[];
+  lang: Language;
+  onSaved: () => Promise<void> | void;
+  onClose: () => void;
+}) {
+  const t = words[lang];
+  const dialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    dialog.current?.showModal();
+  }, []);
+  return (
+    <dialog
+      ref={dialog}
+      className="set-viewer edit-details"
+      aria-labelledby="edit-details-title"
+      onClose={onClose}
+    >
+      <div className="set-viewer-inner">
+        <header>
+          <div>
+            <span className="eyebrow">{t.editDetails}</span>
+            <h2 id="edit-details-title">{set.title}</h2>
+          </div>
+          <button
+            type="button"
+            className="close-button"
+            aria-label={t.close}
+            onClick={() => dialog.current?.close()}
+          >
+            <X size={22} aria-hidden="true" />
+          </button>
+        </header>
+        <DetailsEditor
+          inline
+          set={set}
+          sets={sets}
+          groups={groups}
+          t={t}
+          onSaved={async () => {
+            await onSaved();
+            dialog.current?.close();
+          }}
+        />
+      </div>
+    </dialog>
   );
 }
 type Words = (typeof words)[Language];
