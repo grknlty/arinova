@@ -104,6 +104,14 @@ Field rules:
 | `questions[].correctIndex` | Counting from 0: 0 = A, 1 = B, 2 = C, 3 = D |
 | `questions[].explanation` | Required; why the correct answer is right |
 
+### File name
+
+When you save the set as a file, or tell the user what to save it as, name it from its fields, joined by ` – ` (space, en dash, space):
+
+`<subject> – <theme> <themanaam> – <lesson> – <questionCount> vragen – <testStyle> – <addedDate>.json`
+
+For example `Natuur en Techniek – Thema 7.1 Puur natuur – Les 4 Nieuwe diersoorten – 30 vragen – Cito – 2026-11-08.json`. Write the lesson without the colon (`Les 4 Nieuwe diersoorten`), the test style as `Cito` or `Kennis`, and "vragen" in the language of the set (`soru` for `tr`, `questions` for `en`). Leave out characters that are not allowed in file names (`/ \ : * ? " < > |`).
+
 Leave out `image` and `optionImages` unless the user supplied pictures (then: data URLs, PNG/JPEG/WebP/GIF, no SVG, about 1 MB each). Arinova also accepts `"image": null` and `"optionImages": [null, null, null, null]` as an export writes them. Do not add `source`, `fileName` or other fields.
 
 ## Check before you answer
@@ -118,4 +126,4 @@ If you can run code, save the JSON and run `python3 scripts/check_set.py <file>`
 - [ ] Across the set: answers spread evenly over A–D, no run longer than 2; at least 7 question types; no two prompts nearly the same
 - [ ] `questionCount` matches; `testStyle` is `cito`; the JSON is valid (double quotes, no trailing commas)
 
-After the code block, give one line: number of questions, the count at A/B/C/D, and the question types used.
+After the code block, give the file name (see **File name**) and one line: number of questions, the count at A/B/C/D, and the question types used. If you can write files, also save the JSON under that name.
