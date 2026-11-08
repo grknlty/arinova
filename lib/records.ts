@@ -1,6 +1,6 @@
 import type { Pool, PoolClient } from 'pg';
 import type { Attempt, SetDetails, StudySet } from './model';
-import { factOrder, type FactKey } from './facts';
+import { buttonOrder, factOrder, type CardLayout } from './facts';
 import type { Role } from './auth';
 import { canonicalSubject } from './subjects';
 
@@ -90,6 +90,8 @@ export const schema = `
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_style text;
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_order text[];
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_count integer;
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS button_order text[];
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS buttons_per_row integer;
   ALTER TABLE public.arinova_tests
     ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES public.arinova_groups(id);
   CREATE INDEX IF NOT EXISTS arinova_answers_question
@@ -117,15 +119,12 @@ export const learnerGroup = () => process.env.LEARNER_GROUP || 'Groep 7–8';
 // their id when renamed; a subject names its group.
 export type Catalog = {
   groups: { id: string; name: string }[];
-  subjects: {
+  // Each subject's card layout is included when the parent set one.
+  subjects: ({
     id: string;
     name: string;
     group: string | null;
-    // The order of the details on its material cards, and how many show
-    // before "more", when set.
-    factOrder?: FactKey[];
-    factCount?: number;
-  }[];
+  } & CardLayout)[];
 };
 
 // One family with one learner: both sign-in roles get a user row. The
@@ -475,7 +474,7 @@ export async function readCatalog(client: Client): Promise<Catalog> {
   );
   const subjects = await client.query(
     `SELECT s.id, s.subject_name, g.name AS group_name, s.fact_order,
-       s.fact_count
+       s.fact_count, s.button_order, s.buttons_per_row
      FROM public.arinova_subjects s
      LEFT JOIN public.arinova_groups g ON g.id = s.group_id
      ORDER BY s.subject_name`,
@@ -488,22 +487,33 @@ export async function readCatalog(client: Client): Promise<Catalog> {
       group: r.group_name,
       ...(r.fact_order?.length ? { factOrder: factOrder(r.fact_order) } : {}),
       ...(r.fact_count ? { factCount: r.fact_count } : {}),
+      ...(r.button_order?.length
+        ? { buttonOrder: buttonOrder(r.button_order) }
+        : {}),
+      ...(r.buttons_per_row ? { buttonsPerRow: r.buttons_per_row } : {}),
     })),
   };
 }
 
-// An empty order or no count goes back to the default; false if the
-// subject is missing.
-export async function updateFactOrder(
+// Replaces a subject's card layout; what it leaves out goes back to the
+// default. False if the subject is missing.
+export async function updateCardLayout(
   client: Client,
   id: string,
-  order: FactKey[],
-  count: number | null,
+  layout: CardLayout,
 ) {
   const result = await client.query(
-    `UPDATE public.arinova_subjects SET fact_order = $2, fact_count = $3
+    `UPDATE public.arinova_subjects
+     SET fact_order = $2, fact_count = $3, button_order = $4,
+       buttons_per_row = $5
      WHERE id = $1`,
-    [id, order.length ? order : null, count],
+    [
+      id,
+      layout.factOrder?.length ? layout.factOrder : null,
+      layout.factCount ?? null,
+      layout.buttonOrder?.length ? layout.buttonOrder : null,
+      layout.buttonsPerRow ?? null,
+    ],
   );
   return !!result.rowCount;
 }

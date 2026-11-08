@@ -3,9 +3,14 @@ import { useState } from 'react';
 import { ArrowDown, ArrowUp, Check } from 'lucide-react';
 import type { words } from '@/lib/i18n';
 import {
+  buttonKeys,
+  buttonOrder,
+  defaultButtonsPerRow,
   defaultFactCount,
   factKeys,
   factOrder,
+  type ButtonKey,
+  type CardLayout,
   type FactKey,
 } from '@/lib/facts';
 
@@ -24,41 +29,115 @@ export const factLabels = (t: Words): Record<FactKey, string> => ({
   added: t.factAdded,
 });
 
-// The parent sets the order of the details on one subject's material cards,
-// moving each up or down, and how many show before "more"; saving the
-// defaults clears the setting.
-export function FactOrderEditor({
+const buttonLabels = (t: Words): Record<ButtonKey, string> => ({
+  study: t.study,
+  results: t.previousResults,
+  startOver: t.startOver,
+  practice: `${t.practice} / ${t.resume}`,
+});
+
+// A number typed into a field, kept as typed so the field can be cleared to
+// type another; outside 1 to max it counts as the default.
+function useNumber(saved: number | undefined, fallback: number, max: number) {
+  const [text, setText] = useState(String(saved ?? fallback));
+  const typed = Math.round(Number(text));
+  const value = typed >= 1 && typed <= max ? typed : fallback;
+  return { text, setText, value, reset: () => setText(String(fallback)) };
+}
+
+// Items moved up or down one place at a time. With cutAt, the items from
+// there on are marked with cutLabel (details waiting behind "more").
+function OrderList<K extends string>({
+  order,
+  labels,
+  t,
+  cutAt,
+  cutLabel,
+  onChange,
+}: {
+  order: K[];
+  labels: Record<K, string>;
+  t: Words;
+  cutAt?: number;
+  cutLabel?: string;
+  onChange: (order: K[]) => void;
+}) {
+  const move = (from: number, to: number) => {
+    const next = [...order];
+    next.splice(to, 0, ...next.splice(from, 1));
+    onChange(next);
+  };
+  return (
+    <ol>
+      {order.map((key, i) => (
+        <li
+          key={key}
+          className={cutAt !== undefined && i >= cutAt ? 'behind-more' : ''}
+          data-more={i === cutAt ? cutLabel : undefined}
+        >
+          <span>{labels[key]}</span>
+          <button
+            type="button"
+            className="small-icon"
+            aria-label={`${t.moveUp}: ${labels[key]}`}
+            title={t.moveUp}
+            disabled={i === 0}
+            onClick={() => move(i, i - 1)}
+          >
+            <ArrowUp size={15} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="small-icon"
+            aria-label={`${t.moveDown}: ${labels[key]}`}
+            title={t.moveDown}
+            disabled={i === order.length - 1}
+            onClick={() => move(i, i + 1)}
+          >
+            <ArrowDown size={15} aria-hidden="true" />
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// The parent sets one subject's material cards: the order of the details
+// and how many show before "more", and the order of the buttons and how
+// many stand side by side. Saving the defaults clears the setting.
+export function CardLayoutEditor({
   subjectId,
   saved,
-  savedCount,
   t,
   onSaved,
 }: {
   subjectId: string;
-  saved?: FactKey[];
-  savedCount?: number;
+  saved: CardLayout;
   t: Words;
   onSaved: () => Promise<void> | void;
 }) {
-  const [order, setOrder] = useState(() => factOrder(saved));
-  // Kept as typed, so the field can be cleared to type another number.
-  const [countText, setCountText] = useState(
-    String(savedCount ?? defaultFactCount),
+  const [facts, setFacts] = useState(() => factOrder(saved.factOrder));
+  const [buttons, setButtons] = useState(() => buttonOrder(saved.buttonOrder));
+  const factCount = useNumber(
+    saved.factCount,
+    defaultFactCount,
+    factKeys.length,
   );
-  const typed = Math.round(Number(countText));
-  const count =
-    typed >= 1 && typed <= factKeys.length ? typed : defaultFactCount;
+  const perRow = useNumber(
+    saved.buttonsPerRow,
+    defaultButtonsPerRow,
+    buttonKeys.length,
+  );
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState({ ok: true, message: '' });
-  const labels = factLabels(t);
-  const move = (from: number, to: number) => {
-    const next = [...order];
-    next.splice(to, 0, ...next.splice(from, 1));
-    setOrder(next);
-    setStatus({ ok: true, message: '' });
-  };
-  const isDefaultOrder = order.every((k, i) => k === factKeys[i]);
-  const isDefault = isDefaultOrder && count === defaultFactCount;
+  const changed = () => setStatus({ ok: true, message: '' });
+  const defaultFacts = facts.every((k, i) => k === factKeys[i]);
+  const defaultButtons = buttons.every((k, i) => k === buttonKeys[i]);
+  const isDefault =
+    defaultFacts &&
+    defaultButtons &&
+    factCount.value === defaultFactCount &&
+    perRow.value === defaultButtonsPerRow;
   async function save() {
     setBusy(true);
     try {
@@ -68,8 +147,13 @@ export function FactOrderEditor({
         body: JSON.stringify({
           kind: 'subject',
           id: subjectId,
-          factOrder: isDefaultOrder ? [] : order,
-          factCount: count === defaultFactCount ? null : count,
+          layout: true,
+          factOrder: defaultFacts ? [] : facts,
+          factCount:
+            factCount.value === defaultFactCount ? null : factCount.value,
+          buttonOrder: defaultButtons ? [] : buttons,
+          buttonsPerRow:
+            perRow.value === defaultButtonsPerRow ? null : perRow.value,
         }),
       });
       if (!r.ok) throw new Error();
@@ -81,56 +165,62 @@ export function FactOrderEditor({
       setBusy(false);
     }
   }
+  const number = (
+    label: string,
+    field: ReturnType<typeof useNumber>,
+    max: number,
+  ) => (
+    <label className="field fact-count">
+      {label}
+      <input
+        type="number"
+        min={1}
+        max={max}
+        value={field.text}
+        onChange={(e) => {
+          field.setText(e.target.value);
+          changed();
+        }}
+        onBlur={() => field.setText(String(field.value))}
+      />
+    </label>
+  );
   return (
     <details className="details-editor fact-order">
-      <summary>{t.factOrderTitle}</summary>
+      <summary>{t.cardLayoutTitle}</summary>
       <div className="fact-order-body">
-        <p className="muted">{t.factOrderText}</p>
-        <label className="field fact-count">
-          {t.factCountLabel}
-          <input
-            type="number"
-            min={1}
-            max={factKeys.length}
-            value={countText}
-            onChange={(e) => {
-              setCountText(e.target.value);
-              setStatus({ ok: true, message: '' });
-            }}
-            onBlur={() => setCountText(String(count))}
-          />
-        </label>
-        <ol>
-          {order.map((key, i) => (
-            <li
-              key={key}
-              className={i >= count ? 'behind-more' : undefined}
-              data-more={i === count ? t.behindMore : undefined}
-            >
-              <span>{labels[key]}</span>
-              <button
-                type="button"
-                className="small-icon"
-                aria-label={`${t.moveUp}: ${labels[key]}`}
-                title={t.moveUp}
-                disabled={i === 0}
-                onClick={() => move(i, i - 1)}
-              >
-                <ArrowUp size={15} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className="small-icon"
-                aria-label={`${t.moveDown}: ${labels[key]}`}
-                title={t.moveDown}
-                disabled={i === order.length - 1}
-                onClick={() => move(i, i + 1)}
-              >
-                <ArrowDown size={15} aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ol>
+        <div className="card-layout">
+          <section>
+            <h3>{t.cardDetails}</h3>
+            <p className="muted">{t.factOrderText}</p>
+            {number(t.factCountLabel, factCount, factKeys.length)}
+            <OrderList
+              order={facts}
+              labels={factLabels(t)}
+              t={t}
+              cutAt={factCount.value}
+              cutLabel={t.behindMore}
+              onChange={(order) => {
+                setFacts(order);
+                changed();
+              }}
+            />
+          </section>
+          <section>
+            <h3>{t.cardButtons}</h3>
+            <p className="muted">{t.buttonOrderText}</p>
+            {number(t.buttonsPerRowLabel, perRow, buttonKeys.length)}
+            <OrderList
+              order={buttons}
+              labels={buttonLabels(t)}
+              t={t}
+              onChange={(order) => {
+                setButtons(order);
+                changed();
+              }}
+            />
+          </section>
+        </div>
         <div className="details-actions">
           <button
             type="button"
@@ -145,9 +235,11 @@ export function FactOrderEditor({
             className="text-button"
             disabled={busy || isDefault}
             onClick={() => {
-              setOrder([...factKeys]);
-              setCountText(String(defaultFactCount));
-              setStatus({ ok: true, message: '' });
+              setFacts([...factKeys]);
+              setButtons([...buttonKeys]);
+              factCount.reset();
+              perRow.reset();
+              changed();
             }}
           >
             {t.resetOrder}

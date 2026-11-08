@@ -12,7 +12,7 @@ import {
   renameEntry,
   setDeleted,
   setDetails,
-  setFactOrder,
+  setCardLayout,
 } from '../lib/store';
 import { mergeSubjects, tables } from '../lib/records';
 import { allowLogin } from '../lib/rate-limit';
@@ -160,7 +160,12 @@ test(
             (s) => s.name === set.subject,
           )!;
           assert.equal(
-            await setFactOrder(subject.id, ['questions', 'lesson'], 3),
+            await setCardLayout(subject.id, {
+              factOrder: ['questions', 'lesson'],
+              factCount: 3,
+              buttonOrder: ['practice'],
+              buttonsPerRow: 1,
+            }),
             true,
           );
           assert.deepEqual(
@@ -174,7 +179,17 @@ test(
               .factCount,
             3,
           );
-          await setFactOrder(subject.id, [], null);
+          assert.deepEqual(
+            (await catalog()).subjects.find((s) => s.id === subject.id)!
+              .buttonOrder,
+            ['practice', 'study', 'results', 'startOver'],
+          );
+          assert.equal(
+            (await catalog()).subjects.find((s) => s.id === subject.id)!
+              .buttonsPerRow,
+            1,
+          );
+          await setCardLayout(subject.id, {});
           assert.equal(
             'factOrder' in
               (await catalog()).subjects.find((s) => s.id === subject.id)!,

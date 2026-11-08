@@ -55,9 +55,14 @@ import type {
 } from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
-import { defaultFactCount, factOrder, type FactKey } from '@/lib/facts';
-import { FactOrderEditor, factLabels } from './fact-order';
-import { Dropdown } from './dropdown';
+import {
+  buttonOrder,
+  defaultButtonsPerRow,
+  defaultFactCount,
+  factOrder,
+  type FactKey,
+} from '@/lib/facts';
+import { CardLayoutEditor, factLabels } from './fact-order';
 import { CatalogEditor } from './catalog-editor';
 import {
   DetailsEditor,
@@ -66,6 +71,7 @@ import {
   styleLabels,
   type Grouping,
 } from './set-grouping';
+import { Dropdown } from './dropdown';
 import type { Catalog } from '@/lib/records';
 type Progress = {
   answers: Answer[];
@@ -855,45 +861,79 @@ export default function Home() {
                       {s.sample && (
                         <span className="sample-label">{t.sample}</span>
                       )}
-                      <div className="card-actions">
-                        {s.material.trim() && (
-                          <button
-                            className="button secondary"
-                            onClick={() => {
-                              setSelected(s);
-                              navigate('study');
-                            }}
+                      {(() => {
+                        // In the subject's order; a button shows only when it
+                        // applies. The last one fills its row.
+                        const layout = layoutOf(s.subject);
+                        const perRow =
+                          layout?.buttonsPerRow ?? defaultButtonsPerRow;
+                        const buttons = {
+                          study: s.material.trim() && (
+                            <button
+                              className="button secondary"
+                              onClick={() => {
+                                setSelected(s);
+                                navigate('study');
+                              }}
+                            >
+                              {t.study}
+                            </button>
+                          ),
+                          results: attempts.some((a) => a.setId === s.id) && (
+                            <button
+                              className="button secondary"
+                              onClick={() => setResultsOf(s)}
+                            >
+                              <History size={16} aria-hidden="true" />
+                              {t.previousResults}
+                            </button>
+                          ),
+                          startOver: progress && (
+                            <button
+                              className="button secondary"
+                              onClick={() => start(s, false)}
+                            >
+                              {t.startOver}
+                            </button>
+                          ),
+                          practice: (
+                            <button
+                              className="button primary"
+                              onClick={() => start(s)}
+                            >
+                              {progress
+                                ? `${t.resume} · ${progress.index + 1}/${s.questions.length}`
+                                : t.practice}
+                              <ArrowRight size={16} />
+                            </button>
+                          ),
+                        };
+                        const shown = buttonOrder(layout?.buttonOrder).filter(
+                          (key) => buttons[key],
+                        );
+                        const lastSpan = perRow - ((shown.length - 1) % perRow);
+                        return (
+                          <div
+                            className="card-actions"
+                            style={
+                              { '--per-row': perRow } as React.CSSProperties
+                            }
                           >
-                            {t.study}
-                          </button>
-                        )}
-                        {attempts.some((a) => a.setId === s.id) && (
-                          <button
-                            className="button secondary"
-                            onClick={() => setResultsOf(s)}
-                          >
-                            <History size={16} aria-hidden="true" />
-                            {t.previousResults}
-                          </button>
-                        )}
-                        {progress && (
-                          <button
-                            className="button secondary"
-                            onClick={() => start(s, false)}
-                          >
-                            {t.startOver}
-                          </button>
-                        )}
-                        <button
-                          className="button primary"
-                          onClick={() => start(s)}
-                        >
-                          {progress
-                            ? `${t.resume} · ${progress.index + 1}/${s.questions.length}`
-                            : t.practice}
-                          <ArrowRight size={16} />
-                        </button>
-                      </div>
+                            {shown.map((key, i) => (
+                              <div
+                                key={key}
+                                style={
+                                  i === shown.length - 1 && lastSpan > 1
+                                    ? { gridColumn: `span ${lastSpan}` }
+                                    : undefined
+                                }
+                              >
+                                {buttons[key]}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </article>
                 );
@@ -1401,11 +1441,10 @@ export default function Home() {
                     ) : !material ? (
                       <>
                         <h2>{subjectLabel(chosen.name, lang)}</h2>
-                        <FactOrderEditor
+                        <CardLayoutEditor
                           key={chosen.id}
                           subjectId={chosen.id}
-                          saved={chosen.factOrder}
-                          savedCount={chosen.factCount}
+                          saved={chosen}
                           t={t}
                           onSaved={load}
                         />

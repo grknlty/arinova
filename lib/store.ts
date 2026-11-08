@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { StudySet, Attempt, SetDetails } from './model';
 import type { Role } from './auth';
 import { canonicalSubject } from './subjects';
-import type { FactKey } from './facts';
+import type { ButtonKey, CardLayout, FactKey } from './facts';
 import {
   insertAttempt,
   insertGroup,
@@ -15,7 +15,7 @@ import {
   readAttempts,
   readCatalog,
   renameRecord,
-  updateFactOrder,
+  updateCardLayout,
   markDeleted,
   updateDetails,
   readImage,
@@ -35,6 +35,8 @@ type Data = {
     group: string;
     factOrder?: FactKey[];
     factCount?: number;
+    buttonOrder?: ButtonKey[];
+    buttonsPerRow?: number;
   }[];
 };
 const globalStore = globalThis as unknown as {
@@ -163,6 +165,8 @@ function withIds(data: Data) {
     group: string;
     factOrder?: FactKey[];
     factCount?: number;
+    buttonOrder?: ButtonKey[];
+    buttonsPerRow?: number;
   }[] = [];
   for (const s of data.subjects ?? [])
     if (!subjects.some((x) => key(x.name) === key(s.name)))
@@ -194,6 +198,8 @@ async function localCatalog() {
       group: string;
       factOrder?: FactKey[];
       factCount?: number;
+      buttonOrder?: ButtonKey[];
+      buttonsPerRow?: number;
     }[];
   };
 }
@@ -288,26 +294,25 @@ export async function setDetails(setId: string, details: SetDetails) {
   });
   return found;
 }
-// The order of the details on a subject's cards and how many show before
-// "more"; an empty order or no count goes back to the default. False if the
-// subject does not exist.
-export async function setFactOrder(
-  id: string,
-  order: FactKey[],
-  count: number | null,
-) {
+// Replaces a subject's card layout; what it leaves out goes back to the
+// default. False if the subject does not exist.
+export async function setCardLayout(id: string, layout: CardLayout) {
   const db = await database();
-  if (db) return updateFactOrder(db, id, order, count);
+  if (db) return updateCardLayout(db, id, layout);
   let found = false;
   await writeLocal((data) => {
     withIds(data);
     const subject = data.subjects!.find((s) => s.id === id);
     if (!subject) return;
     found = true;
-    if (order.length) subject.factOrder = order;
-    else delete subject.factOrder;
-    if (count) subject.factCount = count;
-    else delete subject.factCount;
+    delete subject.factOrder;
+    delete subject.factCount;
+    delete subject.buttonOrder;
+    delete subject.buttonsPerRow;
+    if (layout.factOrder?.length) subject.factOrder = layout.factOrder;
+    if (layout.factCount) subject.factCount = layout.factCount;
+    if (layout.buttonOrder?.length) subject.buttonOrder = layout.buttonOrder;
+    if (layout.buttonsPerRow) subject.buttonsPerRow = layout.buttonsPerRow;
   });
   return found;
 }
