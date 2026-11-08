@@ -2016,6 +2016,24 @@ footer[hidden] {
   color: var(--muted);
   text-decoration: line-through;
 }
+.missed-section summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.missed-section summary::-webkit-details-marker {
+  display: none;
+}
+.missed-section summary .chevron {
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.missed-section[open] summary .chevron {
+  transform: rotate(180deg);
+}
 .missed {
   display: grid;
   gap: 16px;

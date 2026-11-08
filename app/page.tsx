@@ -33,6 +33,7 @@ import {
   RotateCcw,
   X,
   History,
+  ChevronDown,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -1163,33 +1164,41 @@ export default function Home() {
                 );
               })}
             </div>
-            <h2>{t.missed}</h2>
-            {missed.length ? (
-              <div className="missed">
-                {missed.map((m, i) => (
-                  <article className="review-card" key={i}>
-                    <div className="review-heading">
-                      <span className="pill bad">
-                        {m.wrong}/{m.total} {t.wrong.toLowerCase()}
-                      </span>
-                      <span className="confidence-label">{m.title}</span>
-                    </div>
-                    <h3>{m.prompt}</h3>
-                    <QuestionDetail
-                      question={m.question}
-                      prompt={m.prompt}
-                      chosen={m.lastOption}
-                      chosenText={m.last}
-                      chosenLabel={t.lastWrong}
-                      correctAnswer={m.correctAnswer}
-                      lang={lang}
-                    />
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="content-note">{t.noMissed}</p>
-            )}
+            <details className="missed-section">
+              <summary>
+                <h2>{t.missed}</h2>
+                {missed.length > 0 && (
+                  <span className="pill bad">{missed.length}</span>
+                )}
+                <ChevronDown className="chevron" size={24} aria-hidden="true" />
+              </summary>
+              {missed.length ? (
+                <div className="missed">
+                  {missed.map((m, i) => (
+                    <article className="review-card" key={i}>
+                      <div className="review-heading">
+                        <span className="pill bad">
+                          {m.wrong}/{m.total} {t.wrong.toLowerCase()}
+                        </span>
+                        <span className="confidence-label">{m.title}</span>
+                      </div>
+                      <h3>{m.prompt}</h3>
+                      <QuestionDetail
+                        question={m.question}
+                        prompt={m.prompt}
+                        chosen={m.lastOption}
+                        chosenText={m.last}
+                        chosenLabel={t.lastWrong}
+                        correctAnswer={m.correctAnswer}
+                        lang={lang}
+                      />
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="content-note">{t.noMissed}</p>
+              )}
+            </details>
             <h2>{t.recent}</h2>
             {shownAttempts.length ? (
               shownAttempts.map((a) => (
