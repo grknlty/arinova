@@ -1404,9 +1404,18 @@ export default function Home() {
                       </span>
                     )}
                   </button>
+                  <a
+                    className="material-action"
+                    href={`/api/sets/${s.id}/export`}
+                    download
+                    aria-label={`${t.exportJson}: ${s.title}`}
+                  >
+                    <Download size={16} aria-hidden="true" />
+                    {t.exportJson}
+                  </a>
                   {/* Deleting keeps Nova's results; it can be undone. */}
                   <button
-                    className="material-delete"
+                    className="material-action material-delete"
                     disabled={busy}
                     aria-label={`${s.deletedAt ? t.restore : t.delete}: ${s.title}`}
                     onClick={() => setDeleted(s, !s.deletedAt)}

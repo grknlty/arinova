@@ -119,6 +119,29 @@ export async function image(setId: string, question: number, option?: number) {
   ];
   return (option === undefined ? q?.image : q?.optionImages?.[option]) ?? null;
 }
+// One set as the JSON the import takes back: all its details, questions and
+// options, with its pictures as data. Its id and dates of saving and deleting
+// are left out. Null if there is no such set.
+export async function exportSet(setId: string) {
+  const set = (await list('sets')).find((s) => s.id === setId);
+  if (!set) return null;
+  const { id, createdAt, deletedAt, sample, ...details } = set;
+  void [id, createdAt, deletedAt, sample];
+  const questions = await Promise.all(
+    set.questions.map(async (q, i) => ({
+      ...q,
+      ...(q.image ? { image: await image(setId, i) } : {}),
+      ...(q.optionImages
+        ? {
+            optionImages: await Promise.all(
+              q.optionImages.map((o, j) => (o ? image(setId, i, j) : null)),
+            ),
+          }
+        : {}),
+    })),
+  );
+  return { ...details, questions };
+}
 // Deletes (or with deleted false, restores) a set; false if it does not exist.
 export async function setDeleted(setId: string, deleted: boolean) {
   const db = await database();

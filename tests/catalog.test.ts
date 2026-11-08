@@ -160,3 +160,63 @@ test('one subject under different spellings becomes one subject', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('an exported set has everything the import needs, pictures included', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'arinova-export-'));
+  process.env.ARINOVA_DATA_DIR = dir;
+  delete process.env.DATABASE_URL;
+  delete process.env.POSTGRES_URL;
+  try {
+    const png =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const { setSchema } = await import('../lib/model');
+    const set = setSchema.parse({
+      title: 'Les 1 – Levende doden',
+      subject: 'Natuur & Techniek',
+      language: 'nl',
+      material: 'Lesstof',
+      group: 'Groep 7',
+      theme: 'Thema 7.1',
+      lesson: 'Les 1',
+      testStyle: 'cito',
+      questions: [
+        {
+          prompt: 'Wat leeft?',
+          options: ['Steen', 'Plant'],
+          correctIndex: 1,
+          explanation: 'Een plant groeit.',
+          image: png,
+          optionImages: [null, png],
+        },
+      ],
+    });
+    const id = '11111111-2222-4333-8444-555555555555';
+    await writeFile(
+      path.join(dir, 'store.json'),
+      JSON.stringify({
+        sets: [
+          {
+            ...set,
+            id,
+            createdAt: '2026-11-08T09:00:00.000Z',
+            deletedAt: '2026-11-08T10:00:00.000Z',
+          },
+        ],
+        attempts: [],
+      }),
+    );
+    const store = await import(`../lib/store.ts?export=${Date.now()}`);
+    const exported = await store.exportSet(id);
+    assert.ok(exported);
+    assert.equal('id' in exported, false);
+    assert.equal('deletedAt' in exported, false);
+    // Imported again, it is the same set.
+    assert.deepEqual(setSchema.parse(exported), set);
+    assert.equal(
+      await store.exportSet('11111111-2222-4333-8444-000000000000'),
+      null,
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

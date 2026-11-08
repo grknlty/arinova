@@ -134,6 +134,7 @@ export const words = {
     practised: 'geoefend',
     delete: 'Verwijderen',
     restore: 'Terugzetten',
+    exportJson: 'JSON exporteren',
     deletedOn: 'Verwijderd op',
     deletedResult: 'Materiaal verwijderd · telt niet mee',
     confirmDelete:
@@ -363,6 +364,7 @@ export const words = {
     practised: 'practised',
     delete: 'Delete',
     restore: 'Restore',
+    exportJson: 'Export JSON',
     deletedOn: 'Deleted on',
     deletedResult: 'Material deleted · not counted',
     confirmDelete:
@@ -590,6 +592,7 @@ export const words = {
     practised: 'çalışıldı',
     delete: 'Sil',
     restore: 'Geri al',
+    exportJson: 'JSON dışa aktar',
     deletedOn: 'Silinme tarihi',
     deletedResult: 'Materyal silindi · sayılmaz',
     confirmDelete:
