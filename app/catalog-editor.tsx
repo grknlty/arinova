@@ -172,23 +172,6 @@ export function CatalogEditor({
     <section className="paper catalog">
       <div>
         <h2>{t.groupsTitle}</h2>
-        <ul className="name-list">
-          {catalog.groups.map((g) => (
-            <NameRow
-              key={g.id}
-              name={g.name}
-              t={t}
-              onRename={(name) =>
-                change(
-                  'PATCH',
-                  { kind: 'group', id: g.id, name },
-                  t.renamed,
-                  setGroupStatus,
-                )
-              }
-            />
-          ))}
-        </ul>
         <form
           className="add-row"
           onSubmit={async (e) => {
@@ -223,27 +206,26 @@ export function CatalogEditor({
           </button>
         </form>
         <Message {...groupStatus} />
-      </div>
-      <div>
-        <h2>{t.subjectsTitle}</h2>
         <ul className="name-list">
-          {catalog.subjects.map((s) => (
+          {catalog.groups.map((g) => (
             <NameRow
-              key={s.id}
-              name={s.name}
-              detail={s.group}
+              key={g.id}
+              name={g.name}
               t={t}
               onRename={(name) =>
                 change(
                   'PATCH',
-                  { kind: 'subject', id: s.id, name },
+                  { kind: 'group', id: g.id, name },
                   t.renamed,
-                  setSubjectStatus,
+                  setGroupStatus,
                 )
               }
             />
           ))}
         </ul>
+      </div>
+      <div>
+        <h2>{t.subjectsTitle}</h2>
         <form
           className="add-row"
           onSubmit={async (e) => {
@@ -295,6 +277,24 @@ export function CatalogEditor({
           </button>
         </form>
         <Message {...subjectStatus} />
+        <ul className="name-list">
+          {catalog.subjects.map((s) => (
+            <NameRow
+              key={s.id}
+              name={s.name}
+              detail={s.group}
+              t={t}
+              onRename={(name) =>
+                change(
+                  'PATCH',
+                  { kind: 'subject', id: s.id, name },
+                  t.renamed,
+                  setSubjectStatus,
+                )
+              }
+            />
+          ))}
+        </ul>
       </div>
     </section>
   );
