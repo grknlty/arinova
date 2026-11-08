@@ -201,10 +201,10 @@ try {
   const card = page.getByRole('article').filter({
     has: page.getByRole('heading', { name: 'Browser workflow test' }),
   });
-  await card.getByRole('button', { name: 'Learn first' }).click();
+  await card.getByRole('button', { name: 'Learn' }).click();
   await page.getByText('A noun names a thing.', { exact: true }).waitFor();
   await page
-    .getByRole('button', { name: 'Start practice', exact: true })
+    .getByRole('button', { name: 'Start', exact: true })
     .click();
   assert.equal(
     await page.getByRole('button', { name: 'Next question' }).isDisabled(),
@@ -223,7 +223,7 @@ try {
   await card.getByRole('button', { name: /^Continue · 2\// }).click();
   await page.getByText('Question 2 of', { exact: false }).waitFor();
   // Every question needs an answer, even when she doesn't understand it.
-  await page.getByLabel('I don’t understand the question').check();
+  await page.getByLabel('I don’t understand').check();
   assert.equal(
     await page.getByRole('button', { name: 'See my results' }).isDisabled(),
     true,
@@ -246,7 +246,7 @@ try {
   await page.getByRole('radio', { name: /^All/ }).check();
   // Previous results have the same filters, across every practice.
   await page.getByRole('button', { name: 'Language', exact: true }).click();
-  await card.getByRole('button', { name: 'Previous results' }).click();
+  await card.getByRole('button', { name: 'Results' }).click();
   const past = page.getByRole('dialog', { name: 'Browser workflow test' });
   await past.locator('summary').first().click();
   await past.getByRole('radio', { name: /Not sure/ }).check();

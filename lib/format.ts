@@ -60,11 +60,11 @@ export function setJsonSchema(questionRef: string) {
           type: 'string',
           maxLength: 50000,
           description:
-            'Optional study text shown under "Learn first" (plain text; line breaks are kept).',
+            'Optional study text shown under "Learn" (plain text; line breaks are kept).',
         },
         materialDoc: {
           description:
-            'Optional lesson document (PDF, DOC or DOCX), shown as a link under "Learn first". A data URL or https link, or an object { fileName, url } or { fileName, mimeType, data } with base64 data. null for none.',
+            'Optional lesson document (PDF, DOC or DOCX), shown as a link under "Learn". A data URL or https link, or an object { fileName, url } or { fileName, mimeType, data } with base64 data. null for none.',
           oneOf: [
             { type: 'null' },
             { type: 'string' },

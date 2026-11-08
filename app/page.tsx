@@ -82,7 +82,8 @@ type Progress = {
 };
 // Which answers the result page lists; "unsure" includes the older
 // "best guess" answers.
-type ResultFilter = 'all' | 'wrong' | 'correct' | 'unsure' | 'not_understood';
+type ResultFilter =
+  'all' | 'wrong' | 'correct' | 'unanswered' | 'unsure' | 'not_understood';
 const resultFilters: Record<
   ResultFilter,
   (a: Attempt['answers'][number]) => boolean
@@ -90,6 +91,7 @@ const resultFilters: Record<
   all: () => true,
   wrong: (a) => a.option !== null && !a.correct,
   correct: (a) => a.correct,
+  unanswered: (a) => a.option === null,
   unsure: (a) => a.confidence === 'unsure' || a.confidence === 'best_guess',
   not_understood: (a) => a.confidence === 'not_understood',
 };
@@ -712,6 +714,7 @@ export default function Home() {
     all: t.filterAll,
     correct: t.correct,
     wrong: t.wrong,
+    unanswered: t.unanswered,
     unsure: t.unsure,
     not_understood: t.not_understood,
   };
@@ -1342,6 +1345,7 @@ export default function Home() {
                                 value: `${percent(skipped)}%`,
                                 count: skipped,
                                 swatch: donutColours.skipped,
+                                filter: 'unanswered',
                               })}
                           </ul>
                           <ul>
@@ -2679,6 +2683,7 @@ function ResultFilters({
     ['all', t.filterAll],
     ['wrong', t.wrong],
     ['correct', t.correct],
+    ['unanswered', t.unanswered],
     ['unsure', t.filterUnsure],
     ['not_understood', t.filterNotUnderstood],
   ];
