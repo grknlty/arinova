@@ -1532,6 +1532,11 @@ footer[hidden] {
   font-size: 13px;
   text-align: center;
 }
+.results-viewer .result-filters {
+  margin: 0 0 18px;
+  padding: 0;
+  border-top: 0;
+}
 .review {
   display: grid;
   gap: 16px;
@@ -1597,17 +1602,17 @@ footer[hidden] {
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  gap: 12px;
 }
 .stat-grid > div {
   background: var(--card);
   border: 2px solid var(--line);
-  padding: 24px;
+  padding: 14px 18px;
   border-radius: var(--radius);
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 2px;
   box-shadow: var(--shadow-card);
 }
 .stat-grid span {
@@ -1618,21 +1623,21 @@ footer[hidden] {
 }
 .stat-grid strong {
   font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 44px;
+  font-size: 30px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .stat-grid small {
-  font-size: 22px;
+  font-size: 17px;
 }
 .stat-grid svg {
   position: absolute;
-  right: 20px;
-  top: 20px;
-  width: 40px;
-  height: 40px;
-  padding: 9px;
-  border-radius: 12px;
+  right: 14px;
+  top: 14px;
+  width: 32px;
+  height: 32px;
+  padding: 7px;
+  border-radius: 10px;
   background: var(--soft);
   color: var(--primary);
 }
@@ -1668,32 +1673,38 @@ footer[hidden] {
   gap: 12px;
   margin-bottom: 30px;
 }
+/* One line per feeling: icon, name over the correct count, then the total. */
 .confidence-grid > div {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'icon label count'
+    'icon detail count';
+  align-items: center;
+  gap: 0 12px;
   border: 2px solid var(--line);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 12px 16px;
   background: var(--card);
   box-shadow: var(--shadow-card);
 }
 .confidence-grid span {
-  font-size: 15px;
+  grid-area: label;
+  font-size: 14px;
   font-weight: 600;
-  min-height: 30px;
 }
 .confidence-grid .feeling-icon {
-  min-height: 0;
+  grid-area: icon;
 }
 .confidence-grid strong {
+  grid-area: count;
   font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 30px;
+  font-size: 24px;
 }
 .confidence-grid small {
+  grid-area: detail;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
 }
 .attempt {
   border: 2px solid var(--line);
@@ -2615,8 +2626,8 @@ textarea {
     gap: 8px;
   }
   .stat-grid > div {
-    padding: 16px 12px;
-    gap: 10px;
+    padding: 12px;
+    gap: 4px;
   }
   .stat-grid svg {
     display: none;
@@ -2627,10 +2638,11 @@ textarea {
     min-height: 36px;
   }
   .stat-grid strong {
-    font-size: 32px;
+    font-size: 26px;
   }
   .confidence-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
   .review-card {
     padding: 18px;
