@@ -552,6 +552,7 @@ svg {
   margin: 0 0 12px;
 }
 .card-description {
+  position: relative;
   margin: 0 0 12px;
 }
 .card-description p {
@@ -574,6 +575,15 @@ svg {
   color: var(--primary);
   text-decoration: underline;
   cursor: pointer;
+}
+/* Over the end of the clamped second line, fading the text out before it. */
+.more-link.at-end {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-left: 32px;
+  line-height: 24px;
+  background: linear-gradient(to right, transparent, var(--card) 28px);
 }
 .sample-label {
   font-size: 13px;

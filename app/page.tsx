@@ -2089,15 +2089,30 @@ function CardDescription({ text, lang }: { text: string; lang: Language }) {
     <div className="card-description">
       <p ref={ref} className={open ? undefined : 'clamped'}>
         {text}
+        {/* Open, the link follows the last word; closed, it covers the end of
+            the second line. */}
+        {long && open && (
+          <>
+            {' '}
+            <button
+              type="button"
+              className="more-link"
+              aria-expanded
+              onClick={() => setOpen(false)}
+            >
+              {t.showLess}
+            </button>
+          </>
+        )}
       </p>
-      {long && (
+      {long && !open && (
         <button
           type="button"
-          className="more-link"
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
+          className="more-link at-end"
+          aria-expanded={false}
+          onClick={() => setOpen(true)}
         >
-          {open ? t.showLess : t.showMore}
+          {t.showMore}
         </button>
       )}
     </div>
