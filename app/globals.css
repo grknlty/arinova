@@ -2107,6 +2107,28 @@ textarea {
   font-weight: 400;
   color: var(--muted);
 }
+/* A subject on the materials page: its icon, name and group, and count. */
+.subject-list .subject-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 10px;
+}
+.subject-row .detail {
+  display: block;
+}
+.subject-row-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--primary);
+}
+.subject-row[aria-current='true'] .subject-row-icon {
+  background: var(--primary);
+  color: #fff;
+}
 .subject-list button:hover,
 .material-list button:hover {
   background: var(--soft);
