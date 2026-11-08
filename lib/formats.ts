@@ -28,6 +28,7 @@ type Toets = {
   language?: unknown;
   description?: unknown;
   material?: unknown;
+  materialDoc?: unknown;
   lessons?: unknown[];
   group?: unknown;
   questions?: Question[];
@@ -95,6 +96,7 @@ function convert(toets: Toets) {
       : {}),
     ...(toets.group ? { group: toets.group } : {}),
     material: toets.material ?? '',
+    ...(toets.materialDoc ? { materialDoc: toets.materialDoc } : {}),
     questions,
   };
 }

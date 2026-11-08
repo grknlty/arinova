@@ -722,6 +722,36 @@ footer[hidden] {
   margin: 28px 0;
   font-size: 18px;
 }
+.material-doc {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  margin: 24px 0 28px;
+  padding: 12px 18px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--soft);
+  color: var(--primary);
+  text-decoration: none;
+}
+.material-doc:hover {
+  border-color: var(--primary);
+}
+.material-doc svg {
+  flex: none;
+}
+.material-doc span {
+  display: grid;
+  min-width: 0;
+}
+.material-doc small {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .paper-actions {
   display: flex;
   justify-content: space-between;

@@ -36,6 +36,7 @@ import {
   FolderOpen,
   Tags,
   Pencil,
+  FileText,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -52,6 +53,7 @@ import type {
   Attempt,
   TestType,
   Difficulty,
+  MaterialDoc,
 } from '@/lib/model';
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
@@ -972,7 +974,7 @@ export default function Home() {
                         const perRow =
                           layout?.buttonsPerRow ?? defaultButtonsPerRow;
                         const buttons = {
-                          study: s.material.trim() && (
+                          study: (s.material.trim() || s.materialDoc) && (
                             <button
                               className="button secondary"
                               onClick={() => {
@@ -1072,9 +1074,14 @@ export default function Home() {
                 <BookOpen size={16} />
                 {t.material}
               </span>
-              <div className="material">
-                {selected.material || t.noMaterial}
-              </div>
+              {selected.materialDoc && (
+                <MaterialDocLink doc={selected.materialDoc} lang={lang} />
+              )}
+              {(selected.material || !selected.materialDoc) && (
+                <div className="material">
+                  {selected.material || t.noMaterial}
+                </div>
+              )}
               <div className="paper-actions">
                 <button
                   className="button secondary"
@@ -2172,6 +2179,25 @@ function ResultsViewer({
 }
 // A set's questions with the right answer marked, and how often Nova
 // answered each one wrong.
+// Opens the material document: a PDF in a new tab, a Word file downloads.
+function MaterialDocLink({ doc, lang }: { doc: MaterialDoc; lang: Language }) {
+  const kind = (doc.fileName ?? doc.url).match(/\.(pdf|docx?)$/i)?.[1];
+  return (
+    <a
+      className="material-doc"
+      href={doc.url}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <FileText size={22} aria-hidden="true" />
+      <span>
+        <strong>{words[lang].materialDoc}</strong>
+        <small>{doc.fileName ?? (kind ? kind.toUpperCase() : doc.url)}</small>
+      </span>
+    </a>
+  );
+}
+
 function SetQuestions({
   set,
   attempts,
@@ -2188,6 +2214,7 @@ function SetQuestions({
     <>
       {set.description && <p>{set.description}</p>}
       <SetFacts set={set} lang={lang} order={order} />
+      {set.materialDoc && <MaterialDocLink doc={set.materialDoc} lang={lang} />}
       {set.material.trim() && (
         <details className="set-viewer-material">
           <summary>{t.material}</summary>

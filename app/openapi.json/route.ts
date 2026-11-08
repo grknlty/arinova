@@ -106,6 +106,30 @@ export function GET(req: Request) {
               description:
                 'Optional study text shown under "Learn first" (plain text; line breaks are kept).',
             },
+            materialDoc: {
+              description:
+                'Optional lesson document (PDF, DOC or DOCX), shown as a link under "Learn first". A data URL or https link, or an object { fileName, url } or { fileName, mimeType, data } with base64 data. null for none.',
+              oneOf: [
+                { type: 'null' },
+                { type: 'string' },
+                {
+                  type: 'object',
+                  properties: {
+                    fileName: { type: 'string', maxLength: 200 },
+                    url: { type: 'string' },
+                    mimeType: {
+                      type: 'string',
+                      enum: [
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      ],
+                    },
+                    data: { type: 'string', description: 'Base64 file data.' },
+                  },
+                },
+              ],
+            },
             questions: {
               type: 'array',
               minItems: 1,

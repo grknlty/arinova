@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
-import type { Attempt, SetDetails, StudySet } from './model';
+import type { Attempt, MaterialDoc, SetDetails, StudySet } from './model';
 import { buttonOrder, factOrder, type CardLayout } from './facts';
 import type { Role } from './auth';
 import { canonicalSubject, subjects as fixedSubjects } from './subjects';
@@ -88,6 +88,9 @@ export const schema = `
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS added_date date;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS theme text;
   ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS test_style text;
+  -- The material as a document: a data URL or a link, and its file name.
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS material_doc text;
+  ALTER TABLE public.arinova_tests ADD COLUMN IF NOT EXISTS material_doc_name text;
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_order text[];
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS fact_count integer;
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS button_order text[];
@@ -183,9 +186,9 @@ export async function insertSet(client: Client, set: StudySet) {
     `INSERT INTO public.arinova_tests
        (id, subject_id, title, description, material, language, is_sample, created_at,
         source, file_name, lesson, group_id, test_type, difficulty, added_date,
-        theme, test_style)
+        theme, test_style, material_doc, material_doc_name)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
-       $16, $17)
+       $16, $17, $18, $19)
      ON CONFLICT (id) DO NOTHING`,
     [
       set.id,
@@ -205,6 +208,8 @@ export async function insertSet(client: Client, set: StudySet) {
       set.addedDate ?? null,
       set.theme ?? null,
       set.testStyle ?? null,
+      set.materialDoc?.url ?? null,
+      set.materialDoc?.fileName ?? null,
     ],
   );
   if (!test.rowCount) return;
@@ -300,7 +305,10 @@ export async function readSets(client: Client): Promise<StudySet[]> {
     SELECT t.id, t.title, s.subject_name AS subject, t.language, t.description,
       t.material, t.is_sample, t.created_at, t.source, t.file_name, t.deleted_at,
       t.lesson, g.name AS group_name, t.test_type, t.difficulty, t.theme,
-      t.test_style,
+      t.test_style, t.material_doc_name,
+      -- A stored document is listed as the URL that serves it.
+      CASE WHEN t.material_doc LIKE 'data:%' THEN '/api/documents/' || t.id
+           ELSE t.material_doc END AS material_doc,
       to_char(t.added_date, 'YYYY-MM-DD') AS added_date,
       COALESCE((
         -- Pictures are listed as the URLs that serve them, not their data.
@@ -335,6 +343,14 @@ export async function readSets(client: Client): Promise<StudySet[]> {
     language: r.language,
     description: r.description,
     material: r.material,
+    ...(r.material_doc
+      ? {
+          materialDoc: {
+            ...(r.material_doc_name ? { fileName: r.material_doc_name } : {}),
+            url: r.material_doc,
+          },
+        }
+      : {}),
     questions: r.questions,
     createdAt: r.created_at.toISOString(),
     ...(r.is_sample ? { sample: true } : {}),
@@ -657,4 +673,22 @@ export async function renameRecord(
     if ((error as { code?: string }).code === '23505') return 'exists';
     throw error;
   }
+}
+
+// A set's material document as stored, with its data; null if it has none.
+export async function readDocument(
+  client: Client,
+  setId: string,
+): Promise<MaterialDoc | null> {
+  const result = await client.query(
+    'SELECT material_doc, material_doc_name FROM public.arinova_tests WHERE id = $1',
+    [setId],
+  );
+  const r = result.rows[0];
+  return r?.material_doc
+    ? {
+        ...(r.material_doc_name ? { fileName: r.material_doc_name } : {}),
+        url: r.material_doc,
+      }
+    : null;
 }

@@ -2,7 +2,7 @@ import type { Pool, PoolClient } from 'pg';
 import { database } from './database';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { StudySet, Attempt, SetDetails } from './model';
+import type { StudySet, Attempt, SetDetails, MaterialDoc } from './model';
 import type { Role } from './auth';
 import { canonicalSubject, subjects as fixedSubjects } from './subjects';
 import type { ButtonKey, CardLayout, FactKey } from './facts';
@@ -18,6 +18,7 @@ import {
   updateCardLayout,
   markDeleted,
   updateDetails,
+  readDocument,
   readImage,
   readSets,
   type Catalog,
@@ -119,11 +120,19 @@ export async function image(setId: string, question: number, option?: number) {
   ];
   return (option === undefined ? q?.image : q?.optionImages?.[option]) ?? null;
 }
+// A set's material document with its data (or its link); null if none.
+export async function materialDocument(
+  setId: string,
+): Promise<MaterialDoc | null> {
+  const db = await database();
+  if (db) return readDocument(db, setId);
+  return (await local()).sets.find((s) => s.id === setId)?.materialDoc ?? null;
+}
 // One set as the JSON the import takes back: all its details, questions and
 // options, with its pictures as data. Its id and dates of saving and deleting
-// are left out. Every question names its picture and one per option, null
-// where there is none, so the file shows where pictures can go. Null if
-// there is no such set.
+// are left out. The material document and every question's picture and
+// option pictures are named, null where there is none, so the file shows
+// where they can go. Null if there is no such set.
 export async function exportSet(setId: string) {
   const set = (await list('sets')).find((s) => s.id === setId);
   if (!set) return null;
@@ -143,7 +152,23 @@ export async function exportSet(setId: string) {
       explanation: q.explanation,
     })),
   );
-  return { ...details, questions };
+  const { materialDoc, questions: _, ...info } = details;
+  void _;
+  const doc = materialDoc ? await materialDocument(setId) : null;
+  // The document follows the material text in the file.
+  return {
+    ...Object.fromEntries(
+      Object.entries(info).flatMap(([key, value]) =>
+        key === 'material'
+          ? [
+              [key, value],
+              ['materialDoc', doc],
+            ]
+          : [[key, value]],
+      ),
+    ),
+    questions,
+  };
 }
 // Deletes (or with deleted false, restores) a set; false if it does not exist.
 export async function setDeleted(setId: string, deleted: boolean) {

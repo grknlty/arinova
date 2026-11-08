@@ -85,6 +85,47 @@ test('reads null pictures as no picture', () => {
   }
 });
 
+test('takes a material document as a file or a link', () => {
+  const pdf = Buffer.from('%PDF-1.4 lesstof').toString('base64');
+  const base = {
+    title: 'Planten',
+    subject: 'Natuur',
+    language: 'nl',
+    questions: [{ prompt: 'p', options: ['a', 'b'], correctIndex: 0 }],
+  };
+  const parse = (materialDoc: unknown) =>
+    setSchema.safeParse({ ...base, materialDoc });
+  assert.deepEqual(
+    parse({ fileName: 'Les 3.pdf', mimeType: 'application/pdf', data: pdf })
+      .data?.materialDoc,
+    { fileName: 'Les 3.pdf', url: `data:application/pdf;base64,${pdf}` },
+  );
+  // The type can come from the file name alone.
+  assert.equal(
+    parse({ fileName: 'les.pdf', data: pdf }).data?.materialDoc?.url,
+    `data:application/pdf;base64,${pdf}`,
+  );
+  assert.deepEqual(parse('https://example.com/les3.docx').data?.materialDoc, {
+    url: 'https://example.com/les3.docx',
+  });
+  for (const none of [null, undefined])
+    assert.equal('materialDoc' in parse(none).data!, false);
+  for (const bad of [
+    'http://example.com/les.pdf',
+    'javascript:alert(1)',
+    `data:text/html;base64,${pdf}`,
+    // Says PDF, but is not one.
+    `data:application/pdf;base64,${Buffer.from('<html>').toString('base64')}`,
+  ]) {
+    const result = parse(bad);
+    assert.equal(result.success, false, bad);
+    assert.equal(
+      importProblems(result.error!),
+      'MaterialDoc must be a PDF or Word file, or an https link',
+    );
+  }
+});
+
 test('rejects pictures that are not plain image data', () => {
   for (const image of [
     'data:image/svg+xml;base64,PHN2Zz4=',

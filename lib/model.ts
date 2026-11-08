@@ -12,6 +12,70 @@ export const imageData = z
   .string()
   .max(1500000)
   .regex(/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/]+=*$/);
+// A document with the lesson material (PDF or Word), as a data URL or as a
+// link to where it is kept. Each type is checked by its first bytes.
+const documentTypes: Record<string, { start: string; extension: string }> = {
+  'application/pdf': { start: 'JVBERi0', extension: 'pdf' },
+  'application/msword': { start: '0M8R4KGxGuE', extension: 'doc' },
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
+    start: 'UEsDB',
+    extension: 'docx',
+  },
+};
+const documentUrl = z.union([
+  z
+    .string()
+    .max(4000000)
+    .regex(/^data:[a-z./-]+;base64,[A-Za-z0-9+/]+=*$/)
+    .refine((url) => {
+      const [, type, data] = url.match(/^data:([^;]+);base64,(.*)$/) ?? [];
+      return (
+        !!documentTypes[type]?.start &&
+        data.startsWith(documentTypes[type].start)
+      );
+    }),
+  z.url({ protocol: /^https$/ }).max(2000),
+]);
+// Taken as a data URL or link on its own, or as { fileName, url } or
+// { fileName, mimeType, data } with base64 data; null means none. Stored as
+// { fileName?, url }.
+export const materialDocSchema = z
+  .union([
+    z.string(),
+    z.object({
+      fileName: z.string().trim().max(200).optional(),
+      url: z.string().optional(),
+      data: z.string().optional(),
+      mimeType: z.string().optional(),
+    }),
+  ])
+  .nullish()
+  .transform((doc) => {
+    if (!doc) return undefined;
+    if (typeof doc === 'string') return { url: doc };
+    const { fileName, mimeType, data } = doc;
+    const type =
+      mimeType ??
+      Object.keys(documentTypes).find((t) =>
+        fileName?.toLowerCase().endsWith(`.${documentTypes[t].extension}`),
+      );
+    const url =
+      doc.url ??
+      (data?.startsWith('data:') || !type
+        ? data
+        : `data:${type};base64,${data?.replace(/\s+/g, '')}`);
+    return { ...(fileName ? { fileName } : {}), url };
+  })
+  .pipe(
+    z
+      .object({ fileName: z.string().min(1).optional(), url: documentUrl })
+      .optional(),
+  );
+export type MaterialDoc = { fileName?: string; url: string };
+export function documentType(url: string) {
+  const type = url.match(/^data:([^;]+);/)?.[1];
+  return type ? { type, ...documentTypes[type] } : undefined;
+}
 // Kinds of tests a set can declare. Only those with one correct option can
 // be practised so far; the others are named so they are refused clearly.
 export const testTypes = [
@@ -57,6 +121,7 @@ export const setSchema = z
     language: z.enum(['nl', 'tr', 'en']),
     description: z.string().max(1000).default(''),
     material: z.string().max(50000).default(''),
+    materialDoc: materialDocSchema,
     // How the material arrived, for the parent's history of added material.
     source: z.enum(['word', 'json', 'api', 'manual']).optional(),
     fileName: z.string().trim().max(200).optional(),
@@ -100,7 +165,10 @@ export const setSchema = z
         message: `says ${set.questionCount} but the set has ${set.questions.length} questions`,
       });
   })
-  .transform(({ questionCount: _, ...set }) => set);
+  .transform(({ questionCount: _, materialDoc, ...set }) => ({
+    ...set,
+    ...(materialDoc ? { materialDoc } : {}),
+  }));
 // What the parent can change on a saved set. null clears an optional field.
 export const setDetailsSchema = z
   .object({
@@ -200,12 +268,20 @@ export function publicSet(set: StudySet): PublicSet {
   };
 }
 
-// Replaces stored picture data with the URLs that serve it.
+// Replaces stored picture and document data with the URLs that serve it.
 export function imageUrls(set: StudySet): StudySet {
   const url = (data: string | null | undefined, path: string) =>
     data?.startsWith('data:') ? `/api/images/${set.id}/${path}` : data;
   return {
     ...set,
+    ...(set.materialDoc?.url.startsWith('data:')
+      ? {
+          materialDoc: {
+            ...set.materialDoc,
+            url: `/api/documents/${set.id}`,
+          },
+        }
+      : {}),
     questions: set.questions.map((q, i) => ({
       ...q,
       ...(q.image ? { image: url(q.image, `${i}`)! } : {}),
@@ -240,7 +316,9 @@ export function importProblems(error: z.ZodError) {
           ? 'needs exactly one correct answer'
           : /image|optionImages/.test(path.join('.'))
             ? 'pictures must be PNG, JPEG, WebP or GIF data'
-            : `${field || 'file'}: ${message}`;
+            : path.includes('materialDoc')
+              ? 'materialDoc must be a PDF or Word file, or an https link'
+              : `${field || 'file'}: ${message}`;
       const line = where ? `${where}: ${reason}` : reason;
       return line[0].toUpperCase() + line.slice(1);
     })

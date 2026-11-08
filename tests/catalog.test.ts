@@ -219,8 +219,30 @@ test('an exported set has everything the import needs, pictures included', async
     assert.equal(exported.questions[1].image, null);
     assert.deepEqual(exported.questions[1].optionImages, [null, null, null]);
     assert.equal(exported.questions[0].image, png);
+    // No document: it is written as null, right after the material.
+    assert.equal(exported.materialDoc, null);
+    const keys = Object.keys(exported);
+    assert.equal(keys[keys.indexOf('material') + 1], 'materialDoc');
     // Imported again, it is the same set.
     assert.deepEqual(setSchema.parse(exported), set);
+    // A document is exported with its data, and imported back the same.
+    const materialDoc = {
+      fileName: 'Les 1.pdf',
+      url: `data:application/pdf;base64,${Buffer.from('%PDF-1.4').toString('base64')}`,
+    };
+    await writeFile(
+      path.join(dir, 'store.json'),
+      JSON.stringify({
+        sets: [
+          { ...set, materialDoc, id, createdAt: '2026-11-08T09:00:00.000Z' },
+        ],
+        attempts: [],
+      }),
+    );
+    const withDoc = await store.exportSet(id);
+    assert.deepEqual(withDoc.materialDoc, materialDoc);
+    assert.deepEqual(setSchema.parse(withDoc), { ...set, materialDoc });
+    assert.deepEqual(await store.materialDocument(id), materialDoc);
     assert.equal(
       await store.exportSet('11111111-2222-4333-8444-000000000000'),
       null,
