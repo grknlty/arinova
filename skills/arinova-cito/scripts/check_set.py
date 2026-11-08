@@ -32,8 +32,8 @@ def main(path):
         errors.append('language must be nl, tr or en')
     if len(data.get('title', '')) > 150:
         errors.append('title is longer than 150 characters')
-    if data.get('testStyle') != 'cito':
-        warnings.append('testStyle is not "cito"')
+    if data.get('testStyle') not in ('knowledge', 'cito'):
+        errors.append('testStyle must be "knowledge" or "cito"')
     for field in ('theme', 'lesson', 'group'):
         if not data.get(field):
             warnings.append(f'no {field}')

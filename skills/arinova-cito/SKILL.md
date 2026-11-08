@@ -1,13 +1,18 @@
 ---
 name: arinova-cito
-description: Write a Cito-style practice set for one school lesson in Arinova's JSON format - usually 30 reasoning questions (4 options, 1 correct, explanation) for a Thema and Les of a method like Blink, Naut or Meander, for groep 6-8. Use when asked for "Cito vragen", a Cito toets, Cito-stijl oefening, or a question set for "Thema 7.1 Les 4" and similar, from a lesson page, photo, PDF or topic, for Natuur en Techniek, Aardrijkskunde, Geschiedenis, Verkeer, Taal, Rekenen or Topografie.
+description: Write a practice set for one school lesson in Arinova's JSON format, in knowledge style (does the pupil know what the lesson taught) or Cito style (can the pupil reason with it) - usually 30 questions (4 options, 1 correct, explanation) for a Thema and Les of a method like Blink, Naut or Meander, for groep 6-8. Use when asked for "Cito vragen", a Cito toets, Cito-stijl oefening, kennisvragen, a kennistoets, or a question set for "Thema 7.1 Les 4" and similar, from a lesson page, photo, PDF or topic, for Natuur en Techniek, Aardrijkskunde, Geschiedenis, Verkeer, Taal, Rekenen or Topografie.
 ---
 
-# Arinova Cito lesson set
+# Arinova lesson set (knowledge or Cito)
 
-Turn one lesson into one Arinova practice set in the style of the Cito tests: the pupil has to **reason with** the lesson content (observe, compare, classify, conclude, read carefully), not only recall it. The output is a JSON study set that Arinova imports directly (upload or paste it under **Add material**, or send it with the `addStudySet` action).
+Turn one lesson into one Arinova practice set, in one of two test styles (`testStyle`):
 
-The base rules of the Arinova question standard apply (exactly 4 options, exactly 1 correct, an explanation for each question). This skill adds the Cito way of asking and the metadata for a lesson set.
+- **`knowledge`** – checks that the pupil knows and understands what the lesson taught: its terms, facts, rules and examples.
+- **`cito`** – practice in the style of the Cito tests: the pupil has to **reason with** the lesson content (observe, compare, classify, conclude, read carefully), not only recall it.
+
+The output is a JSON study set that Arinova imports directly (upload or paste it under **Add material**, or send it with the `addStudySet` action).
+
+The base rules of the Arinova question standard apply (exactly 4 options, exactly 1 correct, an explanation for each question). This skill adds the two ways of asking and the metadata for a lesson set.
 
 ## Before writing
 
@@ -17,12 +22,26 @@ Work these out from the request or the material. Ask only if one cannot be guess
 - **Theme** – the chapter as the book numbers it, e.g. `Thema 7.1`, plus its name, e.g. `Puur natuur`.
 - **Lesson** – number and name, e.g. `Les 4` and `Nieuwe diersoorten`.
 - **Group** – e.g. `Groep 7`. The theme number usually tells you (Thema 7.x → Groep 7).
+- **Test style** – `knowledge` or `cito`. Words like "Cito", "Cito-stijl" or "redeneren" mean `cito`; "kennis", "kennisvragen", "toets over de les" or "wat ze moeten weten" mean `knowledge`. If the request says neither, ask; if you cannot ask, use `cito`. When the user asks for both, make two separate sets.
 - **Number of questions** – default **30**; never more than 100.
 - **Language** – the language of the school material, normally `nl`.
 
 Read the whole lesson first and list its **key concepts and rules** (for example the steps of a zoekkaart, the kenmerken of each group, the terms the lesson defines). Every question must test one of these. Use only facts from the lesson; general knowledge only when it is certain and at the level of the group.
 
-## How Cito asks
+## Knowledge style (`knowledge`)
+
+A knowledge question checks one thing the lesson teaches, asked directly and clearly. Cover the key concepts list evenly, so every important term, fact and rule of the lesson gets at least one question. Mix:
+
+- **Begrip** – what a term means: "Wat is een ongewerveld dier?"
+- **Feit** – a fact from the lesson: "Welk kenmerk hebben alle vogels?"
+- **Herkennen** – which example belongs to a group or rule: "Welk dier is een weekdier?"
+- **Indeling** – which feature separates two groups: "Waarin verschilt een reptiel van een amfibie?"
+- **Volgorde** – the steps or order the lesson gives: "Welke vraag staat als eerste op de zoekkaart?"
+- **Simple application** – one short case with one step: "Een dier heeft veren. Bij welke groep hoort het?"
+
+Keep the prompts short, one fact per question, in the words the lesson uses. Wrong options come from the same lesson (other groups, other terms, mixed-up features), so the pupil must really know the difference. Rules 2–10 below apply here too; rule 1 does not.
+
+## Cito style (`cito`)
 
 A Cito question gives the pupil a small situation and asks them to apply what the lesson taught. Mix the types in [references/question-types.md](references/question-types.md) across the set; for 30 questions use at least 7 different types and no more than 6 questions of one type. Most-used:
 
@@ -87,14 +106,14 @@ Field rules:
 
 | Field | Rule |
 | --- | --- |
-| `title` | `Thema <nr> <themanaam> – Les <nr> <lesnaam> – Cito`, with en dashes; up to 150 characters |
+| `title` | `Thema <nr> <themanaam> – Les <nr> <lesnaam> – Cito` or `… – Kennis`, with en dashes; up to 150 characters |
 | `subject` | One of the eight Dutch subject names |
 | `language` | `nl`, `tr` or `en` |
-| `description` | One sentence: `<n> CITO-stijl vragen over … (Les <nr>).` |
+| `description` | One sentence: `<n> CITO-stijl vragen over … (Les <nr>).` or `<n> kennisvragen over … (Les <nr>).` |
 | `theme` | `Thema <nr>` only, e.g. `Thema 7.1`, so sets of the same theme group together |
 | `lesson` | `Les <nr>: <lesnaam>` |
 | `group` | `Groep 7`, or a range like `Groep 7–8` |
-| `testStyle` | Always `cito` |
+| `testStyle` | `knowledge` or `cito`, as chosen above |
 | `testType` | Always `single-choice` |
 | `difficulty` | `medium` unless asked otherwise (`easy`, `hard`) |
 | `addedDate` | Today, `YYYY-MM-DD` |
@@ -120,10 +139,10 @@ If you can run code, save the JSON and run `python3 scripts/check_set.py <file>`
 
 - [ ] 4 different, non-empty options; `correctIndex` points to the option that is really correct (count again from 0)
 - [ ] Only that option is correct; the prompt does not already state it
-- [ ] It asks the pupil to reason with a lesson rule, not just recall a word (at most a fifth recall)
+- [ ] `cito`: it asks the pupil to reason with a lesson rule, not just recall a word (at most a fifth recall). `knowledge`: it checks one key concept, and together the questions cover all of them
 - [ ] The correct option is not clearly the longest
 - [ ] Explanation gives the deciding rule, in the language of the question
 - [ ] Across the set: answers spread evenly over A–D, no run longer than 2; at least 7 question types; no two prompts nearly the same
-- [ ] `questionCount` matches; `testStyle` is `cito`; the JSON is valid (double quotes, no trailing commas)
+- [ ] `questionCount` matches; `testStyle` is `knowledge` or `cito` and the title ends in `Kennis` or `Cito` to match; the JSON is valid (double quotes, no trailing commas)
 
 After the code block, give the file name (see **File name**) and one line: number of questions, the count at A/B/C/D, and the question types used. If you can write files, also save the JSON under that name.
