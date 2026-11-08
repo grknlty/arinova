@@ -54,7 +54,9 @@ import type {
 import { normalizeSets } from '@/lib/formats';
 import { groupIn, lessonIn } from '@/lib/school';
 import { FaceEditor } from './face-editor';
+import { CatalogEditor } from './catalog-editor';
 import type { Faces } from '@/lib/faces';
+import type { Catalog } from '@/lib/records';
 type Progress = {
   answers: Answer[];
   doubts: Record<number, { unsure?: boolean; notUnderstood?: boolean }>;
@@ -168,6 +170,7 @@ export default function Home() {
   const [sets, setSets] = useState<(StudySet | PublicSet)[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [faces, setFaces] = useState<Faces>({});
+  const [catalog, setCatalog] = useState<Catalog>({ groups: [], subjects: [] });
   const [selected, setSelected] = useState<StudySet | PublicSet | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [index, setIndex] = useState(0);
@@ -212,6 +215,9 @@ export default function Home() {
       setAttempts(await api('/api/progress'));
       // Faces are a nice extra: the drawings stay if they cannot be loaded.
       setFaces(await api('/api/faces').catch(() => ({})));
+      setCatalog(
+        await api('/api/catalog').catch(() => ({ groups: [], subjects: [] })),
+      );
     } catch {
       setError(t.error);
     } finally {
@@ -708,6 +714,15 @@ export default function Home() {
                   label: subjectLabel(s.name, lang),
                   Icon: subjectIcons[s.id],
                 })),
+                // Subjects the parent added beyond the fixed ones.
+                ...catalog.subjects
+                  .filter((s) => !findSubject(s.name))
+                  .map((s, i) => ({
+                    id: `custom-${i}`,
+                    name: s.name,
+                    label: s.name,
+                    Icon: Sparkle,
+                  })),
               ].map(({ id, name, label, Icon }) => (
                 <button
                   key={id}
@@ -1366,6 +1381,13 @@ export default function Home() {
                 </p>
               )}
             </section>
+            <CatalogEditor
+              catalog={catalog}
+              sets={sets}
+              t={t}
+              lang={lang}
+              onChanged={load}
+            />
             <section className="paper history">
               <h2>{t.history}</h2>
               <p>{t.historyText}</p>
@@ -1386,9 +1408,11 @@ export default function Home() {
                       ? t.sourceWord
                       : s.source === 'api'
                         ? t.sourceApi
-                        : s.source === 'json'
-                          ? t.sourceJson
-                          : t.sourceUnknown;
+                        : s.source === 'manual'
+                          ? t.sourceManual
+                          : s.source === 'json'
+                            ? t.sourceJson
+                            : t.sourceUnknown;
                   return (
                     <li key={s.id} className={s.deletedAt ? 'deleted' : ''}>
                       <button

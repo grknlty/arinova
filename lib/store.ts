@@ -2,19 +2,28 @@ import type { Pool, PoolClient } from 'pg';
 import { database } from './database';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { StudySet, Attempt } from './model';
+import type { StudySet, Attempt, Question } from './model';
 import type { Role } from './auth';
 import {
   insertAttempt,
+  insertGroup,
+  insertQuestion,
   insertSet,
+  insertSubject,
+  learnerGroup,
   readAttempts,
+  readCatalog,
   markDeleted,
   readImage,
   readSets,
+  type Catalog,
 } from './records';
 type Data = {
   sets: StudySet[];
   attempts: Attempt[];
+  // Added by the parent; older files have neither.
+  groups?: string[];
+  subjects?: { name: string; group: string }[];
 };
 const globalStore = globalThis as unknown as {
   arinovaQueue?: Promise<unknown>;
@@ -106,6 +115,70 @@ export async function setDeleted(setId: string, deleted: boolean) {
     found = true;
     if (at) set.deletedAt = at;
     else delete set.deletedAt;
+  });
+  return found;
+}
+// Groups and subjects, as the database keeps them: the learner's group always
+// exists, and subjects of imported sets are filed under it.
+export async function catalog(): Promise<Catalog> {
+  const db = await database();
+  if (db) return readCatalog(db);
+  const data = await local();
+  const subjects = [...(data.subjects ?? [])];
+  for (const set of data.sets)
+    if (!subjects.some((s) => s.name === set.subject))
+      subjects.push({ name: set.subject, group: learnerGroup() });
+  const groups = new Set([
+    learnerGroup(),
+    ...(data.groups ?? []),
+    ...data.sets.flatMap((s) => (s.group ? [s.group] : [])),
+  ]);
+  return {
+    groups: [...groups].sort(),
+    subjects: subjects.sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+// False when the group already exists.
+export async function addGroup(name: string) {
+  const db = await database();
+  if (db) return insertGroup(db, name);
+  const key = name.toLocaleLowerCase();
+  if ((await catalog()).groups.some((g) => g.toLocaleLowerCase() === key))
+    return false;
+  await writeLocal((data) => (data.groups = [...(data.groups ?? []), name]));
+  return true;
+}
+// The group must exist. When the subject exists already (in any case), says
+// which group it belongs to.
+export async function addSubject(name: string, group: string) {
+  const db = await database();
+  if (db) return insertSubject(db, name, group);
+  const key = name.toLocaleLowerCase();
+  const existing = (await catalog()).subjects.find(
+    (s) => s.name.toLocaleLowerCase() === key,
+  );
+  if (existing) return { created: false as const, group: existing.group };
+  await writeLocal(
+    (data) => (data.subjects = [...(data.subjects ?? []), { name, group }]),
+  );
+  return { created: true as const };
+}
+// Appends a question to a set; false if the set does not exist.
+export async function addQuestion(setId: string, question: Question) {
+  const db = await database();
+  if (db) {
+    let found = false;
+    await transaction(db, async (client) => {
+      found = await insertQuestion(client, setId, question);
+    });
+    return found;
+  }
+  let found = false;
+  await writeLocal((data) => {
+    const set = data.sets.find((s) => s.id === setId);
+    if (!set) return;
+    found = true;
+    set.questions.push(question);
   });
   return found;
 }

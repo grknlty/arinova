@@ -23,6 +23,24 @@ export const testTypes = [
 export const difficulties = ['easy', 'medium', 'hard'] as const;
 export type TestType = (typeof testTypes)[number];
 export type Difficulty = (typeof difficulties)[number];
+export const questionSchema = z
+  .object({
+    prompt: z.string().trim().min(1).max(3000),
+    options: z.array(z.string().trim().min(1).max(1000)).min(2).max(6),
+    correctIndex: z.number().int().min(0),
+    explanation: z.string().max(5000).default(''),
+    image: imageData.optional(),
+    optionImages: z.array(imageData.nullable()).optional(),
+  })
+  .refine(
+    (q) => q.correctIndex < q.options.length,
+    'correctIndex must refer to an option',
+  )
+  .refine(
+    (q) => !q.optionImages || q.optionImages.length === q.options.length,
+    'optionImages needs one entry (or null) per option',
+  );
+export type Question = z.infer<typeof questionSchema>;
 export const setSchema = z
   .object({
     title: z.string().trim().min(1).max(150),
@@ -31,7 +49,7 @@ export const setSchema = z
     description: z.string().max(1000).default(''),
     material: z.string().max(50000).default(''),
     // How the material arrived, for the parent's history of added material.
-    source: z.enum(['word', 'json', 'api']).optional(),
+    source: z.enum(['word', 'json', 'api', 'manual']).optional(),
     fileName: z.string().trim().max(200).optional(),
     // School context shown on the card, e.g. "Les 3 tot en met 5", "Groep 7–8".
     lesson: z.string().trim().min(1).max(100).optional(),
@@ -42,29 +60,7 @@ export const setSchema = z
     addedDate: z.iso.date().optional(),
     // Checked against the questions, not stored: the count is always derived.
     questionCount: z.number().int().min(1).optional(),
-    questions: z
-      .array(
-        z
-          .object({
-            prompt: z.string().trim().min(1).max(3000),
-            options: z.array(z.string().trim().min(1).max(1000)).min(2).max(6),
-            correctIndex: z.number().int().min(0),
-            explanation: z.string().max(5000).default(''),
-            image: imageData.optional(),
-            optionImages: z.array(imageData.nullable()).optional(),
-          })
-          .refine(
-            (q) => q.correctIndex < q.options.length,
-            'correctIndex must refer to an option',
-          )
-          .refine(
-            (q) =>
-              !q.optionImages || q.optionImages.length === q.options.length,
-            'optionImages needs one entry (or null) per option',
-          ),
-      )
-      .min(1)
-      .max(100),
+    questions: z.array(questionSchema).min(1).max(100),
   })
   .superRefine((set, ctx) => {
     if (set.testType === 'multiple-choice' || set.testType === 'type-answer')

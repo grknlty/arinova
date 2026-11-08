@@ -1,7 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { database } from '../lib/database';
-import { addAttempt, addSets, image, list, setDeleted } from '../lib/store';
+import {
+  addAttempt,
+  addGroup,
+  addQuestion,
+  addSets,
+  addSubject,
+  catalog,
+  image,
+  list,
+  setDeleted,
+} from '../lib/store';
 import { tables } from '../lib/records';
 import { allowLogin } from '../lib/rate-limit';
 import { grade } from '../lib/model';
@@ -159,6 +169,61 @@ test(
         assert.equal(await image(set.id, 0, 1), png);
         assert.equal(await image(set.id, 0, 0), null);
       });
+      await t.test(
+        'adds groups, subjects in a group and single questions',
+        async () => {
+          const group = `Groep ${crypto.randomUUID()}`;
+          const subject = `Vak ${crypto.randomUUID()}`;
+          assert.equal(await addGroup(group), true);
+          assert.equal(await addGroup(group), false);
+          assert.equal(await addGroup(group.toUpperCase()), false);
+          assert.deepEqual(await addSubject(subject, group), { created: true });
+          assert.deepEqual(
+            await addSubject(subject.toUpperCase(), 'Groep 7–8'),
+            {
+              created: false,
+              group,
+            },
+          );
+          assert.ok(
+            (await catalog()).subjects.some(
+              (s) => s.name === subject && s.group === group,
+            ),
+          );
+          const question = {
+            prompt: 'Eerste?',
+            options: ['Ja', 'Nee'],
+            correctIndex: 1,
+            explanation: '',
+          };
+          const set = {
+            id: crypto.randomUUID(),
+            createdAt: new Date().toISOString(),
+            title: 'Met de hand',
+            subject,
+            language: 'nl' as const,
+            description: '',
+            material: '',
+            group,
+            source: 'manual' as const,
+            questions: [question],
+          };
+          await addSets([set]);
+          assert.equal(
+            await addQuestion(set.id, { ...question, prompt: 'Tweede?' }),
+            true,
+          );
+          assert.equal(await addQuestion(crypto.randomUUID(), question), false);
+          const stored = (await list('sets')).find((s) => s.id === set.id);
+          assert.deepEqual(
+            stored?.questions.map((q) => [q.prompt, q.correctIndex]),
+            [
+              ['Eerste?', 1],
+              ['Tweede?', 1],
+            ],
+          );
+        },
+      );
       await t.test(
         'login limiting persists and enforces its limit in PostgreSQL',
         async () => {

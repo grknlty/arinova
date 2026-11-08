@@ -1,5 +1,5 @@
 import type { Pool, PoolClient } from 'pg';
-import type { Attempt, StudySet } from './model';
+import type { Attempt, Question, StudySet } from './model';
 import type { Role } from './auth';
 
 type Client = Pool | PoolClient;
@@ -103,12 +103,21 @@ export const tables = [
   'arinova_user_question_answers',
 ];
 
+// The learner's school group, which imported subjects are filed under.
+export const learnerGroup = () => process.env.LEARNER_GROUP || 'Groep 7–8';
+
+// Groups and subjects the parent can choose from when adding questions.
+export type Catalog = {
+  groups: string[];
+  subjects: { name: string; group: string | null }[];
+};
+
 // One family with one learner: both sign-in roles get a user row.
 export async function seedUsers(client: Client) {
   const group = await client.query(
     `INSERT INTO public.arinova_groups (name) VALUES ($1)
      ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-    [process.env.LEARNER_GROUP || 'Groep 7–8'],
+    [learnerGroup()],
   );
   await client.query(
     `INSERT INTO public.arinova_users (name, user_name, role, group_id)
@@ -373,4 +382,110 @@ export async function readImage(
           [setId, question, option],
         );
   return result.rows[0]?.image ?? null;
+}
+
+export async function readCatalog(client: Client): Promise<Catalog> {
+  const groups = await client.query(
+    'SELECT name FROM public.arinova_groups ORDER BY name',
+  );
+  const subjects = await client.query(
+    `SELECT s.subject_name, g.name AS group_name
+     FROM public.arinova_subjects s
+     LEFT JOIN public.arinova_groups g ON g.id = s.group_id
+     ORDER BY s.subject_name`,
+  );
+  return {
+    groups: groups.rows.map((r) => r.name),
+    subjects: subjects.rows.map((r) => ({
+      name: r.subject_name,
+      group: r.group_name,
+    })),
+  };
+}
+
+// False when a group with this name already exists, in any case.
+export async function insertGroup(client: Client, name: string) {
+  const result = await client.query(
+    `INSERT INTO public.arinova_groups (name)
+     SELECT $1 WHERE NOT EXISTS (
+       SELECT 1 FROM public.arinova_groups WHERE lower(name) = lower($1))
+     ON CONFLICT (name) DO NOTHING`,
+    [name],
+  );
+  return !!result.rowCount;
+}
+
+// Subject names are unique (in any case), so a subject belongs to one group.
+// One that was imported without a group is filed under the chosen group; one
+// that is already in a group is left alone and that group is returned.
+export async function insertSubject(
+  client: Client,
+  name: string,
+  group: string,
+): Promise<{ created: true } | { created: false; group: string | null }> {
+  const existing = await client.query(
+    `SELECT s.id, g.name AS group_name FROM public.arinova_subjects s
+     LEFT JOIN public.arinova_groups g ON g.id = s.group_id
+     WHERE lower(s.subject_name) = lower($1) LIMIT 1`,
+    [name],
+  );
+  const row = existing.rows[0];
+  if (row?.group_name) return { created: false, group: row.group_name };
+  const groupId = '(SELECT id FROM public.arinova_groups WHERE name = $2)';
+  const done = row
+    ? await client.query(
+        `UPDATE public.arinova_subjects SET group_id = ${groupId} WHERE id = $1`,
+        [row.id, group],
+      )
+    : await client.query(
+        `INSERT INTO public.arinova_subjects (subject_name, group_id)
+         VALUES ($1, ${groupId}) ON CONFLICT (subject_name) DO NOTHING`,
+        [name, group],
+      );
+  return done.rowCount ? { created: true } : { created: false, group: null };
+}
+
+// Adds a question after the last one of a test; false if there is no such test.
+export async function insertQuestion(
+  client: Client,
+  setId: string,
+  question: Question,
+) {
+  // Locking the test keeps two questions added at once from sharing a position.
+  const test = await client.query(
+    'SELECT subject_id FROM public.arinova_tests WHERE id = $1 FOR UPDATE',
+    [setId],
+  );
+  if (!test.rowCount) return false;
+  const inserted = await client.query(
+    `INSERT INTO public.arinova_questions
+       (subject_id, test_id, position, question_text, explanation, answer_count, image)
+     SELECT $1, $2, COALESCE(max(position) + 1, 0), $3, $4, 1, $5
+     FROM public.arinova_questions WHERE test_id = $2
+     RETURNING id`,
+    [
+      test.rows[0].subject_id,
+      setId,
+      question.prompt,
+      question.explanation,
+      question.image ?? null,
+    ],
+  );
+  await client.query(
+    `INSERT INTO public.arinova_options (question_id, position, option_text, is_answer, image)
+     SELECT $1, o.position, o.text, o.is_answer, o.image
+     FROM jsonb_to_recordset($2) AS o(position integer, text text, is_answer boolean, image text)`,
+    [
+      inserted.rows[0].id,
+      JSON.stringify(
+        question.options.map((text, position) => ({
+          position,
+          text,
+          is_answer: position === question.correctIndex,
+          image: question.optionImages?.[position] ?? null,
+        })),
+      ),
+    ],
+  );
+  return true;
 }
