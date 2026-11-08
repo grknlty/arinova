@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { subjects as fixedSubjects } from '../lib/subjects';
 
 test('groups and subjects get ids, match names in any case and rename in place', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'arinova-catalog-'));
@@ -136,10 +137,21 @@ test('one subject under different spellings becomes one subject', async () => {
     // The store module keeps its data folder from the first import.
     const store = await import(`../lib/store.ts?merge=${Date.now()}`);
     const { subjects } = await store.catalog();
+    // The fixed school subjects are added too, once.
     assert.deepEqual(
       subjects.map((s: { name: string }) => s.name),
-      ['engels', 'Natuur en Techniek'],
+      [...fixedSubjects.map((s) => s.name), 'engels'].sort((a, b) =>
+        a.localeCompare(b),
+      ),
     );
+    const verkeer = subjects.find(
+      (s: { name: string }) => s.name === 'Verkeer',
+    );
+    await store.renameEntry('subject', verkeer.id, 'Verkeersles');
+    const names = (await store.catalog()).subjects.map(
+      (s: { name: string }) => s.name,
+    );
+    assert.ok(names.includes('Verkeersles') && !names.includes('Verkeer'));
     assert.deepEqual(
       (await store.list('sets')).map((s: { subject: string }) => s.subject),
       ['Natuur en Techniek', 'Natuur en Techniek', 'engels', 'engels'],

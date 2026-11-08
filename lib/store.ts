@@ -4,7 +4,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { StudySet, Attempt, SetDetails } from './model';
 import type { Role } from './auth';
-import { canonicalSubject } from './subjects';
+import { canonicalSubject, subjects as fixedSubjects } from './subjects';
 import type { ButtonKey, CardLayout, FactKey } from './facts';
 import {
   insertAttempt,
@@ -38,6 +38,8 @@ type Data = {
     buttonOrder?: ButtonKey[];
     buttonsPerRow?: number;
   }[];
+  // Set once the fixed school subjects were added, as in the database.
+  subjectsSeeded?: boolean;
 };
 const globalStore = globalThis as unknown as {
   arinovaQueue?: Promise<unknown>;
@@ -144,6 +146,7 @@ function withIds(data: Data) {
       data.subjects,
       data.sets.map((s) => s.subject),
       data.attempts.map((a) => a.subject),
+      data.subjectsSeeded,
     ]);
   const before = snapshot();
   const groups = (
@@ -181,6 +184,8 @@ function withIds(data: Data) {
   };
   for (const set of data.sets) set.subject = subjectOf(set.subject);
   for (const a of data.attempts) a.subject = subjectOf(a.subject);
+  if (!data.subjectsSeeded) for (const s of fixedSubjects) subjectOf(s.name);
+  data.subjectsSeeded = true;
   data.groups = groups;
   data.subjects = subjects;
   return snapshot() !== before;

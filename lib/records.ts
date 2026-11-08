@@ -2,7 +2,7 @@ import type { Pool, PoolClient } from 'pg';
 import type { Attempt, SetDetails, StudySet } from './model';
 import { buttonOrder, factOrder, type CardLayout } from './facts';
 import type { Role } from './auth';
-import { canonicalSubject } from './subjects';
+import { canonicalSubject, subjects as fixedSubjects } from './subjects';
 
 type Client = Pool | PoolClient;
 
@@ -557,6 +557,33 @@ export async function insertSubject(
         [name, groupId],
       );
   return done.rowCount ? { created: true } : { created: false, group: null };
+}
+
+// The fixed school subjects are added once, under the learner's group, so
+// Materials lists them before anything is imported for them. One the parent
+// renames or that was added under another spelling is not added again.
+export async function seedSubjects(client: Client) {
+  const done = await client.query(
+    `SELECT 1 FROM public.arinova_records WHERE kind = 'subjects_seeded'`,
+  );
+  if (done.rowCount) return;
+  const group = await client.query(
+    `SELECT group_id FROM public.arinova_users WHERE role = 'learner'`,
+  );
+  const known = (
+    await client.query('SELECT subject_name FROM public.arinova_subjects')
+  ).rows.map((r) => canonicalSubject(r.subject_name).toLocaleLowerCase());
+  for (const s of fixedSubjects)
+    if (!known.includes(s.name.toLocaleLowerCase()))
+      await client.query(
+        `INSERT INTO public.arinova_subjects (subject_name, group_id)
+         VALUES ($1, $2) ON CONFLICT (subject_name) DO NOTHING`,
+        [s.name, group.rows[0]?.group_id ?? null],
+      );
+  await client.query(
+    `INSERT INTO public.arinova_records (id, kind, payload)
+     VALUES (gen_random_uuid(), 'subjects_seeded', '{}')`,
+  );
 }
 
 // Earlier imports kept one subject apart under different spellings, such as

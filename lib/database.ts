@@ -5,6 +5,7 @@ import {
   insertAttempt,
   insertSet,
   mergeSubjects,
+  seedSubjects,
   schema,
   seedUsers,
   tables,
@@ -73,6 +74,7 @@ async function initialize(pool: Pool) {
       );
     await seedUsers(client);
     await mergeSubjects(client);
+    await seedSubjects(client);
     // The built-in Taal sample was development data; hide it where it was
     // seeded. Attempts on it are kept, as with any deleted set.
     await client.query(

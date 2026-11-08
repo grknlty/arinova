@@ -14,7 +14,8 @@ import {
   setDetails,
   setCardLayout,
 } from '../lib/store';
-import { mergeSubjects, tables } from '../lib/records';
+import { mergeSubjects, seedSubjects, tables } from '../lib/records';
+import { subjects as fixedSubjects } from '../lib/subjects';
 import { allowLogin } from '../lib/rate-limit';
 import { grade } from '../lib/model';
 import { sample } from '../lib/sample';
@@ -45,6 +46,19 @@ test(
           assert.ok(result.rows.every((row) => row.relrowsecurity));
         },
       );
+      await t.test('lists the fixed school subjects once', async () => {
+        const names = (await catalog()).subjects.map((s) => s.name);
+        for (const s of fixedSubjects) assert.ok(names.includes(s.name));
+        await db.query(
+          `DELETE FROM public.arinova_subjects s WHERE subject_name = 'Verkeer'
+           AND NOT EXISTS (SELECT 1 FROM public.arinova_tests t
+                           WHERE t.subject_id = s.id)`,
+        );
+        await seedSubjects(db);
+        assert.ok(
+          !(await catalog()).subjects.some((s) => s.name === 'Verkeer'),
+        );
+      });
       await t.test(
         'persists imported content and scored attempts via POSTGRES_URL',
         async () => {
