@@ -222,6 +222,10 @@ export default function Home() {
   const [resultFilter, setResultFilter] = useState<ResultFilter>('all');
   // The subject the progress page is narrowed to.
   const [progressSubject, setProgressSubject] = useState('all');
+  // Picking Incorrect or a doubt on the progress page lists only the
+  // practice sessions with such answers, opened at them.
+  const [sessionFilter, setSessionFilter] = useState<ResultFilter>('all');
+  const sessionsHeading = useRef<HTMLHeadingElement>(null);
   // The set opened from the history, shown in a window with its answers.
   const [viewing, setViewing] = useState<StudySet | null>(null);
   // The set whose earlier results are shown in a window.
@@ -587,8 +591,12 @@ export default function Home() {
     if (!seen || a.createdAt > seen.createdAt) newest.set(a.setId, a);
   }
   const latestAttempts = [...newest.values()];
+  // Every school subject is listed, with or without results.
   const resultSubjects = [
-    ...new Set(attempts.map((a) => canonicalSubject(a.subject))),
+    ...new Set([
+      ...catalog.subjects.map((s) => canonicalSubject(s.name)),
+      ...attempts.map((a) => canonicalSubject(a.subject)),
+    ]),
   ]
     .sort((a, b) => order(a) - order(b))
     .map((name) => {
@@ -679,9 +687,80 @@ export default function Home() {
   const longest = Math.max(0, ...drafts.map((d) => d.questions?.length ?? 0));
   const total = allAnswers.length;
   const correct = allAnswers.filter((a) => a.correct).length;
-  const wrong = allAnswers.filter(
-    (a) => !a.correct && a.option !== null,
-  ).length;
+  const wrong = allAnswers.filter(resultFilters.wrong).length;
+  const skipped = allAnswers.filter((a) => a.option === null).length;
+  const percent = (n: number) => (total ? Math.round((n / total) * 100) : 0);
+  // Only the counted sessions have the answers behind the numbers.
+  const listedSessions =
+    sessionFilter === 'all'
+      ? shownAttempts
+      : shownLatest.filter((a) => a.answers.some(resultFilters[sessionFilter]));
+  function showSessions(filter: ResultFilter) {
+    const next = sessionFilter === filter ? 'all' : filter;
+    setSessionFilter(next);
+    if (next !== 'all')
+      requestAnimationFrame(() =>
+        sessionsHeading.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        }),
+      );
+  }
+  const sessionFilterLabel: Record<ResultFilter, string> = {
+    all: t.filterAll,
+    correct: t.correct,
+    wrong: t.wrong,
+    unsure: t.unsure,
+    not_understood: t.not_understood,
+  };
+  // A row beside the chart: a swatch for the chart's parts, an icon for the
+  // rest. Rows with a filter list the matching practice sessions below.
+  const statRow = (row: {
+    key: string;
+    label: string;
+    value: string;
+    count: number;
+    swatch?: string;
+    Icon?: typeof BookOpen;
+    filter?: ResultFilter;
+  }) => {
+    const content = (
+      <>
+        {row.swatch ? (
+          <span
+            className="swatch"
+            style={{ background: row.swatch }}
+            aria-hidden="true"
+          />
+        ) : row.Icon ? (
+          <row.Icon className="row-icon" size={16} aria-hidden="true" />
+        ) : (
+          <span />
+        )}
+        <span>{row.label}</span>
+        <span className="row-figures">
+          <strong>{row.value}</strong>
+          <small>
+            {row.count} {t.questions}
+          </small>
+        </span>
+      </>
+    );
+    return (
+      <li key={row.key} className={row.key}>
+        {row.filter ? (
+          <button
+            aria-pressed={sessionFilter === row.filter}
+            onClick={() => showSessions(row.filter!)}
+          >
+            {content}
+          </button>
+        ) : (
+          <div>{content}</div>
+        )}
+      </li>
+    );
+  };
   return (
     <div className="app">
       <header className="header">
@@ -1188,90 +1267,96 @@ export default function Home() {
             <h1>{t.dashboard}</h1>
             <p className="page-intro">{t.dashboardText}</p>
             <div className="progress-layout">
-              {resultSubjects.length > 0 && (
-                <nav className="paper subject-list" aria-label={t.bySubject}>
-                  <h2>{t.bySubject}</h2>
-                  <ul>
-                    {[
-                      { name: 'all', label: t.all, score: null },
-                      ...resultSubjects.map((s) => ({
-                        name: s.name,
-                        label: subjectLabel(s.name, lang),
-                        score: s.total
-                          ? Math.round((s.correct / s.total) * 100)
-                          : null,
-                      })),
-                    ].map((s) => (
-                      <li key={s.name}>
-                        <button
-                          aria-current={progressSubject === s.name}
-                          onClick={() => setProgressSubject(s.name)}
-                        >
-                          <span>{s.label}</span>
-                          {s.score !== null && (
-                            <span className="count-small">{s.score}%</span>
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              )}
+              <nav className="paper subject-list" aria-label={t.bySubject}>
+                <h2>{t.bySubject}</h2>
+                <ul>
+                  {[
+                    { name: 'all', label: t.all, score: null },
+                    ...resultSubjects.map((s) => ({
+                      name: s.name,
+                      label: subjectLabel(s.name, lang),
+                      score: s.total
+                        ? Math.round((s.correct / s.total) * 100)
+                        : null,
+                    })),
+                  ].map((s) => (
+                    <li key={s.name}>
+                      <button
+                        aria-current={progressSubject === s.name}
+                        onClick={() => {
+                          setProgressSubject(s.name);
+                          setSessionFilter('all');
+                        }}
+                      >
+                        <span>{s.label}</span>
+                        {s.score !== null && (
+                          <span className="count-small">{s.score}%</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
               <div className="progress-main">
-                <div className="stat-grid">
-                  <div>
-                    <span>{t.attempts}</span>
-                    <strong>{shownLatest.length}</strong>
-                    <small>
-                      {total} {t.questions}
-                    </small>
-                    <BookOpen />
-                  </div>
-                  <div className="good">
-                    <span>{t.accuracy}</span>
-                    <strong>
-                      {total ? Math.round((correct / total) * 100) : 0}
-                      <small>%</small>
-                    </strong>
-                    <small>
-                      {correct} {t.questions}
-                    </small>
-                    <Check />
-                  </div>
-                  <div className="bad">
-                    <span>{t.answeredWrong}</span>
-                    <strong>
-                      {total ? Math.round((wrong / total) * 100) : 0}
-                      <small>%</small>
-                    </strong>
-                    <small>
-                      {wrong} {t.questions}
-                    </small>
-                    <X />
-                  </div>
-                  {feelings.map((feeling, i) => {
-                    const Icon = feelingIcons[i];
-                    const group = allAnswers.filter(
-                      (a) => a.confidence === feeling,
-                    );
-                    // No longer offered in practice; shown only for older answers.
-                    if (feeling === 'best_guess' && !group.length) return null;
-                    return (
-                      <div className={feeling} key={feeling}>
-                        <span>{t[feeling]}</span>
-                        <strong>{group.length}</strong>
-                        <small>
-                          {group.filter((a) => a.correct).length}{' '}
-                          {t.correct.toLowerCase()}
-                        </small>
-                        <Icon />
-                      </div>
-                    );
-                  })}
-                </div>
                 {total > 0 && (
                   <section className="paper progress-chart">
-                    <ScoreChart answers={allAnswers} lang={lang} />
+                    <ScoreChart
+                      answers={allAnswers}
+                      lang={lang}
+                      legend={
+                        <div className="progress-legend">
+                          <ul>
+                            {statRow({
+                              key: 'practices',
+                              label: t.attempts,
+                              value: String(shownLatest.length),
+                              count: total,
+                              Icon: BookOpen,
+                            })}
+                            {statRow({
+                              key: 'correct',
+                              label: t.correct,
+                              value: `${percent(correct)}%`,
+                              count: correct,
+                              swatch: donutColours.correct,
+                            })}
+                            {statRow({
+                              key: 'wrong',
+                              label: t.wrong,
+                              value: `${percent(wrong)}%`,
+                              count: wrong,
+                              swatch: donutColours.wrong,
+                              filter: 'wrong',
+                            })}
+                            {skipped > 0 &&
+                              statRow({
+                                key: 'skipped',
+                                label: t.unanswered,
+                                value: `${percent(skipped)}%`,
+                                count: skipped,
+                                swatch: donutColours.skipped,
+                              })}
+                          </ul>
+                          <ul>
+                            {(['unsure', 'not_understood'] as const).map(
+                              (feeling) => {
+                                const n = allAnswers.filter(
+                                  resultFilters[feeling],
+                                ).length;
+                                return statRow({
+                                  key: feeling,
+                                  label: t[feeling],
+                                  value: `${percent(n)}%`,
+                                  count: n,
+                                  Icon: feelingIcons[feelings.indexOf(feeling)],
+                                  filter: feeling,
+                                });
+                              },
+                            )}
+                          </ul>
+                        </div>
+                      }
+                    />
                   </section>
                 )}
                 <p className="content-note">{t.progressNote}</p>
@@ -1314,12 +1399,26 @@ export default function Home() {
                     <p className="content-note">{t.noMissed}</p>
                   )}
                 </details>
-                <h2>{t.recent}</h2>
-                {shownAttempts.length ? (
-                  shownAttempts.map((a) => (
+                <div className="sessions-heading">
+                  <h2 ref={sessionsHeading}>{t.recent}</h2>
+                  {sessionFilter !== 'all' && (
+                    <button
+                      className="filter-chip"
+                      title={t.showAllSessions}
+                      aria-label={`${sessionFilterLabel[sessionFilter]}: ${t.showAllSessions}`}
+                      onClick={() => setSessionFilter('all')}
+                    >
+                      {sessionFilterLabel[sessionFilter]}
+                      <X size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                {listedSessions.length ? (
+                  listedSessions.map((a) => (
                     <details
                       className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
-                      key={a.id}
+                      key={`${a.id}-${sessionFilter}`}
+                      open={sessionFilter !== 'all'}
                     >
                       <summary>
                         <span className="attempt-icon">
@@ -1345,6 +1444,7 @@ export default function Home() {
                       <FilteredReview
                         attempt={a}
                         lang={lang}
+                        initialFilter={sessionFilter}
                         questions={a.answers.map((_, i) =>
                           questionOf(a.setId, i),
                         )}
@@ -2427,9 +2527,12 @@ function ResultSummary({
 function ScoreChart({
   answers,
   lang,
+  legend,
 }: {
   answers: Attempt['answers'];
   lang: Language;
+  // Shown beside the ring in place of the usual legend.
+  legend?: React.ReactNode;
 }) {
   const t = words[lang];
   const total = answers.length;
@@ -2492,20 +2595,22 @@ function ScoreChart({
           {t.correct.toLowerCase()}
         </text>
       </svg>
-      <ul className="result-legend">
-        {parts.map((p) => (
-          <li key={p.key}>
-            <span
-              className="swatch"
-              style={{ background: donutColours[p.key] }}
-              aria-hidden="true"
-            />
-            <span>{p.label}</span>
-            <strong>{p.n}</strong>
-            <small>{pct(p.n)}%</small>
-          </li>
-        ))}
-      </ul>
+      {legend ?? (
+        <ul className="result-legend">
+          {parts.map((p) => (
+            <li key={p.key}>
+              <span
+                className="swatch"
+                style={{ background: donutColours[p.key] }}
+                aria-hidden="true"
+              />
+              <span>{p.label}</span>
+              <strong>{p.n}</strong>
+              <small>{pct(p.n)}%</small>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -2639,12 +2744,14 @@ function FilteredReview({
   attempt,
   lang,
   questions,
+  initialFilter = 'all',
 }: {
   attempt: Attempt;
   lang: Language;
   questions?: (ShownQuestion | undefined)[];
+  initialFilter?: ResultFilter;
 }) {
-  const [filter, setFilter] = useState<ResultFilter>('all');
+  const [filter, setFilter] = useState<ResultFilter>(initialFilter);
   return (
     <>
       <ResultFilters

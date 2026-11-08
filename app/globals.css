@@ -1017,16 +1017,16 @@ footer[hidden] {
   flex-wrap: wrap;
   gap: 16px 32px;
 }
-.result-chart svg {
+.result-chart > svg {
   width: 160px;
   height: 160px;
   flex: none;
 }
-.result-chart circle {
+.result-chart > svg circle {
   transition: opacity 0.2s var(--ease);
 }
 @media (hover: hover) {
-  .result-chart svg:hover circle:not(:hover) {
+  .result-chart > svg:hover circle:not(:hover) {
     opacity: 0.45;
   }
 }
@@ -1208,70 +1208,107 @@ footer[hidden] {
   margin: 16px 0 0;
   padding: 22px 28px;
 }
-.stat-grid {
+/* The figures beside the chart, in two columns; Incorrect and the doubts
+   are buttons that list the matching practice sessions. */
+.progress-legend {
+  flex: 1 1 280px;
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 4px 20px;
 }
-.stat-grid > div {
-  background: var(--card);
-  border: 2px solid var(--line);
-  padding: 14px 18px;
-  border-radius: var(--radius);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  box-shadow: var(--shadow-card);
+.progress-legend ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  align-content: start;
 }
-.stat-grid span {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--muted);
-  /* Clear of the icon in the corner. */
-  padding-right: 34px;
+.progress-legend li > * {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: none;
+  font-size: 16px;
+  text-align: left;
 }
-.stat-grid strong {
+.progress-legend button {
+  color: var(--ink);
+}
+.progress-legend button > span:nth-child(2) {
+  text-decoration: underline dotted var(--muted);
+  text-underline-offset: 4px;
+}
+.progress-legend button:hover {
+  background: var(--soft);
+}
+.progress-legend button[aria-pressed='true'] {
+  background: var(--soft);
+  border-color: var(--primary);
+}
+.row-figures {
+  display: grid;
+  justify-items: end;
+  line-height: 1.25;
+}
+.progress-legend strong {
   font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 30px;
-  font-weight: 700;
+  font-size: 18px;
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
-.stat-grid strong small {
-  font-size: 17px;
-}
-/* The number of questions under each figure. */
-.stat-grid > div > small {
+.progress-legend small {
   color: var(--muted);
   font-size: 13px;
-  font-weight: 600;
+  white-space: nowrap;
 }
-.stat-grid svg {
-  position: absolute;
-  right: 14px;
-  top: 14px;
-  width: 32px;
-  height: 32px;
-  padding: 7px;
-  border-radius: 10px;
-  background: var(--soft);
+.progress-legend .swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+.progress-legend .row-icon {
   color: var(--primary);
 }
-.stat-grid .good svg {
-  background: var(--good-bg);
+.progress-legend .correct strong {
   color: var(--good);
 }
-.stat-grid .bad svg {
-  background: var(--bad-bg);
+.progress-legend .wrong strong {
   color: var(--bad);
 }
-.stat-grid .unsure svg {
-  background: #dff7fa;
+.progress-legend .unsure .row-icon {
   color: #0e7490;
 }
-.stat-grid .not_understood svg {
-  background: #ffe4f0;
+.progress-legend .not_understood .row-icon {
   color: #c81f6b;
+}
+.sessions-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  scroll-margin-top: 20px;
+}
+.sessions-heading h2 {
+  scroll-margin-top: 20px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--primary);
+  font-weight: 700;
 }
 .attempt {
   border: 2px solid var(--line);
@@ -2528,23 +2565,12 @@ textarea {
   .quiz-bottom .button {
     padding: 12px 14px;
   }
-  .stat-grid {
-    gap: 8px;
+  .progress-chart .result-chart {
+    justify-content: center;
   }
-  .stat-grid > div {
-    padding: 12px;
-    gap: 4px;
-  }
-  .stat-grid svg {
-    display: none;
-  }
-  .stat-grid span {
-    font-size: 13px;
-    padding-right: 0;
-    min-height: 36px;
-  }
-  .stat-grid strong {
-    font-size: 26px;
+  .progress-legend li > * {
+    padding: 6px 4px;
+    font-size: 15px;
   }
   .review-card {
     padding: 18px;
