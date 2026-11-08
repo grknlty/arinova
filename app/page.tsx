@@ -694,11 +694,20 @@ export default function Home() {
   const wrong = allAnswers.filter(resultFilters.wrong).length;
   const skipped = allAnswers.filter((a) => a.option === null).length;
   const percent = (n: number) => (total ? Math.round((n / total) * 100) : 0);
-  // Only the counted sessions have the answers behind the numbers.
+  // Each test is listed once, at its latest try, with the earlier tries
+  // under it. Filtered, only the counted latest tries have the answers
+  // behind the numbers.
+  const triesOf = new Map<string, Attempt[]>();
+  for (const a of [...shownAttempts].sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
+  ))
+    triesOf.set(a.setId, [...(triesOf.get(a.setId) ?? []), a]);
   const listedSessions =
     sessionFilter === 'all'
-      ? shownAttempts
-      : shownLatest.filter((a) => a.answers.some(resultFilters[sessionFilter]));
+      ? [...triesOf.values()]
+      : shownLatest
+          .filter((a) => a.answers.some(resultFilters[sessionFilter]))
+          .map((a) => [a]);
   function showSessions(filter: ResultFilter) {
     const next = sessionFilter === filter ? 'all' : filter;
     setSessionFilter(next);
@@ -710,6 +719,41 @@ export default function Home() {
         }),
       );
   }
+  const sessionRow = (a: Attempt) => (
+    <details
+      className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
+      key={`${a.id}-${sessionFilter}`}
+      open={sessionFilter !== 'all'}
+    >
+      <summary>
+        <span className="attempt-icon">
+          <BookOpen size={20} />
+        </span>
+        <span>
+          <strong>{a.title}</strong>
+          <small>
+            {new Date(a.createdAt).toLocaleString(lang, {
+              timeZone: 'Europe/Amsterdam',
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+          </small>
+          {fromDeleted(a) && (
+            <span className="pill bad">{t.deletedResult}</span>
+          )}
+        </span>
+        <span className="attempt-score">
+          {a.correct}/{a.total}
+        </span>
+      </summary>
+      <FilteredReview
+        attempt={a}
+        lang={lang}
+        initialFilter={sessionFilter}
+        questions={a.answers.map((_, i) => questionOf(a.setId, i))}
+      />
+    </details>
+  );
   const sessionFilterLabel: Record<ResultFilter, string> = {
     all: t.filterAll,
     correct: t.correct,
@@ -1425,42 +1469,19 @@ export default function Home() {
                   )}
                 </div>
                 {listedSessions.length ? (
-                  listedSessions.map((a) => (
-                    <details
-                      className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
-                      key={`${a.id}-${sessionFilter}`}
-                      open={sessionFilter !== 'all'}
-                    >
-                      <summary>
-                        <span className="attempt-icon">
-                          <BookOpen size={20} />
-                        </span>
-                        <span>
-                          <strong>{a.title}</strong>
-                          <small>
-                            {new Date(a.createdAt).toLocaleString(lang, {
-                              timeZone: 'Europe/Amsterdam',
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}
-                          </small>
-                          {fromDeleted(a) && (
-                            <span className="pill bad">{t.deletedResult}</span>
-                          )}
-                        </span>
-                        <span className="attempt-score">
-                          {a.correct}/{a.total}
-                        </span>
-                      </summary>
-                      <FilteredReview
-                        attempt={a}
-                        lang={lang}
-                        initialFilter={sessionFilter}
-                        questions={a.answers.map((_, i) =>
-                          questionOf(a.setId, i),
-                        )}
-                      />
-                    </details>
+                  listedSessions.map(([latest, ...earlier]) => (
+                    <div className="attempt-group" key={latest.id}>
+                      {sessionRow(latest)}
+                      {earlier.length > 0 && (
+                        <div
+                          className="earlier-tries"
+                          role="group"
+                          aria-label={t.earlierTries}
+                        >
+                          {earlier.map(sessionRow)}
+                        </div>
+                      )}
+                    </div>
                   ))
                 ) : (
                   <div className="empty">

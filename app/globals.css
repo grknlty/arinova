@@ -1418,6 +1418,64 @@ footer[hidden] {
   padding: 2px 8px;
   font-size: 12px;
 }
+/* Earlier tries of a test hang under its latest try, like a tree. */
+.attempt-group {
+  margin-bottom: 14px;
+}
+.attempt-group > .attempt {
+  margin-bottom: 0;
+}
+.earlier-tries {
+  margin-left: 42px;
+  padding-top: 10px;
+}
+.earlier-tries .attempt {
+  position: relative;
+  margin-bottom: 10px;
+  box-shadow: none;
+}
+.earlier-tries .attempt:last-child {
+  margin-bottom: 0;
+}
+.earlier-tries .attempt::before,
+.earlier-tries .attempt::after {
+  content: '';
+  position: absolute;
+  left: -24px;
+  border-left: 2px solid var(--line);
+}
+.earlier-tries .attempt::before {
+  top: -12px;
+  height: 40px;
+  width: 22px;
+  border-bottom: 2px solid var(--line);
+  border-bottom-left-radius: 10px;
+}
+.earlier-tries .attempt:not(:last-child)::after {
+  top: 28px;
+  bottom: -12px;
+}
+.earlier-tries .attempt summary {
+  min-height: 56px;
+  padding: 10px 16px;
+}
+.earlier-tries .attempt-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+}
+.earlier-tries .attempt summary strong {
+  font-size: 15px;
+}
+.earlier-tries .attempt-score {
+  font-size: 20px;
+  color: var(--muted);
+}
+@media (max-width: 640px) {
+  .earlier-tries {
+    margin-left: 28px;
+  }
+}
 .attempt > .result-filters {
   max-width: 850px;
   margin: 0 auto 16px;
