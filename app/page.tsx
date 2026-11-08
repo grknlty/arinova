@@ -138,11 +138,22 @@ const subjectIcons = {
   geschiedenis: Landmark,
   natuur: Microscope,
 };
-// A subject the parent added beyond the fixed ones has no icon of its own.
-const subjectIconOf = (name: string) => {
+// A subject's planet from the home page, small, for lists of subjects. A
+// subject the parent added beyond the fixed ones has no icon of its own.
+function SubjectPlanet({ name }: { name: string }) {
   const fixed = findSubject(name);
-  return fixed ? subjectIcons[fixed.id] : Sparkle;
-};
+  const Icon = fixed ? subjectIcons[fixed.id] : Sparkle;
+  return (
+    <span
+      className={`planet-mark art-${name === 'all' ? 'all' : (fixed?.id ?? 'other')}`}
+      aria-hidden="true"
+    >
+      <span className="planet">
+        <Icon size={16} strokeWidth={2.2} />
+      </span>
+    </span>
+  );
+}
 type Draft = {
   title?: string;
   subject?: string;
@@ -1373,7 +1384,7 @@ export default function Home() {
                 <h2>{t.bySubject}</h2>
                 <ul>
                   {[
-                    { name: 'all', label: t.all, score: null, Icon: Sparkle },
+                    { name: 'all', label: t.all, score: null },
                     // By name, as the page's language shows it.
                     ...resultSubjects
                       .map((s) => ({
@@ -1382,10 +1393,9 @@ export default function Home() {
                         score: s.total
                           ? Math.round((s.correct / s.total) * 100)
                           : null,
-                        Icon: subjectIconOf(s.name),
                       }))
                       .sort((a, b) => a.label.localeCompare(b.label, lang)),
-                  ].map(({ Icon, ...s }) => (
+                  ].map((s) => (
                     <li key={s.name}>
                       <button
                         className="subject-row"
@@ -1396,9 +1406,7 @@ export default function Home() {
                           setSessionFilter('all');
                         }}
                       >
-                        <span className="subject-row-icon" aria-hidden="true">
-                          <Icon size={18} />
-                        </span>
+                        <SubjectPlanet name={s.name} />
                         <span>{s.label}</span>
                         {s.score !== null && (
                           <span className="count-small">{s.score}%</span>
@@ -1692,11 +1700,10 @@ export default function Home() {
                         .map((s) => ({
                           ...s,
                           label: subjectLabel(s.name, lang),
-                          Icon: subjectIconOf(s.name),
                         }))
                         // By name, as the page's language shows it.
                         .sort((a, b) => a.label.localeCompare(b.label, lang))
-                        .map(({ Icon, ...s }) => (
+                        .map((s) => (
                           <li key={s.id}>
                             <button
                               className="subject-row"
@@ -1707,12 +1714,7 @@ export default function Home() {
                                 setMaterialId('');
                               }}
                             >
-                              <span
-                                className="subject-row-icon"
-                                aria-hidden="true"
-                              >
-                                <Icon size={18} />
-                              </span>
+                              <SubjectPlanet name={s.name} />
                               <span>
                                 {s.label}
                                 <span className="detail">{s.group}</span>

@@ -2116,18 +2116,39 @@ textarea {
 .subject-row .detail {
   display: block;
 }
-.subject-row-icon {
+/* The home page's planets, small, before a subject's name. Without its own
+   colours a subject is violet. */
+:where(.planet-mark) {
+  --planet: var(--violet);
+  --planet-light: #c4b5fd;
+  --planet-dark: #6d28d9;
+  --planet-ink: #fff;
+}
+.planet-mark {
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: 10px;
-  background: var(--soft);
-  color: var(--primary);
 }
-.subject-row[aria-current='true'] .subject-row-icon {
-  background: var(--primary);
-  color: #fff;
+.planet-mark .planet {
+  width: 30px;
+  height: 30px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.45),
+    inset -1px -2px 0 rgba(94, 231, 255, 0.55),
+    inset -3px -4px 6px rgba(5, 8, 40, 0.4),
+    0 0 8px color-mix(in srgb, var(--planet) 55%, transparent),
+    0 4px 6px -3px rgba(0, 0, 0, 0.45);
+}
+.planet-mark.art-all .planet {
+  box-shadow:
+    0 0 6px 1px rgba(156, 188, 255, 0.8),
+    0 0 12px 3px rgba(255, 79, 154, 0.3);
+}
+.planet-mark .planet::after {
+  width: 46px;
+  height: 12px;
+  border-width: 2px;
 }
 .subject-list button:hover,
 .material-list button:hover {
