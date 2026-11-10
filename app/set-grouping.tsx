@@ -24,13 +24,32 @@ export type Grouping = {
   theme?: string;
   lesson?: string;
   testStyle?: string;
+  status?: string;
 };
-const keys = ['subjectName', 'group', 'theme', 'lesson', 'testStyle'] as const;
+const keys = [
+  'subjectName',
+  'group',
+  'theme',
+  'lesson',
+  'testStyle',
+  'status',
+] as const;
 type Key = (typeof keys)[number];
+// How far the learner is with a set: practised to the end, started and not
+// finished, or not started. Only the page knows, from results and progress.
+export const setStatuses = ['done', 'started', 'new'] as const;
+export type SetStatus = (typeof setStatuses)[number];
+type StatusOf = (set: AnySet) => SetStatus;
+const statusLabels: Record<SetStatus, (t: Words) => string> = {
+  done: (t) => t.statusDone,
+  started: (t) => t.statusStarted,
+  new: (t) => t.statusNew,
+};
 // Older sets have no group or lesson fields; like their cards, these are
 // then read from the title and description.
-const valueOf = (set: AnySet, key: Key) => {
+const valueOf = (set: AnySet, key: Key, statusOf?: StatusOf) => {
   const text = `${set.title} ${set.description}`;
+  if (key === 'status') return statusOf?.(set);
   if (key === 'subjectName') return canonicalSubject(set.subject);
   if (key === 'group') return set.group ?? groupIn(text);
   if (key === 'lesson') return set.lesson ?? lessonIn(text);
@@ -47,6 +66,7 @@ const byName = (a: string, b: string) =>
   a.localeCompare(b, undefined, { numeric: true });
 
 function values(sets: AnySet[], key: Key) {
+  if (key === 'status') return [...setStatuses];
   if (key === 'testStyle')
     return testStyles.filter((s) => sets.some((x) => x.testStyle === s));
   return [
@@ -59,23 +79,35 @@ function values(sets: AnySet[], key: Key) {
 // The filter choice for sets that have no value for a grouping, such as
 // the sets without a lesson.
 const noValue = '\u0000';
-const fits = (set: AnySet, key: Key, value: string | undefined) =>
+const fits = (
+  set: AnySet,
+  key: Key,
+  value: string | undefined,
+  statusOf?: StatusOf,
+) =>
   !value ||
-  (value === noValue ? !valueOf(set, key) : valueOf(set, key) === value);
+  (value === noValue
+    ? !valueOf(set, key)
+    : valueOf(set, key, statusOf) === value);
 
-export function matchesGrouping(set: AnySet, grouping: Grouping) {
-  return keys.every((k) => fits(set, k, grouping[k]));
+export function matchesGrouping(
+  set: AnySet,
+  grouping: Grouping,
+  statusOf?: StatusOf,
+) {
+  return keys.every((k) => fits(set, k, grouping[k], statusOf));
 }
 
 // A dropdown for each grouping that at least one set in the subject has, all
 // on one line, in the order of the subject's card details; a subject without
 // any shows nothing. With subjectLabel (on the page with all subjects) the
-// subject comes first.
+// subject comes first. With statusOf the learner's progress comes last.
 export function GroupingFilters({
   sets,
   grouping,
   t,
   subjectLabel,
+  statusOf,
   order = [...factKeys],
   onChange,
 }: {
@@ -83,6 +115,7 @@ export function GroupingFilters({
   grouping: Grouping;
   t: Words;
   subjectLabel?: (name: string) => string;
+  statusOf?: StatusOf;
   order?: FactKey[];
   onChange: (grouping: Grouping) => void;
 }) {
@@ -92,23 +125,27 @@ export function GroupingFilters({
     theme: t.factTheme,
     lesson: t.factLesson,
     testStyle: t.factStyle,
+    status: t.factStatus,
   };
   // Themes, lessons and styles are those of the chosen subject.
   const inSubject = sets.filter((s) =>
     matchesGrouping(s, { subjectName: grouping.subjectName }),
   );
   const position = (key: Key) =>
-    key === 'subjectName' ? -1 : order.indexOf(key);
+    key === 'subjectName' ? -1 : key === 'status' ? 99 : order.indexOf(key);
   const groups = [...keys]
     .sort((a, b) => position(a) - position(b))
     .filter((key) => key !== 'subjectName' || subjectLabel)
+    .filter((key) => key !== 'status' || statusOf)
     .map((key) => {
       const among = key === 'subjectName' ? sets : inSubject;
       const options = values(among, key);
       return {
         key,
         options:
-          options.length && among.some((s) => !valueOf(s, key))
+          key !== 'status' &&
+          options.length &&
+          among.some((s) => !valueOf(s, key))
             ? [...options, noValue]
             : options,
       };
@@ -122,11 +159,12 @@ export function GroupingFilters({
           key={key}
           label={label[key]}
           value={grouping[key] ?? ''}
-          // Another subject starts again from all of its sets.
+          // Another subject starts again from all of its sets, keeping the
+          // progress filter.
           onChange={(value) =>
             onChange(
               key === 'subjectName'
-                ? { subjectName: value || undefined }
+                ? { subjectName: value || undefined, status: grouping.status }
                 : { ...grouping, [key]: value || undefined },
             )
           }
@@ -139,14 +177,20 @@ export function GroupingFilters({
                   ? t.detailNone
                   : key === 'testStyle'
                     ? styleLabels[value as TestStyle](t)
-                    : key === 'subjectName'
-                      ? subjectLabel!(value)
-                      : value
+                    : key === 'status'
+                      ? statusLabels[value as SetStatus](t)
+                      : key === 'subjectName'
+                        ? subjectLabel!(value)
+                        : value
             } (${
               sets.filter(
                 (s) =>
-                  fits(s, key, value) &&
-                  matchesGrouping(s, { ...grouping, [key]: undefined }),
+                  fits(s, key, value, statusOf) &&
+                  matchesGrouping(
+                    s,
+                    { ...grouping, [key]: undefined },
+                    statusOf,
+                  ),
               ).length
             })`,
           }))}

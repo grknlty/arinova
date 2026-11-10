@@ -73,6 +73,7 @@ import {
   matchesGrouping,
   styleLabels,
   type Grouping,
+  type SetStatus,
 } from './set-grouping';
 import { Dropdown } from './dropdown';
 import type { Catalog } from '@/lib/records';
@@ -605,8 +606,15 @@ export default function Home() {
       (subject === 'all' || canonicalSubject(s.subject) === subject),
   );
   const activeGrouping = grouping.subject === subject ? grouping : {};
+  // A practice in progress counts as started, even when it was done before.
+  const statusOf = (s: StudySet | PublicSet): SetStatus =>
+    savedProgress(s)
+      ? 'started'
+      : attempts.some((a) => a.setId === s.id)
+        ? 'done'
+        : 'new';
   const shownSets = visibleSets.filter((s) =>
-    matchesGrouping(s, activeGrouping),
+    matchesGrouping(s, activeGrouping, statusOf),
   );
   // Subjects that have results, each with its share of correct answers.
   // Fixed subjects come in their usual order, any others after them.
@@ -1019,6 +1027,7 @@ export default function Home() {
                   ? (name) => subjectLabel(name, lang)
                   : undefined
               }
+              statusOf={statusOf}
               order={orderOf(activeGrouping.subjectName ?? subject)}
               onChange={(g) => setGrouping({ ...g, subject })}
             />
