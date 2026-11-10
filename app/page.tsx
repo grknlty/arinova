@@ -1385,9 +1385,6 @@ export default function Home() {
         )}
         {view === 'progress' && (
           <>
-            <span className="eyebrow muted">{t.overview}</span>
-            <h1>{t.dashboard}</h1>
-            <p className="page-intro">{t.dashboardText}</p>
             <div className="progress-layout">
               <nav className="paper subject-list" aria-label={t.bySubject}>
                 <h2>{t.bySubject}</h2>

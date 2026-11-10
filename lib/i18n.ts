@@ -176,9 +176,6 @@ export const words = {
     noAttempts: 'De eerste stap begint met een oefening.',
     noAttemptsText:
       'Zodra Nova een oefening afrondt, zie je hier de resultaten en hoe zeker ze zich voelde.',
-    dashboard: 'Zien hoe Nova groeit',
-    dashboardText:
-      'Een goed antwoord vertelt niet het hele verhaal. Bekijk ook waar ze twijfelt of hulp nodig heeft.',
     attempts: 'Oefeningen afgerond',
     accuracy: 'Goed beantwoord',
     recent: 'Alle oefenmomenten',
@@ -213,7 +210,6 @@ export const words = {
     showAll: 'Alles tonen',
     showFewer: 'Minder tonen',
     previousResults: 'Resultaten',
-    overview: 'In één oogopslag',
     learning: 'LEREN OP JOUW MANIER',
     tip: 'Een beetje oefenen is ook vooruitgang.',
     progressNote:
@@ -414,9 +410,6 @@ export const words = {
     noAttempts: 'The first step starts with practice.',
     noAttemptsText:
       'When Nova finishes a practice, her results and confidence will appear here.',
-    dashboard: 'Watch Nova grow',
-    dashboardText:
-      'A right answer doesn’t tell the whole story. See where she feels unsure or needs a helping hand.',
     attempts: 'Practices completed',
     accuracy: 'Answered correctly',
     recent: 'All practice sessions',
@@ -451,7 +444,6 @@ export const words = {
     showAll: 'Show all',
     showFewer: 'Show fewer',
     previousResults: 'Results',
-    overview: 'At a glance',
     learning: 'LEARN YOUR OWN WAY',
     tip: 'A little practice is progress, too.',
     progressNote:
@@ -650,9 +642,6 @@ export const words = {
     noAttempts: 'İlk adım bir alıştırmayla başlar.',
     noAttemptsText:
       'Nova bir alıştırmayı bitirdiğinde sonuçlarını ve kendine ne kadar güvendiğini burada görebilirsin.',
-    dashboard: 'Nova’nın gelişimini izle',
-    dashboardText:
-      'Doğru cevap her şeyi anlatmaz. Nerelerde kararsız kaldığını veya yardıma ihtiyaç duyduğunu da gör.',
     attempts: 'Tamamlanan alıştırma',
     accuracy: 'Doğru cevaplanan',
     recent: 'Tüm çalışmalar',
@@ -687,7 +676,6 @@ export const words = {
     showAll: 'Tümünü göster',
     showFewer: 'Daha az göster',
     previousResults: 'Sonuçlar',
-    overview: 'Bir bakışta',
     learning: 'KENDİ YÖNTEMİNLE ÖĞREN',
     tip: 'Az da olsa çalışmak ilerlemektir.',
     progressNote:
