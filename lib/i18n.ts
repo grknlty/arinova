@@ -78,6 +78,11 @@ export const words = {
     buttonOrderText:
       'Een knop staat er alleen als hij past, zoals “Opnieuw beginnen” bij een begonnen oefening.',
     buttonsPerRowLabel: 'Knoppen naast elkaar',
+    resultColours: 'Kleur van de knop Resultaten',
+    resultColoursText:
+      'Groen als alles goed is. Rood bij meer fouten dan hieronder, of minder procent goed. Anders geel.',
+    resultMaxMistakesLabel: 'Rood bij meer fouten dan',
+    resultMinPercentLabel: 'Rood onder dit % goed',
     behindMore: 'Achter “meer gegevens”',
     moreDetails: 'meer gegevens',
     fewerDetails: 'minder gegevens',
@@ -145,6 +150,7 @@ export const words = {
       '“{title}” definitief verwijderen? De vragen en alle resultaten van Nova bij deze oefening gaan weg. Dit kan niet ongedaan worden gemaakt.',
     exportJson: 'JSON exporteren',
     deletedOn: 'Verwijderd op',
+    loadingCount: 'Aan het laden',
     deletedResult: 'Materiaal verwijderd · telt niet mee',
     confirmDelete:
       '“{title}” verwijderen uit de leerplek? De resultaten van Nova blijven bewaard en je kunt de oefening later terugzetten.',
@@ -315,6 +321,11 @@ export const words = {
     buttonOrderText:
       'A button only shows when it applies, like “Start over” for a practice already begun.',
     buttonsPerRowLabel: 'Buttons side by side',
+    resultColours: 'Results button colour',
+    resultColoursText:
+      'Green when all answers are correct. Red with more mistakes than below, or a lower percentage correct. Yellow otherwise.',
+    resultMaxMistakesLabel: 'Red with more mistakes than',
+    resultMinPercentLabel: 'Red below this % correct',
     behindMore: 'Behind “more details”',
     moreDetails: 'more details',
     fewerDetails: 'fewer details',
@@ -382,6 +393,7 @@ export const words = {
       'Delete “{title}” permanently? Its questions and all of Nova’s results for it will be removed. This cannot be undone.',
     exportJson: 'Export JSON',
     deletedOn: 'Deleted on',
+    loadingCount: 'Loading',
     deletedResult: 'Material deleted · not counted',
     confirmDelete:
       'Delete “{title}” from the learning space? Nova’s results are kept and you can restore the practice later.',
@@ -551,6 +563,11 @@ export const words = {
     buttonOrderText:
       'Bir düğme yalnızca uygun olduğunda görünür; örneğin “Baştan başla” başlanmış bir alıştırmada.',
     buttonsPerRowLabel: 'Yan yana düğme sayısı',
+    resultColours: 'Sonuçlar düğmesinin rengi',
+    resultColoursText:
+      'Hepsi doğruysa yeşil. Aşağıdakinden fazla hata varsa ya da doğru yüzdesi daha düşükse kırmızı. Diğer durumlarda sarı.',
+    resultMaxMistakesLabel: 'Şundan fazla hatada kırmızı',
+    resultMinPercentLabel: 'Doğru yüzdesi bunun altındaysa kırmızı',
     behindMore: '“Daha fazla bilgi” altında',
     moreDetails: 'daha fazla bilgi',
     fewerDetails: 'daha az bilgi',
@@ -617,6 +634,7 @@ export const words = {
       '“{title}” kalıcı olarak silinsin mi? Soruları ve Nova’nın bu alıştırmadaki tüm sonuçları silinecek. Bu geri alınamaz.',
     exportJson: 'JSON dışa aktar',
     deletedOn: 'Silinme tarihi',
+    loadingCount: 'Yükleniyor',
     deletedResult: 'Materyal silindi · sayılmaz',
     confirmDelete:
       '“{title}” öğrenme alanından silinsin mi? Nova’nın sonuçları kalır ve alıştırmayı sonra geri alabilirsin.',

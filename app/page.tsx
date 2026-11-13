@@ -38,6 +38,7 @@ import {
   Tags,
   Pencil,
   FileText,
+  LoaderCircle,
 } from 'lucide-react';
 import { words, type Language } from '@/lib/i18n';
 import { sample } from '@/lib/sample';
@@ -63,6 +64,7 @@ import {
   defaultButtonsPerRow,
   defaultFactCount,
   factOrder,
+  resultTone,
   type FactKey,
 } from '@/lib/facts';
 import { CardLayoutEditor, factLabels } from './fact-order';
@@ -617,6 +619,11 @@ export default function Home() {
     );
   const orderOf = (name: string) => factOrder(layoutOf(name)?.factOrder);
   const SubjectIcon = subjectInfo ? subjectIcons[subjectInfo.id] : Sparkle;
+  // Until the first sets arrive, counts show a spinner instead of 0.
+  const counting = loading && !sets.length;
+  const spinner = (
+    <LoaderCircle size={14} className="spin" aria-label={t.loadingCount} />
+  );
   const visibleSets = sets.filter(
     (s) =>
       !s.deletedAt &&
@@ -1006,14 +1013,14 @@ export default function Home() {
                   </span>
                   <span className="subject-card-name">{label}</span>
                   <span className="count" aria-hidden="true">
-                    {
-                      sets.filter(
-                        (x) =>
-                          !x.deletedAt &&
-                          (name === 'all' ||
-                            canonicalSubject(x.subject) === name),
-                      ).length
-                    }
+                    {counting
+                      ? spinner
+                      : sets.filter(
+                          (x) =>
+                            !x.deletedAt &&
+                            (name === 'all' ||
+                              canonicalSubject(x.subject) === name),
+                        ).length}
                   </span>
                 </button>
               ))}
@@ -1033,7 +1040,9 @@ export default function Home() {
                 <SubjectIcon size={30} strokeWidth={2} />
               </span>
               <h1>{subject === 'all' ? t.all : subjectLabel(subject, lang)}</h1>
-              <span className="count">{shownSets.length}</span>
+              <span className="count">
+                {counting ? spinner : shownSets.length}
+              </span>
             </div>
             <GroupingFilters
               sets={visibleSets}
@@ -1090,6 +1099,15 @@ export default function Home() {
                         // In the subject's order; a button shows only when it
                         // applies. The last one fills its row.
                         const layout = layoutOf(s.subject);
+                        const last = attempts
+                          .filter((a) => a.setId === s.id)
+                          .reduce<Attempt | undefined>(
+                            (newest, a) =>
+                              !newest || a.createdAt > newest.createdAt
+                                ? a
+                                : newest,
+                            undefined,
+                          );
                         const perRow =
                           layout?.buttonsPerRow ?? defaultButtonsPerRow;
                         const buttons = {
@@ -1105,13 +1123,20 @@ export default function Home() {
                               {t.study}
                             </button>
                           ),
-                          results: attempts.some((a) => a.setId === s.id) && (
+                          // The latest score under the label, coloured by the
+                          // subject's thresholds.
+                          results: last && (
                             <button
-                              className="button secondary tone-results"
+                              className={`button secondary tone-${resultTone(last.correct, last.total, layout)}`}
                               onClick={() => setResultsOf(s)}
                             >
                               <History size={16} aria-hidden="true" />
-                              {t.previousResults}
+                              <span className="button-stack">
+                                <span>{t.previousResults}</span>
+                                <small className="button-score">
+                                  {last.correct}/{last.total}
+                                </small>
+                              </span>
                             </button>
                           ),
                           startOver: progress && (
@@ -1756,11 +1781,12 @@ export default function Home() {
                                 <span className="detail">{s.group}</span>
                               </span>
                               <span className="count-small">
-                                {
-                                  sets.filter(
-                                    (x) => x.subject === s.name && !x.deletedAt,
-                                  ).length
-                                }
+                                {counting
+                                  ? spinner
+                                  : sets.filter(
+                                      (x) =>
+                                        x.subject === s.name && !x.deletedAt,
+                                    ).length}
                               </span>
                             </button>
                           </li>

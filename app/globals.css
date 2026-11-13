@@ -679,9 +679,35 @@ svg {
   --tone-line: #f5c542;
 }
 .secondary.tone-again {
-  --tone-bg: #ffe8f1;
-  --tone-ink: #9d174d;
-  --tone-line: #f9a8c9;
+  --tone-bg: #f1f5f9;
+  --tone-ink: #334155;
+  --tone-line: #cbd5e1;
+}
+/* Results by the latest score: all correct, or too many mistakes. */
+.secondary.tone-good {
+  --tone-bg: #e3f8ec;
+  --tone-ink: #1a7a46;
+  --tone-line: #8fdcb0;
+}
+.secondary.tone-bad {
+  --tone-bg: #fde8ea;
+  --tone-ink: #b42d36;
+  --tone-line: #f4a3ab;
+}
+/* A label with a small line under it, in the button's usual height. */
+.button-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+.button-score {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.card-actions .button:has(.button-stack) {
+  padding-block: 4px;
 }
 .content-note {
   font-size: 14px;
@@ -1946,6 +1972,11 @@ footer[hidden] {
 .fact-count input {
   max-width: 110px;
 }
+.result-thresholds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
 .card-layout {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -2814,6 +2845,15 @@ textarea {
   }
   .header nav svg {
     display: none;
+  }
+}
+/* A count still loading */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { StudySet, Attempt, SetDetails, MaterialDoc } from './model';
 import type { Role } from './auth';
 import { canonicalSubject, subjects as fixedSubjects } from './subjects';
-import type { ButtonKey, CardLayout, FactKey } from './facts';
+import type { CardLayout } from './facts';
 import {
   insertAttempt,
   insertGroup,
@@ -31,15 +31,11 @@ type Data = {
   // Groups and subjects with ids, so they can be renamed; older files have
   // neither, and files from before ids have groups as plain names.
   groups?: { id: string; name: string }[];
-  subjects?: {
+  subjects?: ({
     id?: string;
     name: string;
     group: string;
-    factOrder?: FactKey[];
-    factCount?: number;
-    buttonOrder?: ButtonKey[];
-    buttonsPerRow?: number;
-  }[];
+  } & CardLayout)[];
   // Set once the fixed school subjects were added, as in the database.
   subjectsSeeded?: boolean;
 };
@@ -228,15 +224,11 @@ function withIds(data: Data) {
     if (set.group && !has(set.group))
       groups.push({ id: crypto.randomUUID(), name: set.group });
   const key = (name: string) => canonicalSubject(name).toLocaleLowerCase();
-  const subjects: {
+  const subjects: ({
     id: string;
     name: string;
     group: string;
-    factOrder?: FactKey[];
-    factCount?: number;
-    buttonOrder?: ButtonKey[];
-    buttonsPerRow?: number;
-  }[] = [];
+  } & CardLayout)[] = [];
   for (const s of data.subjects ?? [])
     if (!subjects.some((x) => key(x.name) === key(s.name)))
       subjects.push({ ...s, id: s.id ?? crypto.randomUUID() });
@@ -263,15 +255,11 @@ async function localCatalog() {
   withIds(data);
   return data as Data & {
     groups: { id: string; name: string }[];
-    subjects: {
+    subjects: ({
       id: string;
       name: string;
       group: string;
-      factOrder?: FactKey[];
-      factCount?: number;
-      buttonOrder?: ButtonKey[];
-      buttonsPerRow?: number;
-    }[];
+    } & CardLayout)[];
   };
 }
 export async function catalog(): Promise<Catalog> {
@@ -380,10 +368,16 @@ export async function setCardLayout(id: string, layout: CardLayout) {
     delete subject.factCount;
     delete subject.buttonOrder;
     delete subject.buttonsPerRow;
+    delete subject.resultMaxMistakes;
+    delete subject.resultMinPercent;
     if (layout.factOrder?.length) subject.factOrder = layout.factOrder;
     if (layout.factCount) subject.factCount = layout.factCount;
     if (layout.buttonOrder?.length) subject.buttonOrder = layout.buttonOrder;
     if (layout.buttonsPerRow) subject.buttonsPerRow = layout.buttonsPerRow;
+    if (layout.resultMaxMistakes !== undefined)
+      subject.resultMaxMistakes = layout.resultMaxMistakes;
+    if (layout.resultMinPercent !== undefined)
+      subject.resultMinPercent = layout.resultMinPercent;
   });
   return found;
 }

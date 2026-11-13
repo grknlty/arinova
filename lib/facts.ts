@@ -44,6 +44,24 @@ export const buttonOrder = (saved?: readonly string[] | null) =>
 export const defaultFactCount = 5;
 export const defaultButtonsPerRow = 2;
 
+// The Results button shows the latest score: green when all is correct, red
+// with more mistakes than this or a lower share correct, else yellow.
+export const defaultMaxMistakes = 5;
+export const defaultMinPercent = 80;
+export type ResultTone = 'good' | 'bad' | 'results';
+export function resultTone(
+  correct: number,
+  total: number,
+  layout: Pick<CardLayout, 'resultMaxMistakes' | 'resultMinPercent'> = {},
+): ResultTone {
+  const mistakes = total - correct;
+  if (!mistakes) return 'good';
+  return mistakes > (layout.resultMaxMistakes ?? defaultMaxMistakes) ||
+    (correct / total) * 100 < (layout.resultMinPercent ?? defaultMinPercent)
+    ? 'bad'
+    : 'results';
+}
+
 // A subject's card layout as the parent saved it; what is left out uses the
 // defaults.
 export type CardLayout = {
@@ -51,4 +69,6 @@ export type CardLayout = {
   factCount?: number;
   buttonOrder?: ButtonKey[];
   buttonsPerRow?: number;
+  resultMaxMistakes?: number;
+  resultMinPercent?: number;
 };

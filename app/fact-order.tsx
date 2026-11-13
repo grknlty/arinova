@@ -7,6 +7,8 @@ import {
   buttonOrder,
   defaultButtonsPerRow,
   defaultFactCount,
+  defaultMaxMistakes,
+  defaultMinPercent,
   factKeys,
   factOrder,
   type ButtonKey,
@@ -37,12 +39,25 @@ const buttonLabels = (t: Words): Record<ButtonKey, string> => ({
 });
 
 // A number typed into a field, kept as typed so the field can be cleared to
-// type another; outside 1 to max it counts as the default.
-function useNumber(saved: number | undefined, fallback: number, max: number) {
+// type another; outside min to max, or empty, it counts as the default.
+function useNumber(
+  saved: number | undefined,
+  fallback: number,
+  max: number,
+  min = 1,
+) {
   const [text, setText] = useState(String(saved ?? fallback));
   const typed = Math.round(Number(text));
-  const value = typed >= 1 && typed <= max ? typed : fallback;
-  return { text, setText, value, reset: () => setText(String(fallback)) };
+  const value =
+    text.trim() !== '' && typed >= min && typed <= max ? typed : fallback;
+  return {
+    text,
+    setText,
+    value,
+    min,
+    max,
+    reset: () => setText(String(fallback)),
+  };
 }
 
 // Items moved up or down one place at a time. With cutAt, the items from
@@ -128,6 +143,18 @@ export function CardLayoutEditor({
     defaultButtonsPerRow,
     buttonKeys.length,
   );
+  const maxMistakes = useNumber(
+    saved.resultMaxMistakes,
+    defaultMaxMistakes,
+    999,
+    0,
+  );
+  const minPercent = useNumber(
+    saved.resultMinPercent,
+    defaultMinPercent,
+    100,
+    0,
+  );
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState({ ok: true, message: '' });
   const changed = () => setStatus({ ok: true, message: '' });
@@ -137,7 +164,9 @@ export function CardLayoutEditor({
     defaultFacts &&
     defaultButtons &&
     factCount.value === defaultFactCount &&
-    perRow.value === defaultButtonsPerRow;
+    perRow.value === defaultButtonsPerRow &&
+    maxMistakes.value === defaultMaxMistakes &&
+    minPercent.value === defaultMinPercent;
   async function save() {
     setBusy(true);
     try {
@@ -154,6 +183,10 @@ export function CardLayoutEditor({
           buttonOrder: defaultButtons ? [] : buttons,
           buttonsPerRow:
             perRow.value === defaultButtonsPerRow ? null : perRow.value,
+          resultMaxMistakes:
+            maxMistakes.value === defaultMaxMistakes ? null : maxMistakes.value,
+          resultMinPercent:
+            minPercent.value === defaultMinPercent ? null : minPercent.value,
         }),
       });
       if (!r.ok) throw new Error();
@@ -165,17 +198,13 @@ export function CardLayoutEditor({
       setBusy(false);
     }
   }
-  const number = (
-    label: string,
-    field: ReturnType<typeof useNumber>,
-    max: number,
-  ) => (
+  const number = (label: string, field: ReturnType<typeof useNumber>) => (
     <label className="field fact-count">
       {label}
       <input
         type="number"
-        min={1}
-        max={max}
+        min={field.min}
+        max={field.max}
         value={field.text}
         onChange={(e) => {
           field.setText(e.target.value);
@@ -193,7 +222,7 @@ export function CardLayoutEditor({
           <section>
             <h3>{t.cardDetails}</h3>
             <p className="muted">{t.factOrderText}</p>
-            {number(t.factCountLabel, factCount, factKeys.length)}
+            {number(t.factCountLabel, factCount)}
             <OrderList
               order={facts}
               labels={factLabels(t)}
@@ -209,7 +238,7 @@ export function CardLayoutEditor({
           <section>
             <h3>{t.cardButtons}</h3>
             <p className="muted">{t.buttonOrderText}</p>
-            {number(t.buttonsPerRowLabel, perRow, buttonKeys.length)}
+            {number(t.buttonsPerRowLabel, perRow)}
             <OrderList
               order={buttons}
               labels={buttonLabels(t)}
@@ -219,6 +248,12 @@ export function CardLayoutEditor({
                 changed();
               }}
             />
+            <h3>{t.resultColours}</h3>
+            <p className="muted">{t.resultColoursText}</p>
+            <div className="result-thresholds">
+              {number(t.resultMaxMistakesLabel, maxMistakes)}
+              {number(t.resultMinPercentLabel, minPercent)}
+            </div>
           </section>
         </div>
         <div className="details-actions">
@@ -239,6 +274,8 @@ export function CardLayoutEditor({
               setButtons([...buttonKeys]);
               factCount.reset();
               perRow.reset();
+              maxMistakes.reset();
+              minPercent.reset();
               changed();
             }}
           >

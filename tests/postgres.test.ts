@@ -209,6 +209,8 @@ test(
               factCount: 3,
               buttonOrder: ['practice'],
               buttonsPerRow: 1,
+              resultMaxMistakes: 0,
+              resultMinPercent: 90,
             }),
             true,
           );
@@ -232,6 +234,17 @@ test(
             (await catalog()).subjects.find((s) => s.id === subject.id)!
               .buttonsPerRow,
             1,
+          );
+          // Zero mistakes is kept as a setting, not read as the default.
+          assert.equal(
+            (await catalog()).subjects.find((s) => s.id === subject.id)!
+              .resultMaxMistakes,
+            0,
+          );
+          assert.equal(
+            (await catalog()).subjects.find((s) => s.id === subject.id)!
+              .resultMinPercent,
+            90,
           );
           await setCardLayout(subject.id, {});
           assert.equal(
