@@ -657,14 +657,31 @@ svg {
   transform: translateY(3px);
 }
 .secondary {
-  background: var(--card);
-  color: var(--ink);
-  border: 2px solid var(--line);
-  box-shadow: 0 4px 0 var(--line);
+  background: var(--tone-bg, var(--card));
+  color: var(--tone-ink, var(--ink));
+  border: 2px solid var(--tone-line, var(--line));
+  box-shadow: 0 4px 0 var(--tone-line, var(--line));
 }
 .secondary:active:not(:disabled) {
-  box-shadow: 0 1px 0 var(--line);
+  box-shadow: 0 1px 0 var(--tone-line, var(--line));
   transform: translateY(3px);
+}
+/* The buttons on a practice card each have their own colour, so none of
+   them disappears beside the others. */
+.secondary.tone-study {
+  --tone-bg: #e0f2fe;
+  --tone-ink: #075985;
+  --tone-line: #7dd3fc;
+}
+.secondary.tone-results {
+  --tone-bg: #fff4d6;
+  --tone-ink: #7a4d00;
+  --tone-line: #f5c542;
+}
+.secondary.tone-again {
+  --tone-bg: #ffe8f1;
+  --tone-ink: #9d174d;
+  --tone-line: #f9a8c9;
 }
 .content-note {
   font-size: 14px;

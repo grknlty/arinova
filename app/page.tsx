@@ -1078,18 +1078,19 @@ export default function Home() {
                         const buttons = {
                           study: (s.material.trim() || s.materialDoc) && (
                             <button
-                              className="button secondary"
+                              className="button secondary tone-study"
                               onClick={() => {
                                 setSelected(s);
                                 navigate('study');
                               }}
                             >
+                              <BookOpen size={16} aria-hidden="true" />
                               {t.study}
                             </button>
                           ),
                           results: attempts.some((a) => a.setId === s.id) && (
                             <button
-                              className="button secondary"
+                              className="button secondary tone-results"
                               onClick={() => setResultsOf(s)}
                             >
                               <History size={16} aria-hidden="true" />
@@ -1098,9 +1099,10 @@ export default function Home() {
                           ),
                           startOver: progress && (
                             <button
-                              className="button secondary"
+                              className="button secondary tone-again"
                               onClick={() => start(s, false)}
                             >
+                              <RotateCcw size={16} aria-hidden="true" />
                               {t.startOver}
                             </button>
                           ),
