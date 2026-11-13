@@ -1195,7 +1195,7 @@ export default function Home() {
                           ),
                           practice: (
                             <button
-                              className="button primary"
+                              className={`button primary ${progress ? 'resume' : ''}`}
                               onClick={() => start(s)}
                             >
                               {progress
