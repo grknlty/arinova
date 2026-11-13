@@ -31,6 +31,8 @@ import {
   Microscope,
   Trash2,
   RotateCcw,
+  CirclePlay,
+  FastForward,
   X,
   History,
   ChevronDown,
@@ -1198,6 +1200,19 @@ export default function Home() {
                               className={`button primary ${progress ? 'resume' : ''}`}
                               onClick={() => start(s)}
                             >
+                              {progress ? (
+                                <FastForward
+                                  size={16}
+                                  className="icon-continue"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <CirclePlay
+                                  size={16}
+                                  className="icon-play"
+                                  aria-hidden="true"
+                                />
+                              )}
                               {progress ? (
                                 <span className="button-stack">
                                   <span>{t.resume}</span>
