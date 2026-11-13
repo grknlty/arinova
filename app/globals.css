@@ -620,14 +620,26 @@ svg {
   min-height: 48px;
   margin: 0 0 12px;
 }
-.card-description {
+.card-description,
+.card-title {
   position: relative;
   margin: 0 0 12px;
 }
-.card-description p {
+.card-title {
+  margin: 10px 0 8px;
+}
+.card-description p,
+.card-title h3 {
   margin: 0;
 }
-.card-description p.clamped {
+.card-title h3 {
+  line-height: 30px;
+}
+.card-title .more-link.at-end {
+  line-height: 30px;
+}
+.card-description .clamped,
+.card-title .clamped {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -669,12 +681,26 @@ svg {
   grid-template-columns: repeat(var(--per-row, 2), minmax(0, 1fr));
   gap: 10px;
 }
+/* Every card button at the standard 50px: a label on two lines, or one
+   with the small line under it, still fits. */
 .card-actions .button {
   width: 100%;
   height: 100%;
-  padding: 10px 12px;
+  padding: 4px 12px;
+  line-height: 1.15;
   text-align: center;
   white-space: normal;
+}
+
+/* A label kept on one line: its type shrinks with a narrow button, by the
+   label's length in --chars. */
+.card-actions > div {
+  container-type: inline-size;
+}
+.card-actions .button.fit-line {
+  padding-inline: 6px;
+  white-space: nowrap;
+  font-size: clamp(11px, calc((100cqi - 16px) / (var(--chars) * 0.56)), 16px);
 }
 
 /* Buttons */
@@ -754,9 +780,6 @@ svg {
   font-size: 12px;
   font-weight: 700;
   opacity: 0.85;
-}
-.card-actions .button:has(.button-stack) {
-  padding-block: 4px;
 }
 .content-note {
   font-size: 14px;

@@ -42,7 +42,7 @@ export const buttonOrder = (saved?: readonly string[] | null) =>
 // How many details a card shows before its "more" link, and how many
 // buttons stand side by side, unless the subject sets other numbers.
 export const defaultFactCount = 5;
-export const defaultButtonsPerRow = 2;
+export const defaultButtonsPerRow = 3;
 
 // The Results button shows the latest score: green when all is correct, red
 // with more mistakes than this or a lower share correct, else yellow.

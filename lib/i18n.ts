@@ -33,7 +33,7 @@ export const words = {
     odd_options: 'Rare antwoorden',
     exitQuiz: 'Stoppen, later verder',
     resume: 'Verder gaan',
-    startOver: 'Opnieuw beginnen',
+    startOver: 'Opnieuw',
     splitLabel: 'Opdelen in kleinere oefeningen:',
     noSplit: 'Niet opdelen',
     perPart: 'vragen per deel',

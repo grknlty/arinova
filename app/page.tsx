@@ -1135,9 +1135,14 @@ export default function Home() {
                           </button>
                         )}
                       </div>
-                      <h3>{s.title}</h3>
+                      <ClampedText
+                        text={s.title}
+                        lang={lang}
+                        as="h3"
+                        className="card-title"
+                      />
                       {s.description && (
-                        <CardDescription text={s.description} lang={lang} />
+                        <ClampedText text={s.description} lang={lang} />
                       )}
                       <SetFacts
                         set={s}
@@ -1184,7 +1189,12 @@ export default function Home() {
                           ),
                           startOver: progress && (
                             <button
-                              className="button secondary tone-again"
+                              className="button secondary tone-again fit-line"
+                              style={
+                                {
+                                  '--chars': t.startOver.length,
+                                } as React.CSSProperties
+                              }
                               onClick={() => start(s, false)}
                             >
                               {t.startOver}
@@ -1192,7 +1202,14 @@ export default function Home() {
                           ),
                           practice: (
                             <button
-                              className={`button primary ${progress ? 'resume' : ''}`}
+                              className={`button primary ${progress ? 'resume fit-line' : ''}`}
+                              style={
+                                progress
+                                  ? ({
+                                      '--chars': t.resume.length,
+                                    } as React.CSSProperties)
+                                  : undefined
+                              }
                               onClick={() => start(s)}
                             >
                               {progress ? (
@@ -2641,10 +2658,21 @@ const difficultyLabels: Record<Difficulty, (t: Words) => string> = {
   medium: (t) => t.difficultyMedium,
   hard: (t) => t.difficultyHard,
 };
-// A card's description, cut to two lines with a link to show the rest.
-function CardDescription({ text, lang }: { text: string; lang: Language }) {
+// A card's title or description, cut to two lines with a link to show the
+// rest.
+function ClampedText({
+  text,
+  lang,
+  as: Tag = 'p',
+  className = 'card-description',
+}: {
+  text: string;
+  lang: Language;
+  as?: 'p' | 'h3';
+  className?: string;
+}) {
   const t = words[lang];
-  const ref = useRef<HTMLParagraphElement>(null);
+  const ref = useRef<HTMLParagraphElement & HTMLHeadingElement>(null);
   const [open, setOpen] = useState(false);
   const [long, setLong] = useState(false);
   useEffect(() => {
@@ -2657,8 +2685,8 @@ function CardDescription({ text, lang }: { text: string; lang: Language }) {
     return () => observer.disconnect();
   }, [text, open]);
   return (
-    <div className="card-description">
-      <p ref={ref} className={open ? undefined : 'clamped'}>
+    <div className={className}>
+      <Tag ref={ref} className={open ? undefined : 'clamped'}>
         {text}
         {/* Open, the link follows the last word; closed, it covers the end of
             the second line. */}
@@ -2675,7 +2703,7 @@ function CardDescription({ text, lang }: { text: string; lang: Language }) {
             </button>
           </>
         )}
-      </p>
+      </Tag>
       {long && !open && (
         <button
           type="button"
