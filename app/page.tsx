@@ -1198,10 +1198,16 @@ export default function Home() {
                               className={`button primary ${progress ? 'resume' : ''}`}
                               onClick={() => start(s)}
                             >
-                              {progress
-                                ? `${t.resume} · ${progress.index + 1}/${s.questions.length}`
-                                : t.practice}
-                              <ArrowRight size={16} />
+                              {progress ? (
+                                <span className="button-stack">
+                                  <span>{t.resume}</span>
+                                  <small className="button-score">
+                                    {progress.index + 1}/{s.questions.length}
+                                  </small>
+                                </span>
+                              ) : (
+                                t.practice
+                              )}
                             </button>
                           ),
                         };

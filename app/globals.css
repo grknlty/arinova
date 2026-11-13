@@ -738,10 +738,10 @@ svg {
   --tone-ink: #b42d36;
   --tone-line: #f4a3ab;
 }
-/* Continuing a started practice, apart from starting one. */
+/* Continuing a started practice: a lighter Start. */
 .primary.resume {
-  --primary: #c2410c;
-  --press: #7c2d12;
+  --primary: #7547ea;
+  --press: #5b2ee0;
 }
 /* A label with a small line under it, in the button's usual height. */
 .button-stack {
