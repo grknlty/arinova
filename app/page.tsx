@@ -1152,7 +1152,7 @@ export default function Home() {
                       )}
                       {(() => {
                         // In the subject's order; a button shows only when it
-                        // applies. The last one fills its row.
+                        // applies. Each keeps one column's width.
                         const perRow =
                           layout?.buttonsPerRow ?? defaultButtonsPerRow;
                         const buttons = {
@@ -1211,7 +1211,6 @@ export default function Home() {
                         const shown = buttonOrder(layout?.buttonOrder).filter(
                           (key) => buttons[key],
                         );
-                        const lastSpan = perRow - ((shown.length - 1) % perRow);
                         return (
                           <div
                             className="card-actions"
@@ -1219,17 +1218,8 @@ export default function Home() {
                               { '--per-row': perRow } as React.CSSProperties
                             }
                           >
-                            {shown.map((key, i) => (
-                              <div
-                                key={key}
-                                style={
-                                  i === shown.length - 1 && lastSpan > 1
-                                    ? { gridColumn: `span ${lastSpan}` }
-                                    : undefined
-                                }
-                              >
-                                {buttons[key]}
-                              </div>
+                            {shown.map((key) => (
+                              <div key={key}>{buttons[key]}</div>
                             ))}
                           </div>
                         );
