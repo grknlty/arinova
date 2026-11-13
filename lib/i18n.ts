@@ -140,6 +140,9 @@ export const words = {
     practised: 'geoefend',
     delete: 'Verwijderen',
     restore: 'Terugzetten',
+    deleteForever: 'Definitief verwijderen',
+    confirmDeleteForever:
+      '“{title}” definitief verwijderen? De vragen en alle resultaten van Nova bij deze oefening gaan weg. Dit kan niet ongedaan worden gemaakt.',
     exportJson: 'JSON exporteren',
     deletedOn: 'Verwijderd op',
     deletedResult: 'Materiaal verwijderd · telt niet mee',
@@ -374,6 +377,9 @@ export const words = {
     practised: 'practised',
     delete: 'Delete',
     restore: 'Restore',
+    deleteForever: 'Delete permanently',
+    confirmDeleteForever:
+      'Delete “{title}” permanently? Its questions and all of Nova’s results for it will be removed. This cannot be undone.',
     exportJson: 'Export JSON',
     deletedOn: 'Deleted on',
     deletedResult: 'Material deleted · not counted',
@@ -606,6 +612,9 @@ export const words = {
     practised: 'çalışıldı',
     delete: 'Sil',
     restore: 'Geri al',
+    deleteForever: 'Kalıcı olarak sil',
+    confirmDeleteForever:
+      '“{title}” kalıcı olarak silinsin mi? Soruları ve Nova’nın bu alıştırmadaki tüm sonuçları silinecek. Bu geri alınamaz.',
     exportJson: 'JSON dışa aktar',
     deletedOn: 'Silinme tarihi',
     deletedResult: 'Materyal silindi · sayılmaz',

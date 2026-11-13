@@ -17,6 +17,7 @@ import {
   renameRecord,
   updateCardLayout,
   markDeleted,
+  removeSet as removeRecord,
   updateDetails,
   readDocument,
   readImage,
@@ -182,6 +183,20 @@ export async function setDeleted(setId: string, deleted: boolean) {
     found = true;
     if (at) set.deletedAt = at;
     else delete set.deletedAt;
+  });
+  return found;
+}
+// Removes a deleted set for good, with its results.
+export async function removeSet(setId: string) {
+  const db = await database();
+  if (db) return removeRecord(db, setId);
+  let found = false;
+  await writeLocal((data) => {
+    const set = data.sets.find((s) => s.id === setId);
+    if (!set?.deletedAt) return;
+    found = true;
+    data.sets = data.sets.filter((s) => s.id !== setId);
+    data.attempts = data.attempts.filter((a) => a.setId !== setId);
   });
   return found;
 }

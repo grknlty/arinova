@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { role, sameOrigin } from '@/lib/auth';
-import { setDeleted, setDetails } from '@/lib/store';
+import { removeSet, setDeleted, setDetails } from '@/lib/store';
 import { setDetailsSchema } from '@/lib/model';
 import { body, unavailable } from '@/lib/http';
 
@@ -37,6 +37,26 @@ export async function PATCH(
     return (await ('deleted' in change
       ? setDeleted(id, change.deleted)
       : setDetails(id, change)))
+      ? new Response(null, { status: 204 })
+      : new Response(null, { status: 404 });
+  } catch {
+    return unavailable();
+  }
+}
+
+// Parent only: removes a deleted set for good, with its results. A set that
+// is not deleted first is not found.
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  if (!sameOrigin(req) || (await role()) !== 'parent')
+    return new Response(null, { status: 403 });
+  const { id } = await params;
+  if (!z.string().uuid().safeParse(id).success)
+    return new Response(null, { status: 404 });
+  try {
+    return (await removeSet(id))
       ? new Response(null, { status: 204 })
       : new Response(null, { status: 404 });
   } catch {

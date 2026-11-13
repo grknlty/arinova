@@ -444,6 +444,23 @@ export default function Home() {
       setBusy(false);
     }
   }
+  // Only for deleted material; its results go with it, so it asks first.
+  async function removeForever(s: StudySet | PublicSet) {
+    if (!window.confirm(t.confirmDeleteForever.replace('{title}', s.title)))
+      return;
+    setBusy(true);
+    setError('');
+    try {
+      const r = await fetch(`/api/sets/${s.id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error();
+      if (materialId === s.id) setMaterialId('');
+      await load();
+    } catch {
+      setError(t.error);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function finish() {
     setBusy(true);
     setError('');
@@ -1673,6 +1690,17 @@ export default function Home() {
                     )}
                     {s.deletedAt ? t.restore : t.delete}
                   </button>
+                  {s.deletedAt && (
+                    <button
+                      className="material-action material-remove"
+                      disabled={busy}
+                      aria-label={`${t.deleteForever}: ${s.title}`}
+                      onClick={() => removeForever(s)}
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                      {t.deleteForever}
+                    </button>
+                  )}
                 </li>
               );
             };

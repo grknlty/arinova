@@ -2255,6 +2255,16 @@ textarea {
   background: var(--good-bg);
   color: var(--good);
 }
+/* Deleting for good, in the deleted list only: red, filled on hover. */
+.material-list .material-remove {
+  border-color: var(--bad);
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+.material-list .material-remove:hover:not(:disabled) {
+  background: var(--bad);
+  color: #fff;
+}
 .material-pane .details-editor {
   margin: 18px 0 0;
 }

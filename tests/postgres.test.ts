@@ -9,6 +9,7 @@ import {
   catalog,
   image,
   list,
+  removeSet,
   renameEntry,
   setDeleted,
   setDetails,
@@ -161,6 +162,25 @@ test(
           assert.equal(await setDeleted(set.id, false), true);
           assert.equal('deletedAt' in (await find()), false);
           assert.equal(await setDeleted(crypto.randomUUID(), true), false);
+          // Deleting for good needs a deleted set, and takes its results.
+          const other = { ...set, id: crypto.randomUUID() };
+          await addSets([other]);
+          const otherAttempt = grade(
+            other,
+            other.questions.map(() => ({
+              option: 0,
+              confidence: 'sure' as const,
+            })),
+          );
+          await addAttempt(otherAttempt, 'learner');
+          assert.equal(await removeSet(other.id), false);
+          await setDeleted(other.id, true);
+          assert.equal(await removeSet(other.id), true);
+          assert.ok(!(await list('sets')).some((s) => s.id === other.id));
+          assert.ok(
+            !(await list('attempts')).some((a) => a.id === otherAttempt.id),
+          );
+          assert.ok((await list('attempts')).some((a) => a.id === attempt.id));
           assert.equal(
             await setDetails(set.id, {
               title: 'Planten groeien',

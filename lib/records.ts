@@ -428,6 +428,16 @@ export async function markDeleted(
   return !!result.rowCount;
 }
 
+// Permanent delete, only for a set already deleted: its questions, options,
+// attempts and answers go with it.
+export async function removeSet(client: Client, setId: string) {
+  const result = await client.query(
+    `DELETE FROM public.arinova_tests WHERE id = $1 AND deleted_at IS NOT NULL`,
+    [setId],
+  );
+  return !!result.rowCount;
+}
+
 export async function readAttempts(client: Client): Promise<Attempt[]> {
   const result = await client.query(`
     SELECT a.id, a.test_id, t.title, s.subject_name AS subject, a.created_at,
