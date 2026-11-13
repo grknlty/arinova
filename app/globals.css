@@ -588,24 +588,32 @@ svg {
   display: grid;
   gap: 12px;
 }
+/* One detail a line, "Label: value", the values lined up in a column. */
 .set-facts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 16px;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 12px;
   margin: 14px 0 18px;
   padding: 14px 0 0;
   border-top: 2px solid var(--line);
 }
 .set-facts div {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
   min-width: 0;
 }
 .set-facts dt {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--muted);
 }
+.set-facts dt::after {
+  content: ':';
+}
 .set-facts dd {
-  margin: 2px 0 0;
+  margin: 0;
   font-size: 15px;
   font-weight: 700;
   color: var(--ink);
