@@ -400,6 +400,16 @@ svg {
     box-shadow 0.25s var(--ease);
   animation: pop-in 0.45s var(--spring) both;
 }
+/* The border in the colour of the Results button. */
+.study-card.result-good {
+  border-color: #8fdcb0;
+}
+.study-card.result-results {
+  border-color: #f5c542;
+}
+.study-card.result-bad {
+  border-color: #f4a3ab;
+}
 .study-card:nth-child(2) {
   animation-delay: 60ms;
 }

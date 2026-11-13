@@ -1060,8 +1060,23 @@ export default function Home() {
             <div className="cards">
               {shownSets.map((s) => {
                 const progress = savedProgress(s);
+                const layout = layoutOf(s.subject);
+                const last = attempts
+                  .filter((a) => a.setId === s.id)
+                  .reduce<Attempt | undefined>(
+                    (newest, a) =>
+                      !newest || a.createdAt > newest.createdAt ? a : newest,
+                    undefined,
+                  );
+                // The latest score colours the Results button and the card's
+                // border alike.
+                const tone =
+                  last && resultTone(last.correct, last.total, layout);
                 return (
-                  <article className="study-card" key={s.id}>
+                  <article
+                    className={`study-card ${tone ? `result-${tone}` : ''}`}
+                    key={s.id}
+                  >
                     <div className="card-body">
                       <div className="card-meta">
                         <span>
@@ -1098,16 +1113,6 @@ export default function Home() {
                       {(() => {
                         // In the subject's order; a button shows only when it
                         // applies. The last one fills its row.
-                        const layout = layoutOf(s.subject);
-                        const last = attempts
-                          .filter((a) => a.setId === s.id)
-                          .reduce<Attempt | undefined>(
-                            (newest, a) =>
-                              !newest || a.createdAt > newest.createdAt
-                                ? a
-                                : newest,
-                            undefined,
-                          );
                         const perRow =
                           layout?.buttonsPerRow ?? defaultButtonsPerRow;
                         const buttons = {
@@ -1127,7 +1132,7 @@ export default function Home() {
                           // subject's thresholds.
                           results: last && (
                             <button
-                              className={`button secondary tone-${resultTone(last.correct, last.total, layout)}`}
+                              className={`button secondary tone-${tone}`}
                               onClick={() => setResultsOf(s)}
                             >
                               <History size={16} aria-hidden="true" />
