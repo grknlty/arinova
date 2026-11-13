@@ -744,12 +744,25 @@ svg {
   --primary: #7547ea;
   --press: #5b2ee0;
 }
-/* The play and fast-forward icons of Start and Continue, filled. */
-.icon-play polygon {
-  fill: currentColor;
+/* The round icons of Start (green, play) and Continue (blue, arrows). */
+.round-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
 }
-.icon-continue polygon {
-  fill: #bae6fd;
+.round-icon.play {
+  background: #4caf50;
+}
+.round-icon.play svg {
+  fill: #fff;
+  margin-left: 2px;
+}
+.round-icon.continue {
+  background: #2b6cb0;
 }
 /* A label with a small line under it, in the button's usual height. */
 .button-stack {

@@ -31,8 +31,8 @@ import {
   Microscope,
   Trash2,
   RotateCcw,
-  CirclePlay,
-  FastForward,
+  Play,
+  RefreshCw,
   X,
   History,
   ChevronDown,
@@ -1200,19 +1200,17 @@ export default function Home() {
                               className={`button primary ${progress ? 'resume' : ''}`}
                               onClick={() => start(s)}
                             >
-                              {progress ? (
-                                <FastForward
-                                  size={16}
-                                  className="icon-continue"
-                                  aria-hidden="true"
-                                />
-                              ) : (
-                                <CirclePlay
-                                  size={16}
-                                  className="icon-play"
-                                  aria-hidden="true"
-                                />
-                              )}
+                              {/* A round badge: green play, or blue arrows. */}
+                              <span
+                                className={`round-icon ${progress ? 'continue' : 'play'}`}
+                                aria-hidden="true"
+                              >
+                                {progress ? (
+                                  <RefreshCw size={12} strokeWidth={3} />
+                                ) : (
+                                  <Play size={11} strokeWidth={0} />
+                                )}
+                              </span>
                               {progress ? (
                                 <span className="button-stack">
                                   <span>{t.resume}</span>
