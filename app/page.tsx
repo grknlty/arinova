@@ -31,8 +31,6 @@ import {
   Microscope,
   Trash2,
   RotateCcw,
-  Play,
-  RefreshCw,
   X,
   History,
   ChevronDown,
@@ -1166,7 +1164,6 @@ export default function Home() {
                                 navigate('study');
                               }}
                             >
-                              <BookOpen size={16} aria-hidden="true" />
                               {t.study}
                             </button>
                           ),
@@ -1177,7 +1174,6 @@ export default function Home() {
                               className={`button secondary tone-${tone}`}
                               onClick={() => setResultsOf(s)}
                             >
-                              <History size={16} aria-hidden="true" />
                               <span className="button-stack">
                                 <span>{t.previousResults}</span>
                                 <small className="button-score">
@@ -1191,7 +1187,6 @@ export default function Home() {
                               className="button secondary tone-again"
                               onClick={() => start(s, false)}
                             >
-                              <RotateCcw size={16} aria-hidden="true" />
                               {t.startOver}
                             </button>
                           ),
@@ -1200,17 +1195,6 @@ export default function Home() {
                               className={`button primary ${progress ? 'resume' : ''}`}
                               onClick={() => start(s)}
                             >
-                              {/* A round badge: green play, or blue arrows. */}
-                              <span
-                                className={`round-icon ${progress ? 'continue' : 'play'}`}
-                                aria-hidden="true"
-                              >
-                                {progress ? (
-                                  <RefreshCw size={12} strokeWidth={3} />
-                                ) : (
-                                  <Play size={11} strokeWidth={0} />
-                                )}
-                              </span>
                               {progress ? (
                                 <span className="button-stack">
                                   <span>{t.resume}</span>
