@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Check } from 'lucide-react';
 import type { words } from '@/lib/i18n';
 import { canonicalSubject } from '@/lib/subjects';
@@ -101,7 +101,8 @@ export function matchesGrouping(
 // A dropdown for each grouping that at least one set in the subject has, all
 // on one line, in the order of the subject's card details; a subject without
 // any shows nothing. With subjectLabel (on the page with all subjects) the
-// subject comes first. With statusOf the learner's progress comes last.
+// subject comes first. With statusOf the learner's progress comes last;
+// children (such as the sort order) follow on the same line.
 export function GroupingFilters({
   sets,
   grouping,
@@ -110,6 +111,7 @@ export function GroupingFilters({
   statusOf,
   order = [...factKeys],
   onChange,
+  children,
 }: {
   sets: AnySet[];
   grouping: Grouping;
@@ -118,6 +120,7 @@ export function GroupingFilters({
   statusOf?: StatusOf;
   order?: FactKey[];
   onChange: (grouping: Grouping) => void;
+  children?: ReactNode;
 }) {
   const label = {
     subjectName: t.factSubject,
@@ -151,7 +154,7 @@ export function GroupingFilters({
       };
     })
     .filter((g) => g.options.length);
-  if (!groups.length) return null;
+  if (!groups.length && !children) return null;
   return (
     <div className="grouping-filters" aria-label={t.filtersLabel} role="group">
       {groups.map(({ key, options }) => (
@@ -196,6 +199,7 @@ export function GroupingFilters({
           }))}
         />
       ))}
+      {children}
     </div>
   );
 }

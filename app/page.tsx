@@ -220,6 +220,10 @@ async function api(url: string, data?: unknown) {
   }
   return r.status === 204 ? null : r.json();
 }
+// The orders the cards can be shown in, the first being the default.
+const sortKeys = ['open', 'done', 'newest', 'oldest'] as const;
+type SortKey = (typeof sortKeys)[number];
+
 export default function Home() {
   const [lang, setLang] = useState<Language>('nl');
   const t = words[lang];
@@ -238,6 +242,7 @@ export default function Home() {
   const [subject, setSubject] = useState('all');
   // Filters inside a subject; they apply only to the subject they were set in.
   const [grouping, setGrouping] = useState<Grouping & { subject?: string }>({});
+  const [sortBy, setSortBy] = useState<SortKey>('open');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [password, setPassword] = useState('');
@@ -637,9 +642,22 @@ export default function Home() {
       : attempts.some((a) => a.setId === s.id)
         ? 'done'
         : 'new';
-  const shownSets = visibleSets.filter((s) =>
-    matchesGrouping(s, activeGrouping, statusOf),
-  );
+  // By default the tests still to do come first, each part newest first.
+  const newestFirst = (a: StudySet | PublicSet, b: StudySet | PublicSet) =>
+    b.createdAt.localeCompare(a.createdAt);
+  const isDone = (s: StudySet | PublicSet) => statusOf(s) === 'done';
+  const sorters: Record<
+    SortKey,
+    (a: StudySet | PublicSet, b: StudySet | PublicSet) => number
+  > = {
+    open: (a, b) => +isDone(a) - +isDone(b) || newestFirst(a, b),
+    done: (a, b) => +isDone(b) - +isDone(a) || newestFirst(a, b),
+    newest: newestFirst,
+    oldest: (a, b) => newestFirst(b, a),
+  };
+  const shownSets = visibleSets
+    .filter((s) => matchesGrouping(s, activeGrouping, statusOf))
+    .sort(sorters[sortBy]);
   // Subjects that have results, each with its share of correct answers.
   // Fixed subjects come in their usual order, any others after them.
   const order = (name: string) =>
@@ -1056,7 +1074,17 @@ export default function Home() {
               statusOf={statusOf}
               order={orderOf(activeGrouping.subjectName ?? subject)}
               onChange={(g) => setGrouping({ ...g, subject })}
-            />
+            >
+              <Dropdown
+                label={t.sortBy}
+                value={sortBy}
+                onChange={(value) => setSortBy(value as SortKey)}
+                options={sortKeys.map((key) => ({
+                  value: key,
+                  label: t.sortLabels[key],
+                }))}
+              />
+            </GroupingFilters>
             <div className="cards">
               {shownSets.map((s) => {
                 const progress = savedProgress(s);
