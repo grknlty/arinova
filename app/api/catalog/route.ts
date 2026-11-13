@@ -42,8 +42,8 @@ const renamed = z.discriminatedUnion('kind', [
 // A subject's card layout: the order of its details and buttons ([] for the
 // default), how many details show before "more" and how many buttons stand
 // side by side, and when the Results button turns red: more mistakes than
-// resultMaxMistakes or less than resultMinPercent correct (null for the
-// default).
+// resultMaxMistakes or less than resultMinPercent correct, and when the card
+// gets a gold or silver star (null for the default).
 const layout = z.object({
   kind: z.literal('subject'),
   id: z.string().uuid(),
@@ -65,6 +65,10 @@ const layout = z.object({
     .default(null),
   resultMaxMistakes: z.number().int().min(0).max(999).nullable().default(null),
   resultMinPercent: z.number().int().min(0).max(100).nullable().default(null),
+  goldMaxMistakes: z.number().int().min(0).max(999).nullable().default(null),
+  goldMinPercent: z.number().int().min(0).max(100).nullable().default(null),
+  silverMaxMistakes: z.number().int().min(0).max(999).nullable().default(null),
+  silverMinPercent: z.number().int().min(0).max(100).nullable().default(null),
   layout: z.literal(true),
 });
 
@@ -119,7 +123,7 @@ export async function PATCH(req: Request) {
     data = z.union([layout, renamed]).parse(await body(req));
   } catch {
     return invalid(
-      'Send { "kind": "group" or "subject", "id", "name" }, or { "kind": "subject", "id", "layout": true, "factOrder", "factCount", "buttonOrder", "buttonsPerRow", "resultMaxMistakes", "resultMinPercent" }',
+      'Send { "kind": "group" or "subject", "id", "name" }, or { "kind": "subject", "id", "layout": true, "factOrder", "factCount", "buttonOrder", "buttonsPerRow", "resultMaxMistakes", "resultMinPercent", "goldMaxMistakes", "goldMinPercent", "silverMaxMistakes", "silverMinPercent" }',
     );
   }
   try {
@@ -131,6 +135,10 @@ export async function PATCH(req: Request) {
         buttonsPerRow: data.buttonsPerRow ?? undefined,
         resultMaxMistakes: data.resultMaxMistakes ?? undefined,
         resultMinPercent: data.resultMinPercent ?? undefined,
+        goldMaxMistakes: data.goldMaxMistakes ?? undefined,
+        goldMinPercent: data.goldMinPercent ?? undefined,
+        silverMaxMistakes: data.silverMaxMistakes ?? undefined,
+        silverMinPercent: data.silverMinPercent ?? undefined,
       };
       return (await setCardLayout(data.id, saved))
         ? Response.json(saved)

@@ -211,6 +211,8 @@ test(
               buttonsPerRow: 1,
               resultMaxMistakes: 0,
               resultMinPercent: 90,
+              silverMaxMistakes: 0,
+              silverMinPercent: 95,
             }),
             true,
           );
@@ -245,6 +247,16 @@ test(
             (await catalog()).subjects.find((s) => s.id === subject.id)!
               .resultMinPercent,
             90,
+          );
+          assert.equal(
+            (await catalog()).subjects.find((s) => s.id === subject.id)!
+              .silverMaxMistakes,
+            0,
+          );
+          assert.equal(
+            'goldMaxMistakes' in
+              (await catalog()).subjects.find((s) => s.id === subject.id)!,
+            false,
           );
           await setCardLayout(subject.id, {});
           assert.equal(

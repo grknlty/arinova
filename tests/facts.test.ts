@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { factKeys, factOrder, resultTone } from '../lib/facts';
+import { factKeys, factOrder, resultTone, starOf } from '../lib/facts';
 
 test('card details start with group, theme, lesson and test style', () => {
   assert.deepEqual(factOrder().slice(0, 5), [
@@ -28,4 +28,18 @@ test('the Results button is green, yellow or red by the latest score', () => {
   assert.equal(resultTone(35, 40), 'results');
   assert.equal(resultTone(9, 10, { resultMaxMistakes: 0 }), 'bad');
   assert.equal(resultTone(8, 10, { resultMinPercent: 85 }), 'bad');
+});
+
+test('a gold star for all correct, silver for one mistake or 98%', () => {
+  assert.equal(starOf(10, 10), 'gold');
+  assert.equal(starOf(9, 10), 'silver');
+  assert.equal(starOf(98, 100), 'silver');
+  assert.equal(starOf(97, 100), null);
+  assert.equal(starOf(8, 10), null);
+  assert.equal(starOf(9, 10, { goldMaxMistakes: 1 }), 'gold');
+  assert.equal(starOf(8, 10, { silverMinPercent: 80 }), 'silver');
+  assert.equal(
+    starOf(9, 10, { silverMaxMistakes: 0, silverMinPercent: 100 }),
+    null,
+  );
 });

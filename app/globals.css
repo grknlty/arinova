@@ -400,12 +400,12 @@ svg {
     box-shadow 0.25s var(--ease);
   animation: pop-in 0.45s var(--spring) both;
 }
-/* A gold star on the corner when the latest try was all correct. */
-.study-card.result-good {
+/* A gold or silver star on the corner for a (nearly) all-correct try. */
+.study-card:has(.card-star) {
   position: relative;
   overflow: visible;
 }
-.all-correct-star {
+.card-star {
   position: absolute;
   top: -14px;
   left: -14px;
@@ -419,8 +419,15 @@ svg {
   color: #b7791f;
   animation: star-pop 0.5s var(--spring) both;
 }
-.all-correct-star svg {
+.card-star svg {
   fill: #fbbf24;
+}
+.card-star.silver {
+  box-shadow: 0 3px 10px -2px rgba(71, 85, 105, 0.45);
+  color: #64748b;
+}
+.card-star.silver svg {
+  fill: #cbd5e1;
 }
 @keyframes star-pop {
   from {

@@ -9,6 +9,7 @@ import {
   defaultFactCount,
   defaultMaxMistakes,
   defaultMinPercent,
+  defaultStars,
   factKeys,
   factOrder,
   type ButtonKey,
@@ -155,6 +156,40 @@ export function CardLayoutEditor({
     100,
     0,
   );
+  const stars = {
+    goldMaxMistakes: useNumber(
+      saved.goldMaxMistakes,
+      defaultStars.goldMaxMistakes,
+      999,
+      0,
+    ),
+    goldMinPercent: useNumber(
+      saved.goldMinPercent,
+      defaultStars.goldMinPercent,
+      100,
+      0,
+    ),
+    silverMaxMistakes: useNumber(
+      saved.silverMaxMistakes,
+      defaultStars.silverMaxMistakes,
+      999,
+      0,
+    ),
+    silverMinPercent: useNumber(
+      saved.silverMinPercent,
+      defaultStars.silverMinPercent,
+      100,
+      0,
+    ),
+  };
+  const starKeys = Object.keys(defaultStars) as (keyof typeof defaultStars)[];
+  // Each star limit, or null when it is the default.
+  const starValues = Object.fromEntries(
+    starKeys.map((k) => [
+      k,
+      stars[k].value === defaultStars[k] ? null : stars[k].value,
+    ]),
+  );
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState({ ok: true, message: '' });
   const changed = () => setStatus({ ok: true, message: '' });
@@ -166,7 +201,8 @@ export function CardLayoutEditor({
     factCount.value === defaultFactCount &&
     perRow.value === defaultButtonsPerRow &&
     maxMistakes.value === defaultMaxMistakes &&
-    minPercent.value === defaultMinPercent;
+    minPercent.value === defaultMinPercent &&
+    starKeys.every((k) => starValues[k] === null);
   async function save() {
     setBusy(true);
     try {
@@ -187,6 +223,7 @@ export function CardLayoutEditor({
             maxMistakes.value === defaultMaxMistakes ? null : maxMistakes.value,
           resultMinPercent:
             minPercent.value === defaultMinPercent ? null : minPercent.value,
+          ...starValues,
         }),
       });
       if (!r.ok) throw new Error();
@@ -254,6 +291,14 @@ export function CardLayoutEditor({
               {number(t.resultMaxMistakesLabel, maxMistakes)}
               {number(t.resultMinPercentLabel, minPercent)}
             </div>
+            <h3>{t.starsTitle}</h3>
+            <p className="muted">{t.starsText}</p>
+            <div className="result-thresholds">
+              {number(t.goldMaxMistakesLabel, stars.goldMaxMistakes)}
+              {number(t.goldMinPercentLabel, stars.goldMinPercent)}
+              {number(t.silverMaxMistakesLabel, stars.silverMaxMistakes)}
+              {number(t.silverMinPercentLabel, stars.silverMinPercent)}
+            </div>
           </section>
         </div>
         <div className="details-actions">
@@ -276,6 +321,7 @@ export function CardLayoutEditor({
               perRow.reset();
               maxMistakes.reset();
               minPercent.reset();
+              starKeys.forEach((k) => stars[k].reset());
               changed();
             }}
           >

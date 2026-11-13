@@ -99,6 +99,10 @@ export const schema = `
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS buttons_per_row integer;
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS result_max_mistakes integer;
   ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS result_min_percent integer;
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS gold_max_mistakes integer;
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS gold_min_percent integer;
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS silver_max_mistakes integer;
+  ALTER TABLE public.arinova_subjects ADD COLUMN IF NOT EXISTS silver_min_percent integer;
   ALTER TABLE public.arinova_tests
     ADD COLUMN IF NOT EXISTS group_id uuid REFERENCES public.arinova_groups(id);
   CREATE INDEX IF NOT EXISTS arinova_answers_question
@@ -508,7 +512,8 @@ export async function readCatalog(client: Client): Promise<Catalog> {
   const subjects = await client.query(
     `SELECT s.id, s.subject_name, g.name AS group_name, s.fact_order,
        s.fact_count, s.button_order, s.buttons_per_row,
-       s.result_max_mistakes, s.result_min_percent
+       s.result_max_mistakes, s.result_min_percent, s.gold_max_mistakes,
+       s.gold_min_percent, s.silver_max_mistakes, s.silver_min_percent
      FROM public.arinova_subjects s
      LEFT JOIN public.arinova_groups g ON g.id = s.group_id
      ORDER BY s.subject_name`,
@@ -532,6 +537,18 @@ export async function readCatalog(client: Client): Promise<Catalog> {
       ...(r.result_min_percent !== null
         ? { resultMinPercent: r.result_min_percent }
         : {}),
+      ...(r.gold_max_mistakes !== null
+        ? { goldMaxMistakes: r.gold_max_mistakes }
+        : {}),
+      ...(r.gold_min_percent !== null
+        ? { goldMinPercent: r.gold_min_percent }
+        : {}),
+      ...(r.silver_max_mistakes !== null
+        ? { silverMaxMistakes: r.silver_max_mistakes }
+        : {}),
+      ...(r.silver_min_percent !== null
+        ? { silverMinPercent: r.silver_min_percent }
+        : {}),
     })),
   };
 }
@@ -546,7 +563,9 @@ export async function updateCardLayout(
   const result = await client.query(
     `UPDATE public.arinova_subjects
      SET fact_order = $2, fact_count = $3, button_order = $4,
-       buttons_per_row = $5, result_max_mistakes = $6, result_min_percent = $7
+       buttons_per_row = $5, result_max_mistakes = $6, result_min_percent = $7,
+       gold_max_mistakes = $8, gold_min_percent = $9, silver_max_mistakes = $10,
+       silver_min_percent = $11
      WHERE id = $1`,
     [
       id,
@@ -556,6 +575,10 @@ export async function updateCardLayout(
       layout.buttonsPerRow ?? null,
       layout.resultMaxMistakes ?? null,
       layout.resultMinPercent ?? null,
+      layout.goldMaxMistakes ?? null,
+      layout.goldMinPercent ?? null,
+      layout.silverMaxMistakes ?? null,
+      layout.silverMinPercent ?? null,
     ],
   );
   return !!result.rowCount;

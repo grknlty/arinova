@@ -71,4 +71,31 @@ export type CardLayout = {
   buttonsPerRow?: number;
   resultMaxMistakes?: number;
   resultMinPercent?: number;
+  goldMaxMistakes?: number;
+  goldMinPercent?: number;
+  silverMaxMistakes?: number;
+  silverMinPercent?: number;
 };
+
+// A star on the card for the latest try: gold, else silver, when it had at
+// most so many mistakes or at least so much correct.
+export const defaultStars = {
+  goldMaxMistakes: 0,
+  goldMinPercent: 100,
+  silverMaxMistakes: 1,
+  silverMinPercent: 98,
+};
+export function starOf(
+  correct: number,
+  total: number,
+  layout: CardLayout = {},
+): 'gold' | 'silver' | null {
+  const mistakes = total - correct;
+  const percent = (correct / total) * 100;
+  const earns = (kind: 'gold' | 'silver') =>
+    mistakes <=
+      (layout[`${kind}MaxMistakes`] ?? defaultStars[`${kind}MaxMistakes`]) ||
+    percent >=
+      (layout[`${kind}MinPercent`] ?? defaultStars[`${kind}MinPercent`]);
+  return earns('gold') ? 'gold' : earns('silver') ? 'silver' : null;
+}

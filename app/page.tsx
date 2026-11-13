@@ -65,6 +65,7 @@ import {
   defaultFactCount,
   factOrder,
   resultTone,
+  starOf,
   type FactKey,
 } from '@/lib/facts';
 import { CardLayoutEditor, factLabels } from './fact-order';
@@ -1100,17 +1101,18 @@ export default function Home() {
                 // border alike.
                 const tone =
                   last && resultTone(last.correct, last.total, layout);
+                const star = last && starOf(last.correct, last.total, layout);
                 return (
                   <article
                     className={`study-card ${tone ? `result-${tone}` : ''}`}
                     key={s.id}
                   >
-                    {tone === 'good' && (
+                    {star && (
                       <span
-                        className="all-correct-star"
+                        className={`card-star ${star}`}
                         role="img"
-                        aria-label={t.allCorrect}
-                        title={t.allCorrect}
+                        aria-label={star === 'gold' ? t.goldStar : t.silverStar}
+                        title={star === 'gold' ? t.goldStar : t.silverStar}
                       >
                         <Star size={30} strokeWidth={1.6} aria-hidden="true" />
                       </span>

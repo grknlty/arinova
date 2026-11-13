@@ -370,6 +370,10 @@ export async function setCardLayout(id: string, layout: CardLayout) {
     delete subject.buttonsPerRow;
     delete subject.resultMaxMistakes;
     delete subject.resultMinPercent;
+    delete subject.goldMaxMistakes;
+    delete subject.goldMinPercent;
+    delete subject.silverMaxMistakes;
+    delete subject.silverMinPercent;
     if (layout.factOrder?.length) subject.factOrder = layout.factOrder;
     if (layout.factCount) subject.factCount = layout.factCount;
     if (layout.buttonOrder?.length) subject.buttonOrder = layout.buttonOrder;
@@ -378,6 +382,14 @@ export async function setCardLayout(id: string, layout: CardLayout) {
       subject.resultMaxMistakes = layout.resultMaxMistakes;
     if (layout.resultMinPercent !== undefined)
       subject.resultMinPercent = layout.resultMinPercent;
+    if (layout.goldMaxMistakes !== undefined)
+      subject.goldMaxMistakes = layout.goldMaxMistakes;
+    if (layout.goldMinPercent !== undefined)
+      subject.goldMinPercent = layout.goldMinPercent;
+    if (layout.silverMaxMistakes !== undefined)
+      subject.silverMaxMistakes = layout.silverMaxMistakes;
+    if (layout.silverMinPercent !== undefined)
+      subject.silverMinPercent = layout.silverMinPercent;
   });
   return found;
 }
