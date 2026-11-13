@@ -400,6 +400,33 @@ svg {
     box-shadow 0.25s var(--ease);
   animation: pop-in 0.45s var(--spring) both;
 }
+/* A gold star on the corner when the latest try was all correct. */
+.study-card.result-good {
+  position: relative;
+  overflow: visible;
+}
+.all-correct-star {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 10px -2px rgba(180, 120, 0, 0.45);
+  color: #b7791f;
+  animation: star-pop 0.5s var(--spring) both;
+}
+.all-correct-star svg {
+  fill: #fbbf24;
+}
+@keyframes star-pop {
+  from {
+    transform: scale(0) rotate(-40deg);
+  }
+}
 /* The border in the colour of the Results button. */
 .study-card.result-good {
   border-color: #8fdcb0;

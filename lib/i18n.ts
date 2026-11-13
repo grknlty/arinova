@@ -158,6 +158,7 @@ export const words = {
     exportJson: 'JSON exporteren',
     deletedOn: 'Verwijderd op',
     loadingCount: 'Aan het laden',
+    allCorrect: 'Alles goed!',
     deletedResult: 'Materiaal verwijderd · telt niet mee',
     confirmDelete:
       '“{title}” verwijderen uit de leerplek? De resultaten van Nova blijven bewaard en je kunt de oefening later terugzetten.',
@@ -408,6 +409,7 @@ export const words = {
     exportJson: 'Export JSON',
     deletedOn: 'Deleted on',
     loadingCount: 'Loading',
+    allCorrect: 'All correct!',
     deletedResult: 'Material deleted · not counted',
     confirmDelete:
       'Delete “{title}” from the learning space? Nova’s results are kept and you can restore the practice later.',
@@ -656,6 +658,7 @@ export const words = {
     exportJson: 'JSON dışa aktar',
     deletedOn: 'Silinme tarihi',
     loadingCount: 'Yükleniyor',
+    allCorrect: 'Hepsi doğru!',
     deletedResult: 'Materyal silindi · sayılmaz',
     confirmDelete:
       '“{title}” öğrenme alanından silinsin mi? Nova’nın sonuçları kalır ve alıştırmayı sonra geri alabilirsin.',

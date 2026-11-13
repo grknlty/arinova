@@ -1105,6 +1105,16 @@ export default function Home() {
                     className={`study-card ${tone ? `result-${tone}` : ''}`}
                     key={s.id}
                   >
+                    {tone === 'good' && (
+                      <span
+                        className="all-correct-star"
+                        role="img"
+                        aria-label={t.allCorrect}
+                        title={t.allCorrect}
+                      >
+                        <Star size={30} strokeWidth={1.6} aria-hidden="true" />
+                      </span>
+                    )}
                     <div className="card-body">
                       <div className="card-meta">
                         <span>
