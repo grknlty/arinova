@@ -1300,6 +1300,12 @@ footer[hidden] {
 .score-filters {
   min-width: 0;
 }
+/* A line sets the filters apart from the results under them. */
+.results-viewer .result-filters.score-filters,
+.material-pane .result-filters.score-filters {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
 .score-filters .chip-row {
   display: flex;
   flex: 1 1 100%;

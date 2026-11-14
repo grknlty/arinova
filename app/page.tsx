@@ -2551,7 +2551,7 @@ function SetResults({
   return (
     <>
       <fieldset className="result-filters score-filters">
-        <legend>{t.showResults}</legend>
+        <legend className="sr-only">{t.showResults}</legend>
         <div className="chip-row">
           {options.map(([value, label]) => (
             <label key={value} className={`score-${value}`}>
