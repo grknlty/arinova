@@ -66,6 +66,7 @@ import {
   factOrder,
   resultTone,
   starOf,
+  type CardLayout,
   type FactKey,
 } from '@/lib/facts';
 import { CardLayoutEditor, factLabels } from './fact-order';
@@ -1947,6 +1948,7 @@ export default function Home() {
                             set={material}
                             attempts={results}
                             lang={lang}
+                            layout={layoutOf(material.subject)}
                           />
                         ) : (
                           <p className="muted">{t.noResults}</p>
@@ -2302,6 +2304,7 @@ export default function Home() {
           set={resultsOf}
           attempts={attempts.filter((a) => a.setId === resultsOf.id)}
           lang={lang}
+          layout={layoutOf(resultsOf.subject)}
           onClose={() => setResultsOf(null)}
         />
       )}
@@ -2377,11 +2380,13 @@ function ResultsViewer({
   set,
   attempts,
   lang,
+  layout,
   onClose,
 }: {
   set: StudySet | PublicSet;
   attempts: Attempt[];
   lang: Language;
+  layout?: CardLayout;
   onClose: () => void;
 }) {
   const t = words[lang];
@@ -2412,7 +2417,7 @@ function ResultsViewer({
             <X size={22} aria-hidden="true" />
           </button>
         </header>
-        <SetResults set={set} attempts={attempts} lang={lang} />
+        <SetResults set={set} attempts={attempts} lang={lang} layout={layout} />
       </div>
     </dialog>
   );
@@ -2526,10 +2531,12 @@ function SetResults({
   set,
   attempts,
   lang,
+  layout,
 }: {
   set: StudySet | PublicSet;
   attempts: Attempt[];
   lang: Language;
+  layout?: CardLayout;
 }) {
   const t = words[lang];
   const [filter, setFilter] = useState<ScoreFilter>('all');
@@ -2546,7 +2553,7 @@ function SetResults({
       <fieldset className="result-filters">
         <legend>{t.showResults}</legend>
         {options.map(([value, label]) => (
-          <label key={value}>
+          <label key={value} className={`score-${value}`}>
             <input
               type="radio"
               name={`score-filter-${set.id}`}
@@ -2563,7 +2570,10 @@ function SetResults({
       </fieldset>
       {!shown.length && <p className="muted">{t.noResultsInFilter}</p>}
       {shown.map((a) => (
-        <details className="attempt" key={a.id}>
+        <details
+          className={`attempt tone-${resultTone(a.correct, a.total, layout)}`}
+          key={a.id}
+        >
           <summary>
             <span className="attempt-icon">
               <BookOpen size={20} />

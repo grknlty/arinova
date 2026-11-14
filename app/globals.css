@@ -745,29 +745,30 @@ svg {
   transform: translateY(3px);
 }
 /* The buttons on a practice card each have their own colour, so none of
-   them disappears beside the others. */
-.secondary.tone-study {
+   them disappears beside the others. The good/results/bad tones also
+   colour each try in a results list. */
+.tone-study {
   --tone-bg: #e0f2fe;
   --tone-ink: #075985;
   --tone-line: #7dd3fc;
 }
-.secondary.tone-results {
+.tone-results {
   --tone-bg: #fff4d6;
   --tone-ink: #7a4d00;
   --tone-line: #f5c542;
 }
-.secondary.tone-again {
+.tone-again {
   --tone-bg: #f1f5f9;
   --tone-ink: #334155;
   --tone-line: #cbd5e1;
 }
 /* Results by the latest score: all correct, or too many mistakes. */
-.secondary.tone-good {
+.tone-good {
   --tone-bg: #e3f8ec;
   --tone-ink: #1a7a46;
   --tone-line: #8fdcb0;
 }
-.secondary.tone-bad {
+.tone-bad {
   --tone-bg: #fde8ea;
   --tone-ink: #b42d36;
   --tone-line: #f4a3ab;
@@ -1291,6 +1292,47 @@ footer[hidden] {
   font-size: 13px;
   text-align: center;
 }
+/* Score filters in the colour of the scores they show. */
+.result-filters .score-perfect {
+  --chip-bg: #e3f8ec;
+  --chip-ink: #1a7a46;
+  --chip-line: #8fdcb0;
+}
+.result-filters .score-none {
+  --chip-bg: #fde8ea;
+  --chip-ink: #b42d36;
+  --chip-line: #f4a3ab;
+}
+.result-filters .score-below70 {
+  --chip-bg: #ffedd5;
+  --chip-ink: #b45309;
+  --chip-line: #fdba74;
+}
+.result-filters .score-below50 {
+  --chip-bg: #ffe4d6;
+  --chip-ink: #c2410c;
+  --chip-line: #fb8f5c;
+}
+.result-filters label[class*='score-']:not(.score-all) {
+  border-color: var(--chip-line);
+  color: var(--chip-ink);
+}
+.result-filters label[class*='score-']:not(.score-all) input {
+  accent-color: var(--chip-ink);
+}
+.result-filters label[class*='score-']:not(.score-all) .count {
+  background: var(--chip-bg);
+  color: var(--chip-ink);
+}
+.result-filters label[class*='score-']:not(.score-all):has(input:checked) {
+  border-color: var(--chip-ink);
+  background: var(--chip-bg);
+}
+.result-filters
+  label[class*='score-']:not(.score-all):has(input:checked)
+  .count {
+  background: #fff;
+}
 .results-viewer .result-filters,
 .material-pane .result-filters {
   margin: 0 0 18px;
@@ -1531,6 +1573,25 @@ footer[hidden] {
   font-size: 24px;
   font-weight: 700;
   color: var(--primary);
+}
+/* A try in a results list, coloured like the Results button for its score. */
+.attempt[class*='tone-'] {
+  border-color: var(--tone-line);
+}
+.attempt[class*='tone-'] summary {
+  background: var(--tone-bg);
+  border-radius: calc(var(--radius) - 2px);
+}
+.attempt[class*='tone-'][open] summary {
+  border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+  margin-bottom: 16px;
+}
+.attempt[class*='tone-'] .attempt-icon {
+  background: #fff;
+  color: var(--tone-ink);
+}
+.attempt[class*='tone-'] .attempt-score {
+  color: var(--tone-ink);
 }
 .attempt .review {
   padding: 0 20px 20px;
