@@ -2550,23 +2550,25 @@ function SetResults({
   const shown = attempts.filter(scoreFilters[filter]);
   return (
     <>
-      <fieldset className="result-filters">
+      <fieldset className="result-filters score-filters">
         <legend>{t.showResults}</legend>
-        {options.map(([value, label]) => (
-          <label key={value} className={`score-${value}`}>
-            <input
-              type="radio"
-              name={`score-filter-${set.id}`}
-              value={value}
-              checked={filter === value}
-              onChange={() => setFilter(value)}
-            />
-            {label}
-            <span className="count">
-              {attempts.filter(scoreFilters[value]).length}
-            </span>
-          </label>
-        ))}
+        <div className="chip-row">
+          {options.map(([value, label]) => (
+            <label key={value} className={`score-${value}`}>
+              <input
+                type="radio"
+                name={`score-filter-${set.id}`}
+                value={value}
+                checked={filter === value}
+                onChange={() => setFilter(value)}
+              />
+              {label}
+              <span className="count">
+                {attempts.filter(scoreFilters[value]).length}
+              </span>
+            </label>
+          ))}
+        </div>
       </fieldset>
       {!shown.length && <p className="muted">{t.noResultsInFilter}</p>}
       {shown.map((a) => (

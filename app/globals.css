@@ -1259,19 +1259,22 @@ footer[hidden] {
 }
 .result-filters label {
   display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 2px solid var(--line);
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: #fff;
+  font-size: 13px;
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 }
 .result-filters input {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   margin: 0;
   accent-color: var(--primary);
 }
@@ -1284,13 +1287,29 @@ footer[hidden] {
   outline-offset: 2px;
 }
 .result-filters .count {
-  min-width: 24px;
-  padding: 1px 7px;
+  min-width: 22px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: var(--soft);
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
+}
+/* The score filters stay on one line; a narrow screen scrolls them. A
+   fieldset grows to fit its content unless told otherwise. */
+.score-filters {
+  min-width: 0;
+}
+.score-filters .chip-row {
+  display: flex;
+  flex: 1 1 100%;
+  min-width: 0;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Room for the focus ring inside the scroller. */
+  padding: 5px;
+  margin: -5px;
 }
 /* Score filters in the colour of the scores they show. */
 .result-filters .score-perfect {
@@ -1299,9 +1318,9 @@ footer[hidden] {
   --chip-line: #8fdcb0;
 }
 .result-filters .score-none {
-  --chip-bg: #fde8ea;
-  --chip-ink: #b42d36;
-  --chip-line: #f4a3ab;
+  --chip-bg: #fee2e2;
+  --chip-ink: #dc2626;
+  --chip-line: #ef4444;
 }
 .result-filters .score-below70 {
   --chip-bg: #ffedd5;
