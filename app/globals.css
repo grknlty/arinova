@@ -1621,6 +1621,31 @@ footer[hidden] {
 .attempt .review {
   padding: 0 20px 20px;
 }
+/* A try's star: the card's, a little smaller, smaller still for an earlier try. */
+.attempt {
+  position: relative;
+}
+.attempt .card-star {
+  top: -12px;
+  left: -12px;
+  width: 36px;
+  height: 36px;
+  z-index: 1;
+}
+.attempt .card-star svg {
+  width: 24px;
+  height: 24px;
+}
+.earlier-tries .attempt .card-star {
+  top: -10px;
+  left: -10px;
+  width: 30px;
+  height: 30px;
+}
+.earlier-tries .attempt .card-star svg {
+  width: 20px;
+  height: 20px;
+}
 /* Results of deleted material: listed, but left out of every count. */
 .attempt.deleted {
   background: var(--soft);

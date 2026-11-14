@@ -818,41 +818,52 @@ export default function Home() {
         }),
       );
   }
-  const sessionRow = (a: Attempt) => (
-    <details
-      className={`attempt ${fromDeleted(a) ? 'deleted' : ''}`}
-      key={`${a.id}-${sessionFilter}`}
-      open={sessionFilter !== 'all'}
-    >
-      <summary>
-        <span className="attempt-icon">
-          <BookOpen size={20} />
-        </span>
-        <span>
-          <strong>{a.title}</strong>
-          <small>
-            {new Date(a.createdAt).toLocaleString(lang, {
-              timeZone: 'Europe/Amsterdam',
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })}
-          </small>
-          {fromDeleted(a) && (
-            <span className="pill bad">{t.deletedResult}</span>
-          )}
-        </span>
-        <span className="attempt-score">
-          {a.correct}/{a.total}
-        </span>
-      </summary>
-      <FilteredReview
-        attempt={a}
-        lang={lang}
-        initialFilter={sessionFilter}
-        questions={a.answers.map((_, i) => questionOf(a.setId, i))}
-      />
-    </details>
-  );
+  // A try in the colour of the Results button for its score, with the
+  // card's star; a try of deleted material stays grey.
+  const sessionRow = (a: Attempt) => {
+    const layout = layoutOf(a.subject);
+    const star = !fromDeleted(a) && starOf(a.correct, a.total, layout);
+    return (
+      <details
+        className={`attempt ${
+          fromDeleted(a)
+            ? 'deleted'
+            : `tone-${resultTone(a.correct, a.total, layout)}`
+        }`}
+        key={`${a.id}-${sessionFilter}`}
+        open={sessionFilter !== 'all'}
+      >
+        <summary>
+          {star && <StarBadge star={star} lang={lang} />}
+          <span className="attempt-icon">
+            <BookOpen size={20} />
+          </span>
+          <span>
+            <strong>{a.title}</strong>
+            <small>
+              {new Date(a.createdAt).toLocaleString(lang, {
+                timeZone: 'Europe/Amsterdam',
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              })}
+            </small>
+            {fromDeleted(a) && (
+              <span className="pill bad">{t.deletedResult}</span>
+            )}
+          </span>
+          <span className="attempt-score">
+            {a.correct}/{a.total}
+          </span>
+        </summary>
+        <FilteredReview
+          attempt={a}
+          lang={lang}
+          initialFilter={sessionFilter}
+          questions={a.answers.map((_, i) => questionOf(a.setId, i))}
+        />
+      </details>
+    );
+  };
   const sessionFilterLabel: Record<ResultFilter, string> = {
     all: t.filterAll,
     correct: t.correct,
@@ -1113,16 +1124,7 @@ export default function Home() {
                     className={`study-card ${tone ? `result-${tone}` : ''}`}
                     key={s.id}
                   >
-                    {star && (
-                      <span
-                        className={`card-star ${star}`}
-                        role="img"
-                        aria-label={star === 'gold' ? t.goldStar : t.silverStar}
-                        title={star === 'gold' ? t.goldStar : t.silverStar}
-                      >
-                        <Star size={30} strokeWidth={1.6} aria-hidden="true" />
-                      </span>
-                    )}
+                    {star && <StarBadge star={star} lang={lang} />}
                     <div className="card-body">
                       <div className="card-meta">
                         <span>
@@ -2582,6 +2584,10 @@ function SetResults({
           key={a.id}
         >
           <summary>
+            {(() => {
+              const star = starOf(a.correct, a.total, layout);
+              return star && <StarBadge star={star} lang={lang} />;
+            })()}
             <span className="attempt-icon">
               <BookOpen size={20} />
             </span>
@@ -2602,6 +2608,26 @@ function SetResults({
         </details>
       ))}
     </>
+  );
+}
+// The gold or silver star on the corner of a card or a try.
+function StarBadge({
+  star,
+  lang,
+}: {
+  star: 'gold' | 'silver';
+  lang: Language;
+}) {
+  const label = star === 'gold' ? words[lang].goldStar : words[lang].silverStar;
+  return (
+    <span
+      className={`card-star ${star}`}
+      role="img"
+      aria-label={label}
+      title={label}
+    >
+      <Star size={30} strokeWidth={1.6} aria-hidden="true" />
+    </span>
   );
 }
 // The parent's form for a card's details, opened from the card itself. It
