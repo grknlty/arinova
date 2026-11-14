@@ -40,7 +40,20 @@ export function connectionConfig(connectionString: string): PoolConfig {
   };
 }
 
+// The setup below takes dozens of queries, each a trip to the database. It
+// runs once per deployment; later cold starts only check that it ran.
+const setupKey =
+  process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA;
+const setupDone = `SELECT 1 FROM public.arinova_records
+  WHERE kind = 'setup_done' AND payload->>'deployment' = $1`;
+
 async function initialize(pool: Pool) {
+  // Before the first setup the table is missing; then set up as usual.
+  if (
+    setupKey &&
+    (await pool.query(setupDone, [setupKey]).catch(() => null))?.rowCount
+  )
+    return;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -57,6 +70,11 @@ async function initialize(pool: Pool) {
     await client.query(
       'ALTER TABLE public.arinova_records ENABLE ROW LEVEL SECURITY',
     );
+    // Another instance may have finished it while this one waited.
+    if (setupKey && (await client.query(setupDone, [setupKey])).rowCount) {
+      await client.query('COMMIT');
+      return;
+    }
     await client.query(`
       CREATE TABLE IF NOT EXISTS public.arinova_login_limits (
         key text PRIMARY KEY,
@@ -105,6 +123,16 @@ async function initialize(pool: Pool) {
       `UPDATE public.arinova_records SET kind = kind || '_migrated'
        WHERE kind IN ('sets', 'attempts')`,
     );
+    if (setupKey) {
+      await client.query(
+        `DELETE FROM public.arinova_records WHERE kind = 'setup_done'`,
+      );
+      await client.query(
+        `INSERT INTO public.arinova_records (id, kind, payload)
+         VALUES (gen_random_uuid(), 'setup_done', jsonb_build_object('deployment', $1::text))`,
+        [setupKey],
+      );
+    }
     await client.query('COMMIT');
   } catch (error) {
     await client.query('ROLLBACK');

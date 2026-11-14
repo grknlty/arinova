@@ -299,11 +299,15 @@ export default function Home() {
   async function load() {
     setLoading(true);
     try {
-      setSets(await api('/api/sets'));
-      setAttempts(await api('/api/progress'));
-      setCatalog(
-        await api('/api/catalog').catch(() => ({ groups: [], subjects: [] })),
-      );
+      // All three at once: each is a trip to the server and the database.
+      const [sets, attempts, catalog] = await Promise.all([
+        api('/api/sets'),
+        api('/api/progress'),
+        api('/api/catalog').catch(() => ({ groups: [], subjects: [] })),
+      ]);
+      setSets(sets);
+      setAttempts(attempts);
+      setCatalog(catalog);
     } catch {
       setError(t.error);
     } finally {
