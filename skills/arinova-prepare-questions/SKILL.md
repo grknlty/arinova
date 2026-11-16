@@ -1,5 +1,5 @@
 ---
-name: arinova-questions
+name: arinova-prepare-questions
 description: Write multiple-choice practice sets for Arinova in its JSON format - 4 options, 1 correct answer and an explanation per question - in knowledge style (does the pupil know what the lesson taught) or Cito style (can the pupil reason with it), with optional pictures and the lesson document. Use when asked to make a test, quiz, toets, kennisvragen, Cito vragen, a Cito-stijl oefening or "vragen" from study material, a photo or PDF of a school page, a topic, or a lesson such as "Thema 7.1 Les 4", for Taal, Rekenen, Huiswerk, Topografie, Aardrijkskunde, Verkeer, Geschiedenis or Natuur en Techniek, groep 6-8.
 ---
 
